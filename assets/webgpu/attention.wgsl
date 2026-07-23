@@ -1,0 +1,1 @@
+// Refined WGSL attention shader
