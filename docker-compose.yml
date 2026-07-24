@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  saphira-core:
+    build: .
+    container_name: saphira_core
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - DATABASE_URL=postgresql://saphira_user:saphira_pass@saphira-db:5432/saphira_db
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    depends_on:
+      saphira-db:
+        condition: service_healthy
+    restart: always
+
+  saphira-db:
+    image: pgvector/pgvector:pg16
+    container_name: saphira_db
+    environment:
+      POSTGRES_USER: saphira_user
+      POSTGRES_PASSWORD: saphira_pass
+      POSTGRES_DB: saphira_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U saphira_user -d saphira_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+volumes:
+  postgres_data:

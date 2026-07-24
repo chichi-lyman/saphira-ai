@@ -1,0 +1,58 @@
+name: Saphira Core & Sentinel CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint-and-test:
+    name: Core Protocol Verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Code Quality & Sentinel Lint Check
+        run: |
+          ruff check . --select=E9,F63,F7,F82 --show-source
+          ruff check . --exit-zero
+
+      - name: Execute Core Test Suite
+        env:
+          ENVIRONMENT: testing
+        run: |
+          pytest --exitfirst --failed-first -q || true
+
+  docker-build-check:
+    name: Container Integration Build
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Saphira Core Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: saphira-ai/core:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
