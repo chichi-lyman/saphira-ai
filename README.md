@@ -1,6 +1,6 @@
-# Saphira AI: Advanced Personal Assistant with Persistent Memory & WebGPU Acceleration
+"""© 2026 Chelsea Megan Woods. All rights reserved.
+Licensed under the terms specified in the repository."""
 
-**Copyright © 2026 Chelsea Megan Woods (Woods Legacies). All Rights Reserved.**
 
 ---
 
@@ -9,7 +9,7 @@
 # Saphira AI 🔮✨
 *Architected and Built by Chelsea Megan Woods*
 
-Saphira AI is an autonomous multi-agent ecosystem and native assistant designed to cut through cognitive friction, handle complex software and hardware automation, and make human life 1% easier, calmer, and less stressful every single day.
+ # Saphira AI: Advanced Personal Assistant with Persistent Memory & WebGPU Acceleration. Saphira AI is an autonomous multi-agent ecosystem and native assistant designed to cut through cognitive friction, handle complex software and hardware automation, and make human life 1% easier, calmer, and less stressful every single day.
 
 ## 🚀 Expanded IoT & Real-World Control Matrix
 - **Home & Media:** Control TVs, change channels, check what's playing, and command streaming media.
