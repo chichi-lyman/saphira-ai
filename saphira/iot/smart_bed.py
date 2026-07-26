@@ -1,0 +1,1 @@
+Purpose: Integrates with adjustable base and smart mattress APIs to control positioning, massage modes, and dual-zone climate features.
