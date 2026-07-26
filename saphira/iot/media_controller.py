@@ -1,0 +1,1 @@
+Purpose: Interfaces with local casting, APIs, and smart home protocols (like Google Home/Cast APIs or Plex/Roku) to handle TV channels, media playback, volume, and "what's playing" status checks.
