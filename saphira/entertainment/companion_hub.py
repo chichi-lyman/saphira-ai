@@ -1,0 +1,1 @@
+Purpose: Powers interactive games (trivia, text RPGs, 2-player modes), song requests, playlist selection, and homework/problem-solving assistance.
