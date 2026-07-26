@@ -1,0 +1,1 @@
+Purpose: Manages Bluetooth and Wi-Fi smart bulbs/LED strips (color changes, brightness tuning, power states).
