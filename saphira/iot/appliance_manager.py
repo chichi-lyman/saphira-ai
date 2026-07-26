@@ -1,0 +1,1 @@
+Purpose: Connects to robotic vacuums, smart plugs, and household appliances to execute simple on/off, docking, and cleaning routines.
