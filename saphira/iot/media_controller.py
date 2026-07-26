@@ -1,12 +1,10 @@
 """
+© 2026 Chelsea Megan Woods. All rights reserved.
 Saphira AI - Media Controller Module
-Architected and Built by Chelsea Megan Woods
-Purpose: Manages TV controls, channel switching, media playback, and 'what's playing' status checks 
-to make household entertainment effortless and stress-free.
 """
 
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Union
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("SaphiraMediaController")
@@ -19,7 +17,6 @@ class MediaController:
     async def power_device(self, device_id: Optional[str] = None, state: str = "on") -> Dict[str, Any]:
         target = device_id or self.default_device
         logger.info(f"Turning {state} media device: {target}")
-        # Integration hook for smart home casting/API protocols
         return {"device": target, "status": "success", "power": state}
 
     async def play_media(self, media_title: str, device_id: Optional[str] = None) -> Dict[str, Any]:
@@ -31,7 +28,7 @@ class MediaController:
             "status": "success",
             "action": "play",
             "media": media_title,
-            "message": f"Now playing {media_title} on your display, Chelsea."
+            "message": f"Now playing {media_title} on your display, Chelsea Megan Woods."
         }
 
     async def change_channel(self, channel: Union[str, int], device_id: Optional[str] = None) -> Dict[str, Any]:
