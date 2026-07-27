@@ -1,4 +1,4 @@
-# Enhanced Saphira Router with New Agent Registration
+# Enhanced Saphira Router with Expanded Intent Classifier + Wearable Support
 # Copyright © 2026 Chelsea Megan Woods
 
 import os
@@ -8,13 +8,18 @@ from typing import Dict, Any, Optional
 from google import genai
 import openai
 
+from src.core.intent_classifier import IntentClassifier
+from src.integrations.wearable_connector import wearable
+
 logger = logging.getLogger("SaphiraRouter")
+
 
 class SaphiraAPIRouter:
     def __init__(self, primary_provider: str = "gemini", max_retries: int = 3):
         self.primary_provider = primary_provider.lower()
         self.max_retries = max_retries
         self.provider_health: Dict[str, bool] = {"gemini": True, "openai": True}
+        self.intent_classifier = IntentClassifier()
         
         gemini_key = os.getenv("GEMINI_API_KEY", "")
         openai_key = os.getenv("OPENAI_API_KEY", "")
@@ -65,15 +70,12 @@ class SaphiraAPIRouter:
 
         return f"[Saphira Standby Mode]: Request acknowledged. Error: {str(last_exception)}"
 
-    def route_to_agent(self, intent: str) -> str:
-        """Simple intent-based routing to the four new high-impact agents."""
-        intent = intent.lower()
-        if any(word in intent for word in ["boundary", "difficult conversation", "conflict", "argue"]):
-            return "boundary_coach"
-        if any(word in intent for word in ["bill", "insurance", "claim", "bureaucracy", "tax"]):
-            return "admin_resolver"
-        if any(word in intent for word in ["friend", "family", "relationship", "check-in"]):
-            return "relationship"
-        if any(word in intent for word in ["workout", "sleep", "meal", "habit", "lifestyle", "stress"]):
-            return "lifestyle_orchestrator"
-        return "boundary_coach"  # safe default
+    def route_to_agent(self, text: str) -> str:
+        """Use the expanded IntentClassifier instead of simple keywords."""
+        return self.intent_classifier.route(text)
+
+    async def enrich_with_biometrics(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """Automatically attach latest wearable data if not already present."""
+        if "biometrics" not in payload or not payload["biometrics"]:
+            payload["biometrics"] = await wearable.fetch_latest()
+        return payload
