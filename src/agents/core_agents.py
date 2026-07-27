@@ -1,24 +1,21 @@
 # Copyright (c) 2026 Chelsea Megan Woods. All Rights Reserved.
 # Owner & Creator: Chelsea Megan Woods | Woods AI Studio / Lyman Legacies
 #
-# Six Core Agents — Expanded, Self-Healing, Highest-State Version
+# Six Core Agents — Fully Expanded
 # Saphira | Agent Zero | Agent Two | Aura | Nova Reign | NovaAethrea
 
 from typing import Dict, Any, List, Optional
 import logging
 import traceback
 import asyncio
+import re
 from src.connectors.matter_home_assistant import matter_ha
+from src.memory.persistent_store import persistent_memory
 
 logger = logging.getLogger("SaphiraCoreAgents")
 
 
-# ---------------------------------------------------------------------------
-# Shared self-healing base
-# ---------------------------------------------------------------------------
 class SelfHealingAgent:
-    """Base that retries, logs failures, and returns a recoverable state."""
-
     name = "base"
     max_retries = 3
 
@@ -35,8 +32,7 @@ class SelfHealingAgent:
             "status": "recovered_from_failure",
             "agent": self.name,
             "error": str(last_error),
-            "traceback": traceback.format_exc(),
-            "message": f"{self.name} exhausted retries but returned safe state.",
+            "message": f"{self.name} recovered after failures.",
         }
 
     async def run(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -44,68 +40,49 @@ class SelfHealingAgent:
 
 
 # ---------------------------------------------------------------------------
-# 1. Saphira — Command Core
+# 1. Saphira — NLP + Intent
 # ---------------------------------------------------------------------------
 class SaphiraCore(SelfHealingAgent):
     name = "saphira"
 
-    # Tight voice → intent mapping for smart-home and core actions
-    VOICE_INTENT_MAP = {
-        # lights
-        "turn on": "turn_on",
-        "turn off": "turn_off",
-        "lights on": "turn_on",
-        "lights off": "turn_off",
-        "dim": "set_brightness",
-        "brightness": "set_brightness",
-        "set brightness": "set_brightness",
-        # climate
-        "set temperature": "set_temperature",
-        "set the thermostat": "set_temperature",
-        "make it warmer": "set_temperature",
-        "make it cooler": "set_temperature",
-        # locks
-        "lock the door": "lock",
-        "unlock the door": "unlock",
-        "lock front door": "lock",
-        "unlock front door": "unlock",
-        # covers
-        "close the blinds": "set_cover",
-        "open the blinds": "set_cover",
-        "close shades": "set_cover",
-        # scenes
-        "evening scene": "activate_scene",
-        "good night": "activate_scene",
-        "movie mode": "activate_scene",
-        "i'm home": "activate_scene",
-    }
+    VOICE_PATTERNS = [
+        (r"\b(turn on|switch on|lights? on)\b", "turn_on"),
+        (r"\b(turn off|switch off|lights? off)\b", "turn_off"),
+        (r"\b(dim|set brightness|brightness)\b", "set_brightness"),
+        (r"\b(set (the )?temperature|thermostat|make it (warmer|cooler))\b", "set_temperature"),
+        (r"\b(lock (the )?(front )?door)\b", "lock"),
+        (r"\b(unlock (the )?(front )?door)\b", "unlock"),
+        (r"\b(close (the )?(blinds|shades)|open (the )?(blinds|shades))\b", "set_cover"),
+        (r"\b(good night|evening scene|movie mode|i'?m home|i am home)\b", "activate_scene"),
+    ]
 
     def __init__(self, router=None):
         self.router = router
 
     def parse_voice_intent(self, text: str) -> Dict[str, Any]:
         text_l = text.lower().strip()
-        for phrase, intent in self.VOICE_INTENT_MAP.items():
-            if phrase in text_l:
-                return {"intent": intent, "raw": text, "matched_phrase": phrase}
-        return {"intent": "general", "raw": text, "matched_phrase": None}
+        for pattern, intent in self.VOICE_PATTERNS:
+            if re.search(pattern, text_l):
+                return {"intent": intent, "raw": text, "matched": pattern}
+        return {"intent": "general", "raw": text, "matched": None}
 
     async def run(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         text = payload.get("text") or payload.get("message") or ""
-        parsed = self.parse_voice_intent(text) if text else {"intent": payload.get("intent", "general")}
-
+        parsed = self.parse_voice_intent(text) if text else {
+            "intent": payload.get("intent", "general"),
+            "raw": text,
+        }
         return {
             "status": "success",
             "agent": "saphira",
             "parsed_intent": parsed,
-            "message": "Intent understood and ready for delegation.",
-            "next_agents": ["agent_two", "nova_reign", "agent_zero"],
             "payload": {**payload, **parsed},
+            "message": "Intent parsed.",
         }
 
 
 # ---------------------------------------------------------------------------
-# 2. Agent Zero — Execution Engine
+# 2. Agent Zero — Execution
 # ---------------------------------------------------------------------------
 class AgentZero(SelfHealingAgent):
     name = "agent_zero"
@@ -118,41 +95,23 @@ class AgentZero(SelfHealingAgent):
         intent = payload.get("intent") or payload.get("action", "")
         params = payload.get("params", {})
 
-        # Scene activation is handled by NovaAethrea; Agent Zero only executes device calls
         if intent == "activate_scene":
-            return {
-                "status": "delegated",
-                "agent": "agent_zero",
-                "message": "Scene activation belongs to NovaAethrea.",
-            }
+            return {"status": "delegated", "agent": "agent_zero", "message": "Scenes handled by NovaAethrea."}
 
-        if intent in (
-            "turn_on", "turn_off", "toggle", "set_brightness",
-            "set_temperature", "lock", "unlock", "set_cover", "matter"
-        ):
+        if intent in ("turn_on", "turn_off", "toggle", "set_brightness",
+                      "set_temperature", "lock", "unlock", "set_cover", "matter"):
             result = self.matter.execute_intent(intent, params)
-            return {
-                "status": result.get("status", "unknown"),
-                "agent": "agent_zero",
-                "intent": intent,
-                "result": result,
-            }
+            return {"status": result.get("status", "unknown"), "agent": "agent_zero", "intent": intent, "result": result}
 
-        return {
-            "status": "accepted",
-            "agent": "agent_zero",
-            "message": f"Execution request received: {intent}",
-            "params": params,
-        }
+        return {"status": "accepted", "agent": "agent_zero", "message": f"Received: {intent}", "params": params}
 
 
 # ---------------------------------------------------------------------------
-# 3. Agent Two — Security Enforcer
+# 3. Agent Two — Security
 # ---------------------------------------------------------------------------
 class AgentTwo(SelfHealingAgent):
     name = "agent_two"
-
-    SENSITIVE = {"unlock", "lock", "set_temperature"}
+    SENSITIVE = {"unlock", "lock"}
 
     def __init__(self, router=None):
         self.router = router
@@ -160,58 +119,62 @@ class AgentTwo(SelfHealingAgent):
     async def run(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         intent = payload.get("intent") or payload.get("action", "")
         confirmed = payload.get("confirmed", False)
-
         if intent in self.SENSITIVE and not confirmed:
             return {
                 "status": "blocked",
                 "agent": "agent_two",
-                "message": f"Security gate: '{intent}' requires explicit user confirmation.",
+                "message": f"Security: '{intent}' needs explicit confirmation.",
                 "requires_confirmation": True,
             }
-
-        return {
-            "status": "cleared",
-            "agent": "agent_two",
-            "message": "Security check passed.",
-            "intent": intent,
-        }
+        return {"status": "cleared", "agent": "agent_two", "intent": intent}
 
 
 # ---------------------------------------------------------------------------
-# 4. Aura — Multimodal Perception
+# 4. Aura — Full Perception (expanded)
 # ---------------------------------------------------------------------------
 class Aura(SelfHealingAgent):
     name = "aura"
+
+    ROOM_ENTITIES = {
+        "living": ["light.living_room", "media_player.living_room", "cover.living_blinds"],
+        "kitchen": ["light.kitchen", "switch.kitchen_fan"],
+        "bedroom": ["light.bedroom", "cover.bedroom_blinds"],
+        "front": ["lock.front_door", "light.porch"],
+        "office": ["light.office", "switch.office_fan"],
+    }
 
     def __init__(self, router=None):
         self.router = router
 
     async def run(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         context = payload.get("context", {})
+        text = (payload.get("text") or payload.get("raw") or "").lower()
+        room = context.get("room") or self._detect_room(text)
         vision = payload.get("vision") or context.get("vision")
-        room = context.get("room") or payload.get("room")
+
+        suggested = self._suggest_entities(room, text)
 
         return {
             "status": "success",
             "agent": "aura",
-            "message": "Perception layer active.",
             "room": room,
-            "vision_summary": vision or "No visual input this turn.",
-            "suggested_entities": self._suggest_entities(room),
+            "vision_summary": vision or "No visual input.",
+            "suggested_entities": suggested,
+            "message": "Perception complete.",
         }
 
-    def _suggest_entities(self, room: Optional[str]) -> List[str]:
-        if not room:
-            return []
-        room = room.lower()
-        mapping = {
-            "living": ["light.living_room", "media_player.living_room"],
-            "kitchen": ["light.kitchen", "switch.kitchen_fan"],
-            "bedroom": ["light.bedroom", "cover.bedroom_blinds"],
-            "front": ["lock.front_door", "light.porch"],
-        }
-        for key, entities in mapping.items():
-            if key in room:
+    def _detect_room(self, text: str) -> Optional[str]:
+        for room in self.ROOM_ENTITIES:
+            if room in text:
+                return room
+        return None
+
+    def _suggest_entities(self, room: Optional[str], text: str) -> List[str]:
+        if room and room in self.ROOM_ENTITIES:
+            return self.ROOM_ENTITIES[room]
+        # fallback keyword scan
+        for room, entities in self.ROOM_ENTITIES.items():
+            if room in text:
                 return entities
         return []
 
@@ -221,118 +184,109 @@ class Aura(SelfHealingAgent):
 # ---------------------------------------------------------------------------
 class NovaReign(SelfHealingAgent):
     name = "nova_reign"
+    ALLOWED = {
+        "turn_on", "turn_off", "toggle", "set_brightness",
+        "set_temperature", "lock", "unlock", "set_cover",
+        "activate_scene", "general", "matter",
+    }
 
     def __init__(self, router=None):
         self.router = router
-        self.allowed_intents = {
-            "turn_on", "turn_off", "toggle", "set_brightness",
-            "set_temperature", "lock", "unlock", "set_cover",
-            "activate_scene", "general", "matter",
-        }
 
     async def run(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         intent = payload.get("intent") or payload.get("action", "general")
-        if intent not in self.allowed_intents:
+        if intent not in self.ALLOWED:
             return {
                 "status": "rejected",
                 "agent": "nova_reign",
-                "message": f"Policy violation: intent '{intent}' is not in the approved set.",
+                "message": f"Policy: intent '{intent}' not allowed.",
             }
-        return {
-            "status": "approved",
-            "agent": "nova_reign",
-            "message": "Governance check passed. Action within policy.",
-            "intent": intent,
-        }
+        return {"status": "approved", "agent": "nova_reign", "intent": intent}
 
 
 # ---------------------------------------------------------------------------
-# 6. NovaAethrea — Persistent Memory + Scene System
+# 6. NovaAethrea — Persistent Memory + Scenes
 # ---------------------------------------------------------------------------
 class NovaAethrea(SelfHealingAgent):
     name = "nova_aethrea"
 
+    DEFAULT_SCENES = {
+        "evening": [
+            {"intent": "set_brightness", "params": {"entity_id": "light.living_room", "brightness_pct": 30}},
+            {"intent": "set_temperature", "params": {"entity_id": "climate.main", "temperature": 71}},
+        ],
+        "good_night": [
+            {"intent": "turn_off", "params": {"entity_id": "light.living_room"}},
+            {"intent": "turn_off", "params": {"entity_id": "light.kitchen"}},
+            {"intent": "lock", "params": {"entity_id": "lock.front_door"}},
+            {"intent": "set_temperature", "params": {"entity_id": "climate.main", "temperature": 68}},
+        ],
+        "movie": [
+            {"intent": "set_brightness", "params": {"entity_id": "light.living_room", "brightness_pct": 10}},
+            {"intent": "set_cover", "params": {"entity_id": "cover.living_blinds", "position": 0}},
+        ],
+        "im_home": [
+            {"intent": "turn_on", "params": {"entity_id": "light.living_room"}},
+            {"intent": "set_brightness", "params": {"entity_id": "light.living_room", "brightness_pct": 70}},
+            {"intent": "set_temperature", "params": {"entity_id": "climate.main", "temperature": 72}},
+        ],
+    }
+
     def __init__(self, router=None):
         self.router = router
-        self._memory: Dict[str, Any] = {}
-        self._scenes: Dict[str, List[Dict[str, Any]]] = {
-            "evening": [
-                {"intent": "set_brightness", "params": {"entity_id": "light.living_room", "brightness_pct": 30}},
-                {"intent": "set_temperature", "params": {"entity_id": "climate.main", "temperature": 71}},
-            ],
-            "good_night": [
-                {"intent": "turn_off", "params": {"entity_id": "light.living_room"}},
-                {"intent": "turn_off", "params": {"entity_id": "light.kitchen"}},
-                {"intent": "lock", "params": {"entity_id": "lock.front_door"}},
-                {"intent": "set_temperature", "params": {"entity_id": "climate.main", "temperature": 68}},
-            ],
-            "movie": [
-                {"intent": "set_brightness", "params": {"entity_id": "light.living_room", "brightness_pct": 10}},
-                {"intent": "set_cover", "params": {"entity_id": "cover.living_blinds", "position": 0}},
-            ],
-            "im_home": [
-                {"intent": "turn_on", "params": {"entity_id": "light.living_room"}},
-                {"intent": "set_brightness", "params": {"entity_id": "light.living_room", "brightness_pct": 70}},
-                {"intent": "set_temperature", "params": {"entity_id": "climate.main", "temperature": 72}},
-            ],
-        }
+        self.store = persistent_memory
+        # seed default scenes if missing
+        for name, steps in self.DEFAULT_SCENES.items():
+            if not self.store.get_scene(name):
+                self.store.save_scene(name, steps)
 
     async def run(self, payload: Dict[str, Any]) -> Dict[str, Any]:
-        # Memory write
-        key = payload.get("memory_key")
-        value = payload.get("memory_value")
-        if key and value is not None:
-            self._memory[key] = value
-            return {"status": "stored", "agent": "nova_aethrea", "key": key}
+        # Write fact / preference
+        if payload.get("memory_key") and payload.get("memory_value") is not None:
+            self.store.set_fact(payload["memory_key"], payload["memory_value"])
+            return {"status": "stored", "agent": "nova_aethrea", "key": payload["memory_key"]}
 
-        # Memory read
-        if key:
+        if payload.get("memory_key"):
             return {
                 "status": "retrieved",
                 "agent": "nova_aethrea",
-                "key": key,
-                "value": self._memory.get(key),
+                "key": payload["memory_key"],
+                "value": self.store.get_fact(payload["memory_key"]),
             }
 
-        # Scene activation
         intent = payload.get("intent", "")
-        scene_name = payload.get("scene") or payload.get("matched_phrase") or ""
-        scene_name = scene_name.lower().replace(" ", "_").replace("'", "")
+        scene_hint = (payload.get("scene") or payload.get("matched") or payload.get("raw") or "").lower()
 
-        if intent == "activate_scene" or scene_name in self._scenes:
-            # normalize common phrases
-            if "evening" in scene_name:
+        scene_name = None
+        if intent == "activate_scene" or any(s in scene_hint for s in self.DEFAULT_SCENES):
+            if "evening" in scene_hint:
                 scene_name = "evening"
-            elif "night" in scene_name or "good_night" in scene_name:
+            elif "night" in scene_hint:
                 scene_name = "good_night"
-            elif "movie" in scene_name:
+            elif "movie" in scene_hint:
                 scene_name = "movie"
-            elif "home" in scene_name:
+            elif "home" in scene_hint:
                 scene_name = "im_home"
 
-            steps = self._scenes.get(scene_name, [])
+        if scene_name:
+            steps = self.store.get_scene(scene_name) or self.DEFAULT_SCENES.get(scene_name, [])
+            self.store.append_history({"type": "scene", "name": scene_name})
             return {
                 "status": "scene_ready",
                 "agent": "nova_aethrea",
                 "scene": scene_name,
                 "steps": steps,
-                "message": f"Scene '{scene_name}' prepared with {len(steps)} steps.",
+                "message": f"Scene '{scene_name}' ready ({len(steps)} steps).",
             }
 
         return {
             "status": "ok",
             "agent": "nova_aethrea",
-            "memory_size": len(self._memory),
-            "available_scenes": list(self._scenes.keys()),
+            "available_scenes": list(self.DEFAULT_SCENES.keys()),
+            "recent_history": self.store.get_history(5),
         }
 
-    def add_scene(self, name: str, steps: List[Dict[str, Any]]):
-        self._scenes[name.lower()] = steps
 
-
-# ---------------------------------------------------------------------------
-# Registry
-# ---------------------------------------------------------------------------
 CORE_AGENTS = {
     "saphira": SaphiraCore,
     "agent_zero": AgentZero,
