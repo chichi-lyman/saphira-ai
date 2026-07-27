@@ -13,6 +13,7 @@ from saphira.iot.media_controller import MediaController
 from saphira.iot.appliance_manager import ApplianceManager
 from saphira.iot.lighting_controller import LightingController
 from saphira.iot.smart_bed import SmartBedController
+from saphira.iot.print_controller import PrintController
 from saphira.entertainment.companion_hub import CompanionHub
 
 logging.basicConfig(level=logging.INFO)
@@ -24,6 +25,7 @@ class SaphiraRouter:
         self.appliances = ApplianceManager()
         self.lighting = LightingController()
         self.bed = SmartBedController()
+        self.printer = PrintController()
         self.companion = CompanionHub()
 
     async def process_intent(self, user_command: str) -> Dict[str, Any]:
@@ -65,7 +67,18 @@ class SaphiraRouter:
             else:
                 return await self.bed.adjust_position(section="head", angle_or_preset="reading")
 
-        # 5. Companion, Music & Homework Routing
+        # 5. 3D Printing Routing
+        elif any(keyword in cmd for keyword in ["print", "printer", "nozzle", "gcode", "filament"]):
+            if "status" in cmd or "temp" in cmd or "how is" in cmd:
+                return await self.printer.get_print_status()
+            elif "pause" in cmd:
+                return await self.printer.control_print_job(action="pause")
+            elif "cancel" in cmd or "stop print" in cmd:
+                return await self.printer.control_print_job(action="cancel")
+            else:
+                return await self.printer.start_print(file_name="requested_print.gcode")
+
+        # 6. Companion, Music & Homework Routing
         elif any(keyword in cmd for keyword in ["sing", "song", "music", "play game", "homework", "help", "solve"]):
             if "sing" in cmd:
                 return await self.companion.sing_song(song_title=user_command)
