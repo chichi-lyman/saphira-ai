@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  saphira-core:
+    build: .
+    container_name: saphira_core_prod
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+      - DATABASE_URL=postgresql://saphira_user:saphira_pass@saphira-db:5432/saphira_db
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    depends_on:
+      - saphira-db
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 2G
+
+  saphira-db:
+    image: pgvector/pgvector:pg16
+    container_name: saphira_db_prod
+    environment:
+      POSTGRES_USER: saphira_user
+      POSTGRES_PASSWORD: saphira_pass
+      POSTGRES_DB: saphira_db
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    restart: always
+
+volumes:
+  postgres_data_prod:
