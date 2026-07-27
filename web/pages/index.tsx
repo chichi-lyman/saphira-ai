@@ -4,6 +4,7 @@
  */
 
 import SEOHead from '../src/components/SEOHead';
+import SaphiraChatWidget from '../src/components/SaphiraChatWidget';
 import { useState } from 'react';
 
 export default function LandingPage() {
@@ -40,9 +41,13 @@ export default function LandingPage() {
         <h1 style={{ fontSize: '2.8rem', marginBottom: '0.5rem' }}>
           Saphira AI
         </h1>
-        <p style={{ fontSize: '1.3rem', opacity: 0.85, maxWidth: 620, margin: '0 auto 2rem' }}>
+        <p style={{ fontSize: '1.3rem', opacity: 0.85, maxWidth: 620, margin: '0 auto 1rem' }}>
           Speak upfront. Automate in silence.<br />
           Created by Chelsea Megan Woods
+        </p>
+
+        <p style={{ opacity: 0.7, marginBottom: '2rem' }}>
+          Talk to her right now — the chat bubble is live in the bottom-right corner.
         </p>
 
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '3rem' }}>
@@ -55,9 +60,9 @@ export default function LandingPage() {
         </div>
 
         <section style={{ maxWidth: 700, margin: '0 auto', textAlign: 'left', opacity: 0.9 }}>
-          <h2>What Saphira Does</h2>
+          <h2>Meet Saphira</h2>
           <ul>
-            <li>Warm conversational companion upfront</li>
+            <li>Warm conversational companion you can see and talk to</li>
             <li>Silent multi-agent task execution in the background</li>
             <li>Camera vision, voice, smart-home & code automation</li>
             <li>Persistent memory that remembers your projects for weeks</li>
@@ -69,6 +74,9 @@ export default function LandingPage() {
           Woods AI Studio / Lyman Legacies
         </footer>
       </main>
+
+      {/* Live public chat widget */}
+      <SaphiraChatWidget />
     </>
   );
 }
