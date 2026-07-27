@@ -1,8 +1,8 @@
 """
 © 2026 Chelsea Megan Woods. All rights reserved.
 Saphira AI - Main Application Entry Point
-Purpose: Initializes the FastAPI server, connects all IoT and entertainment modules, 
-and serves as the central command hub for Saphira.
+Purpose: Initializes the FastAPI server, connects all IoT, manufacturing, 
+and entertainment modules, and serves as the central command hub for Saphira.
 """
 
 from fastapi import FastAPI, HTTPException
@@ -14,6 +14,7 @@ from saphira.iot.media_controller import MediaController
 from saphira.iot.appliance_manager import ApplianceManager
 from saphira.iot.lighting_controller import LightingController
 from saphira.iot.smart_bed import SmartBedController
+from saphira.iot.print_controller import PrintController
 from saphira.entertainment.companion_hub import CompanionHub
 
 app = FastAPI(
@@ -27,6 +28,7 @@ media = MediaController()
 appliances = ApplianceManager()
 lighting = LightingController()
 bed = SmartBedController()
+printer = PrintController()
 companion = CompanionHub()
 
 # Request Models
@@ -53,6 +55,14 @@ class LightColorRequest(BaseModel):
 class BedPositionRequest(BaseModel):
     section: str
     angle_or_preset: Union[int, str]
+    device_id: Optional[str] = None
+
+class PrintJobRequest(BaseModel):
+    file_name: str
+    device_id: Optional[str] = None
+
+class PrintActionRequest(BaseModel):
+    action: str
     device_id: Optional[str] = None
 
 class EntertainmentRequest(BaseModel):
@@ -97,6 +107,19 @@ async def set_light_color(req: LightColorRequest):
 @app.post("/iot/bed/position")
 async def adjust_bed(req: BedPositionRequest):
     return await bed.adjust_position(req.section, req.angle_or_preset, req.device_id)
+
+# --- 3D Printing Endpoints ---
+@app.get("/iot/printer/status")
+async def get_print_status(device_id: Optional[str] = None):
+    return await printer.get_print_status(device_id)
+
+@app.post("/iot/printer/start")
+async def start_print(req: PrintJobRequest):
+    return await printer.start_print(req.file_name, req.device_id)
+
+@app.post("/iot/printer/control")
+async def control_print_job(req: PrintActionRequest):
+    return await printer.control_print_job(req.action, req.device_id)
 
 # --- Companion & Entertainment Endpoints ---
 @app.post("/entertainment/music")
