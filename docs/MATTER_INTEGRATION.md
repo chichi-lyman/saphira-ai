@@ -10,13 +10,15 @@ User → Saphira (intent)
          ↓
     Nova Reign (governance)
          ↓
+    NovaAethrea (scenes / memory)
+         ↓
     Agent Zero (execution)
          ↓
     MatterHomeAssistantConnector
          ↓
-    Home Assistant REST API
+    Home Assistant REST + WebSocket
          ↓
-    Matter devices (lights, locks, climate, covers…)
+    Matter devices
 ```
 
 ## Environment Variables
@@ -26,23 +28,42 @@ HOME_ASSISTANT_URL=http://homeassistant.local:8123
 HOME_ASSISTANT_TOKEN=your_long_lived_access_token
 ```
 
-## Supported Intents (via Agent Zero)
+## Supported Intents
 
-| Intent            | Example params                                      |
-|-------------------|-----------------------------------------------------|
-| turn_on / on      | entity_id=light.living_room                         |
-| turn_off / off    | entity_id=light.kitchen                             |
-| toggle            | entity_id=switch.fan                                |
-| set_brightness    | entity_id=light.bedroom, brightness_pct=30          |
-| set_temperature   | entity_id=climate.main, temperature=72              |
-| lock / unlock     | entity_id=lock.front_door (requires confirmation)   |
-| set_cover         | entity_id=cover.blinds, position=50                 |
+| Intent | Params | Cluster / Domain |
+|--------|--------|------------------|
+| turn_on / on | entity_id | OnOff |
+| turn_off / off | entity_id | OnOff |
+| toggle | entity_id | OnOff |
+| set_brightness / dim | entity_id, brightness_pct | LevelControl |
+| set_color | entity_id, rgb / kelvin / hs | ColorControl |
+| set_temperature | entity_id, temperature | Thermostat |
+| set_hvac_mode | entity_id, mode | Thermostat |
+| set_fan_mode | entity_id, fan_mode | Fan |
+| fan_percentage | entity_id, percentage | Fan |
+| fan_preset | entity_id, preset | Fan |
+| lock / unlock | entity_id | DoorLock |
+| set_cover / open_cover / close_cover | entity_id, position | WindowCovering |
+| media_play / pause / stop | entity_id | Media |
+| media_volume | entity_id, volume (0-1) | Media |
+| activate_scene | entity_id (scene.xxx) | Scene |
 
-## Agent Responsibilities
+## WebSocket Live State
 
-- **Saphira** — parses voice/text into intent + params
-- **Agent Two** — blocks sensitive actions (unlock) without confirmation
-- **Nova Reign** — policy / boundary check
-- **Agent Zero** — calls the Matter/HA connector
-- **Aura** — can supply room / device context from vision
-- **Nova Etherea** — remembers preferred scenes and device names
+```python
+from src.connectors.matter_home_assistant import matter_ha
+
+def on_state_change(entity_id, state):
+    print(entity_id, state["state"], state.get("attributes"))
+
+matter_ha.add_state_listener(on_state_change)
+matter_ha.start_websocket()
+```
+
+Cached states are available via `matter_ha.get_cached_state("light.living_room")`.
+
+## Dependency
+
+```
+pip install websocket-client requests
+```
