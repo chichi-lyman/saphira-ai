@@ -1,7 +1,7 @@
 # Copyright (c) 2026 Chelsea Megan Woods. All Rights Reserved.
 # Owner: Chelsea Megan Woods | Woods AI Studio / Lyman Legacies
 #
-# Shared contract for every Saphira agent: anatomy, pillars, loop.
+# Shared contract for every Saphira agent: anatomy, pillars, loop + classification.
 
 from typing import Dict, Any, List, Optional
 from enum import Enum
@@ -35,7 +35,6 @@ class AgentPillars:
         ]
 
 
-# Canonical mapping: Saphira roster → taxonomy role
 SAPHIRA_ROLE_MAP = {
     "saphira": AgentRole.ORCHESTRATOR,
     "agent_zero": AgentRole.EXECUTION,
@@ -48,10 +47,10 @@ SAPHIRA_ROLE_MAP = {
 
 def describe_agent(name: str) -> Dict[str, Any]:
     role = SAPHIRA_ROLE_MAP.get(name, AgentRole.SPECIALIST)
-    return {
+    out: Dict[str, Any] = {
         "name": name,
         "role": role.value,
-        "model_vs_agent": "agent",  # all Saphira units are agents (model + loop)
+        "model_vs_agent": "agent",
         "pillars_required": AgentPillars.checklist(),
         "loop": [
             "observe",
@@ -64,6 +63,13 @@ def describe_agent(name: str) -> Dict[str, Any]:
         "owner": "Chelsea Megan Woods",
         "studio": "Woods AI Studio / Lyman Legacies",
     }
+    try:
+        from src.core.agent_classification import classify_core_agent
+
+        out["classification"] = classify_core_agent(name)
+    except Exception:
+        out["classification"] = None
+    return out
 
 
 def perception_pipeline_note() -> str:
