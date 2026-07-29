@@ -2,66 +2,50 @@
 **Copyright © 2026 Chelsea Megan Woods. All Rights Reserved.**  
 **Owner:** Chelsea Megan Woods | Woods AI Studio / Lyman Legacies
 
-There is no single universal count of autonomy levels. The number depends on the **framework**. Saphira uses a **3-level** operational safety model; industry standards use other scales for vehicles and software agents.
+## 1. Saphira — **3 Levels** (operational safety)
+
+| Level | Name | Behavior | Examples |
+|-------|------|----------|----------|
+| **L1** | Confirm First / Hard Gate | Draft/plan only until explicit human OK | Unlock, payment, send email, cold outreach, prod migrate |
+| **L2** | Supervised / Bounded | Auto within rules/sandbox; alert on changes | Sandbox code, UI draft, lights/scenes |
+| **L3** | Silent Background | No per-step prompt; notify on done/critical | Vector ingest, telemetry, context synthesis |
+
+Flutter: `lib/services/autonomy_gate.dart`  
+Python: `src/core/agent_classification.py`, `src/core/autonomy_levels.py`
+
+**Overlay rule:** Wake word may open the sheet; it must **not** auto-run L1 actions.
 
 ---
 
-## 1. Saphira Multi-Agent Architecture — **3 Levels**
+## 2. SAE J3016 — Level 4 vs Level 5 (vehicles)
 
-Designed for task safety and human-in-the-loop gating.
+| SAE Level | Meaning |
+|-----------|--------|
+| **4 High Automation** | System handles driving **without human** but **only inside** a defined operational design domain (geo, weather, mapped area). |
+| **5 Full Automation** | System handles **all** conditions, **everywhere** — human not expected as fallback. |
 
-| Level | Name | Behavior | Typical use in Saphira |
-|-------|------|----------|-------------------------|
-| **L1** | Confirm First / Hard Gate | Zero execution autonomy. Agent drafts or plans only; **explicit human approval** required before run. | Security, lock/unlock, payments, cold outreach, prod migrations |
-| **L2** | Supervised / Bounded | Runs automatically **inside preset rules or sandboxes**; alerts on material changes. | Coding in sandbox, UI drafts, smart-home adjustments, Lyra local render |
-| **L3** | Silent Background | Full background autonomy without per-step prompts; notify on completion or critical exception. | Memory/vector ingestion, telemetry indexing, Aura context synthesis, NovaReign/Aethrea equilibrium scoring |
+### Saphira mapping (analogy only)
 
-### Defaults (Woods AI Studio)
+- SAE 4 ≈ bounded high autonomy **inside** user policy (home, allowed scenes) → closest to **Saphira L2–L3 with rules**
+- SAE 5 ≈ unbounded physical autonomy → **not** a Saphira product goal
 
-- Sales email send, unlock, payment → **L1**
-- Agent Zero code in sandbox, Matter lights/scenes → **L2**
-- NovaAethrea history, Aura perception → **L3**
-
-Code: `src/core/agent_classification.py` (`AutonomyLevel`, `action_autonomy`, `requires_human_confirmation`).
+**Saphira L3 is not SAE Level 5.** Background software jobs ≠ full unsupervised control of locks, money, or production systems.
 
 ---
 
-## 2. Industry Standard Models
+## 3. Other software scales (reference)
 
-### Autonomous driving — SAE J3016 — **6 levels (0–5)**
+- OpenAI-style agent scales (~5 levels): bots → reasoners → multi-step agents → innovators → orgs
+- Bessemer-style (~7 levels L0–L6): prompts → agents managing agent teams
 
-| Level | Name | Summary |
-|-------|------|--------|
-| 0 | No Automation | Human does all the work |
-| 1 | Driver Assistance | Single feature help (e.g. adaptive cruise) |
-| 2 | Partial Automation | Steering + acceleration together; human monitors |
-| 3 | Conditional Automation | System drives in defined conditions; human ready to take over |
-| 4 | High Automation | No human intervention inside defined zones/ODD |
-| 5 | Full Automation | Self-driving under all conditions |
-
-### AI agent software scales — **5 to 7 levels**
-
-**OpenAI-style agent scale (5 levels, conceptual):**  
-L1 conversational bots → L2 reasoners → L3 multi-step executors → L4 innovators → L5 full organizations.
-
-**Bessemer-style AI scale (7 levels, L0–L6, conceptual):**  
-From simple prompt–response (L0) up to agents that manage entire teams of other agents (L6).
-
-These software scales measure **task complexity and delegation**, not the same as Saphira’s **safety gate** model.
+These measure **capability complexity**, not Saphira’s **safety gates**.
 
 ---
 
-## 3. Summary
+## 4. Summary
 
-| Context | Total levels | Range | Core focus |
-|---------|--------------|-------|------------|
-| **Saphira architecture** | **3** | L1–L3 | Operational safety & human-in-the-loop gating |
-| **SAE automotive** | **6** | 0–5 | Vehicle / road automation |
-| **General AI software scales** | **5–7** | L0/L1–L5/L6 | Task complexity, delegation, multi-agent coordination |
-
----
-
-## 4. Design rule for Saphira
-
-Map every **intent** to a Saphira L1/L2/L3 requirement.  
-Do not conflate SAE Level 4 “no human in the loop” with Saphira L3: Saphira L3 is still bounded by Agent Two, Nova Reign policy, and emergency lockdown. Irreversible real-world actions stay L1 unless the user has explicitly pre-authorized a narrow rule.
+| Framework | Levels | Focus |
+|-----------|--------|--------|
+| Saphira | L1–L3 | Human-in-the-loop safety |
+| SAE | 0–5 | Driving automation |
+| AI software scales | 5–7 | Task/delegation complexity |

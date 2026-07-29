@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (c) 2026 Chelsea Megan Woods. All Rights Reserved. -->
+<voice-interaction-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:sessionService="com.saphira.ai.SaphiraVoiceInteractionSessionService"
+    android:recognitionService="com.saphira.ai.SaphiraRecognitionService"
+    android:settingsActivity="com.saphira.ai.MainActivity"
+    android:supportsAssist="true"
+    android:supportsLaunchVoiceAssistFromKeyguard="true" />

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (c) 2026 Chelsea Megan Woods. All Rights Reserved. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:background="#0F0F14">
+
+    <TextView
+        android:id="@+id/saphira_widget_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Saphira"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/saphira_widget_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tap to talk"
+        android:textColor="#B0B0B0"
+        android:textSize="12sp" />
+</LinearLayout>

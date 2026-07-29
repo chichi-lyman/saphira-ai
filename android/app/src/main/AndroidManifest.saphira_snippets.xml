@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copyright (c) 2026 Chelsea Megan Woods. All Rights Reserved.
+  Merge these permissions and service into your real AndroidManifest.xml
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+
+    <application>
+        <service
+            android:name=".SaphiraVoiceInteractionService"
+            android:label="Saphira AI"
+            android:permission="android.permission.BIND_VOICE_INTERACTION"
+            android:exported="true">
+            <meta-data
+                android:name="android.voice_interaction"
+                android:resource="@xml/voice_interaction_service" />
+            <intent-filter>
+                <action android:name="android.service.voice.VoiceInteractionService" />
+            </intent-filter>
+        </service>
+
+        <receiver
+            android:name=".SaphiraWidgetProvider"
+            android:exported="true"
+            android:label="Saphira">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/saphira_widget_info" />
+        </receiver>
+    </application>
+</manifest>
