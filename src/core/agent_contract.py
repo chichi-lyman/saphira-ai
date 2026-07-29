@@ -1,9 +1,9 @@
 # Copyright (c) 2026 Chelsea Megan Woods. All Rights Reserved.
 # Owner: Chelsea Megan Woods | Woods AI Studio / Lyman Legacies
 #
-# Shared contract for every Saphira agent: anatomy, pillars, loop + classification.
+# Shared contract: anatomy, pillars, loop + Nova ecosystem classification
 
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from enum import Enum
 
 
@@ -15,11 +15,10 @@ class AgentRole(str, Enum):
     GOVERNANCE = "governance"
     MEMORY = "memory"
     SPECIALIST = "specialist"
+    CREATIVE = "creative"
 
 
 class AgentPillars:
-    """The four structural pillars required for continuous operation."""
-
     COMPUTE = "compute"
     MEMORY = "memory"
     TOOLS = "tools"
@@ -42,6 +41,7 @@ SAPHIRA_ROLE_MAP = {
     "aura": AgentRole.PERCEPTION,
     "nova_reign": AgentRole.GOVERNANCE,
     "nova_aethrea": AgentRole.MEMORY,
+    "lyra": AgentRole.CREATIVE,
 }
 
 
@@ -77,3 +77,16 @@ def perception_pipeline_note() -> str:
         "Raw input → tokenize/encode → embeddings → reason over goals. "
         "No biological emotion; optimization via task success + safety constraints."
     )
+
+
+def full_ecosystem() -> List[Dict[str, Any]]:
+    names = [
+        "saphira",
+        "nova_reign",
+        "nova_aethrea",
+        "aura",
+        "agent_zero",
+        "agent_two",
+        "lyra",
+    ]
+    return [describe_agent(n) for n in names]
