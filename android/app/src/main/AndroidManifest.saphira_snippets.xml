@@ -1,15 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   Copyright (c) 2026 Chelsea Megan Woods. All Rights Reserved.
-  Merge these permissions and service into your real AndroidManifest.xml
+  Merge into android/app/src/main/AndroidManifest.xml inside <manifest> / <application>.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
+        android:minSdkVersion="30" />
 
     <application>
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:theme="@style/LaunchTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="com.saphira.ai.ACTION_ASSISTANT_INVOKED" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
         <service
             android:name=".SaphiraVoiceInteractionService"
             android:label="Saphira AI"
@@ -23,6 +42,20 @@
             </intent-filter>
         </service>
 
+        <service
+            android:name=".SaphiraVoiceInteractionSessionService"
+            android:permission="android.permission.BIND_VOICE_INTERACTION"
+            android:exported="true" />
+
+        <service
+            android:name=".SaphiraRecognitionService"
+            android:permission="android.permission.BIND_RECOGNITION_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.speech.RecognitionService" />
+            </intent-filter>
+        </service>
+
         <receiver
             android:name=".SaphiraWidgetProvider"
             android:exported="true"
@@ -30,9 +63,7 @@
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/saphira_widget_info" />
         </receiver>
+
     </application>
 </manifest>
