@@ -1,7 +1,7 @@
 # Copyright (c) 2026 Chelsea Megan Woods. All Rights Reserved.
 # Owner & Creator: Chelsea Megan Woods | Woods AI Studio / Lyman Legacies
 #
-# Six Core Agents — Fully Expanded
+# Six Core Agents — aligned with AI/Agent anatomy & taxonomy
 # Saphira | Agent Zero | Agent Two | Aura | Nova Reign | NovaAethrea
 
 from typing import Dict, Any, List, Optional
@@ -9,21 +9,39 @@ import logging
 import traceback
 import asyncio
 import re
+
 from src.connectors.matter_home_assistant import matter_ha
 from src.memory.persistent_store import persistent_memory
+from src.core.agent_contract import (
+    AgentRole,
+    SAPHIRA_ROLE_MAP,
+    describe_agent,
+    perception_pipeline_note,
+    AgentPillars,
+)
 
 logger = logging.getLogger("SaphiraCoreAgents")
 
 
 class SelfHealingAgent:
+    """Base actor loop: observe → plan → act → verify → recover."""
+
     name = "base"
+    role = AgentRole.SPECIALIST
     max_retries = 3
+
+    def identity(self) -> Dict[str, Any]:
+        return describe_agent(self.name)
 
     async def safe_run(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         last_error = None
         for attempt in range(1, self.max_retries + 1):
             try:
-                return await self.run(payload)
+                result = await self.run(payload)
+                result.setdefault("agent", self.name)
+                result.setdefault("role", self.role.value if hasattr(self.role, "value") else str(self.role))
+                result.setdefault("pillars", AgentPillars.checklist())
+                return result
             except Exception as e:
                 last_error = e
                 logger.warning(f"{self.name} attempt {attempt} failed: {e}")
@@ -31,8 +49,10 @@ class SelfHealingAgent:
         return {
             "status": "recovered_from_failure",
             "agent": self.name,
+            "role": self.role.value if hasattr(self.role, "value") else str(self.role),
             "error": str(last_error),
             "message": f"{self.name} recovered after failures.",
+            "pillars": AgentPillars.checklist(),
         }
 
     async def run(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -40,10 +60,11 @@ class SelfHealingAgent:
 
 
 # ---------------------------------------------------------------------------
-# 1. Saphira — NLP + Intent
+# 1. Saphira — Orchestrator
 # ---------------------------------------------------------------------------
 class SaphiraCore(SelfHealingAgent):
     name = "saphira"
+    role = AgentRole.ORCHESTRATOR
 
     VOICE_PATTERNS = [
         (r"\b(turn on|switch on|lights? on)\b", "turn_on"),
@@ -75,9 +96,12 @@ class SaphiraCore(SelfHealingAgent):
         return {
             "status": "success",
             "agent": "saphira",
+            "role": self.role.value,
             "parsed_intent": parsed,
             "payload": {**payload, **parsed},
-            "message": "Intent parsed.",
+            "message": "Orchestrator: intent parsed; ready to delegate.",
+            "next_agents": ["aura", "agent_two", "nova_reign", "nova_aethrea", "agent_zero"],
+            "identity": self.identity(),
         }
 
 
@@ -86,6 +110,7 @@ class SaphiraCore(SelfHealingAgent):
 # ---------------------------------------------------------------------------
 class AgentZero(SelfHealingAgent):
     name = "agent_zero"
+    role = AgentRole.EXECUTION
 
     def __init__(self, router=None):
         self.router = router
@@ -96,21 +121,44 @@ class AgentZero(SelfHealingAgent):
         params = payload.get("params", {})
 
         if intent == "activate_scene":
-            return {"status": "delegated", "agent": "agent_zero", "message": "Scenes handled by NovaAethrea."}
+            return {
+                "status": "delegated",
+                "agent": "agent_zero",
+                "role": self.role.value,
+                "message": "Scenes handled by NovaAethrea then executed here as steps.",
+            }
 
-        if intent in ("turn_on", "turn_off", "toggle", "set_brightness",
-                      "set_temperature", "lock", "unlock", "set_cover", "matter"):
+        if intent in (
+            "turn_on", "turn_off", "toggle", "set_brightness", "set_color",
+            "set_temperature", "set_hvac_mode", "lock", "unlock",
+            "set_cover", "open_cover", "close_cover",
+            "media_play", "media_pause", "media_stop", "media_volume",
+            "fan_percentage", "fan_preset", "activate_scene", "matter",
+        ):
             result = self.matter.execute_intent(intent, params)
-            return {"status": result.get("status", "unknown"), "agent": "agent_zero", "intent": intent, "result": result}
+            return {
+                "status": result.get("status", "unknown"),
+                "agent": "agent_zero",
+                "role": self.role.value,
+                "intent": intent,
+                "result": result,
+            }
 
-        return {"status": "accepted", "agent": "agent_zero", "message": f"Received: {intent}", "params": params}
+        return {
+            "status": "accepted",
+            "agent": "agent_zero",
+            "role": self.role.value,
+            "message": f"Execution request received: {intent}",
+            "params": params,
+        }
 
 
 # ---------------------------------------------------------------------------
-# 3. Agent Two — Security
+# 3. Agent Two — Auditor / Security
 # ---------------------------------------------------------------------------
 class AgentTwo(SelfHealingAgent):
     name = "agent_two"
+    role = AgentRole.AUDITOR
     SENSITIVE = {"unlock", "lock"}
 
     def __init__(self, router=None):
@@ -123,17 +171,25 @@ class AgentTwo(SelfHealingAgent):
             return {
                 "status": "blocked",
                 "agent": "agent_two",
-                "message": f"Security: '{intent}' needs explicit confirmation.",
+                "role": self.role.value,
+                "message": f"Auditor: '{intent}' requires explicit confirmation.",
                 "requires_confirmation": True,
             }
-        return {"status": "cleared", "agent": "agent_two", "intent": intent}
+        return {
+            "status": "cleared",
+            "agent": "agent_two",
+            "role": self.role.value,
+            "intent": intent,
+            "message": "Auditor: security check passed.",
+        }
 
 
 # ---------------------------------------------------------------------------
-# 4. Aura — Full Perception (expanded)
+# 4. Aura — Perception
 # ---------------------------------------------------------------------------
 class Aura(SelfHealingAgent):
     name = "aura"
+    role = AgentRole.PERCEPTION
 
     ROOM_ENTITIES = {
         "living": ["light.living_room", "media_player.living_room", "cover.living_blinds"],
@@ -152,14 +208,14 @@ class Aura(SelfHealingAgent):
         room = context.get("room") or self._detect_room(text)
         vision = payload.get("vision") or context.get("vision")
 
-        suggested = self._suggest_entities(room, text)
-
         return {
             "status": "success",
             "agent": "aura",
+            "role": self.role.value,
             "room": room,
             "vision_summary": vision or "No visual input.",
-            "suggested_entities": suggested,
+            "suggested_entities": self._suggest_entities(room, text),
+            "perception_note": perception_pipeline_note(),
             "message": "Perception complete.",
         }
 
@@ -172,7 +228,6 @@ class Aura(SelfHealingAgent):
     def _suggest_entities(self, room: Optional[str], text: str) -> List[str]:
         if room and room in self.ROOM_ENTITIES:
             return self.ROOM_ENTITIES[room]
-        # fallback keyword scan
         for room, entities in self.ROOM_ENTITIES.items():
             if room in text:
                 return entities
@@ -184,10 +239,13 @@ class Aura(SelfHealingAgent):
 # ---------------------------------------------------------------------------
 class NovaReign(SelfHealingAgent):
     name = "nova_reign"
+    role = AgentRole.GOVERNANCE
     ALLOWED = {
-        "turn_on", "turn_off", "toggle", "set_brightness",
-        "set_temperature", "lock", "unlock", "set_cover",
-        "activate_scene", "general", "matter",
+        "turn_on", "turn_off", "toggle", "set_brightness", "set_color",
+        "set_temperature", "set_hvac_mode", "lock", "unlock",
+        "set_cover", "open_cover", "close_cover",
+        "media_play", "media_pause", "media_stop", "media_volume",
+        "fan_percentage", "fan_preset", "activate_scene", "general", "matter",
     }
 
     def __init__(self, router=None):
@@ -199,16 +257,24 @@ class NovaReign(SelfHealingAgent):
             return {
                 "status": "rejected",
                 "agent": "nova_reign",
-                "message": f"Policy: intent '{intent}' not allowed.",
+                "role": self.role.value,
+                "message": f"Governance: intent '{intent}' not allowed.",
             }
-        return {"status": "approved", "agent": "nova_reign", "intent": intent}
+        return {
+            "status": "approved",
+            "agent": "nova_reign",
+            "role": self.role.value,
+            "intent": intent,
+            "message": "Governance: policy check passed.",
+        }
 
 
 # ---------------------------------------------------------------------------
-# 6. NovaAethrea — Persistent Memory + Scenes
+# 6. NovaAethrea — Memory
 # ---------------------------------------------------------------------------
 class NovaAethrea(SelfHealingAgent):
     name = "nova_aethrea"
+    role = AgentRole.MEMORY
 
     DEFAULT_SCENES = {
         "evening": [
@@ -235,21 +301,20 @@ class NovaAethrea(SelfHealingAgent):
     def __init__(self, router=None):
         self.router = router
         self.store = persistent_memory
-        # seed default scenes if missing
         for name, steps in self.DEFAULT_SCENES.items():
             if not self.store.get_scene(name):
                 self.store.save_scene(name, steps)
 
     async def run(self, payload: Dict[str, Any]) -> Dict[str, Any]:
-        # Write fact / preference
         if payload.get("memory_key") and payload.get("memory_value") is not None:
             self.store.set_fact(payload["memory_key"], payload["memory_value"])
-            return {"status": "stored", "agent": "nova_aethrea", "key": payload["memory_key"]}
+            return {"status": "stored", "agent": "nova_aethrea", "role": self.role.value, "key": payload["memory_key"]}
 
         if payload.get("memory_key"):
             return {
                 "status": "retrieved",
                 "agent": "nova_aethrea",
+                "role": self.role.value,
                 "key": payload["memory_key"],
                 "value": self.store.get_fact(payload["memory_key"]),
             }
@@ -274,16 +339,19 @@ class NovaAethrea(SelfHealingAgent):
             return {
                 "status": "scene_ready",
                 "agent": "nova_aethrea",
+                "role": self.role.value,
                 "scene": scene_name,
                 "steps": steps,
-                "message": f"Scene '{scene_name}' ready ({len(steps)} steps).",
+                "message": f"Memory: scene '{scene_name}' ready ({len(steps)} steps).",
             }
 
         return {
             "status": "ok",
             "agent": "nova_aethrea",
+            "role": self.role.value,
             "available_scenes": list(self.DEFAULT_SCENES.keys()),
             "recent_history": self.store.get_history(5),
+            "message": "Long-term memory online.",
         }
 
 
@@ -295,3 +363,7 @@ CORE_AGENTS = {
     "nova_reign": NovaReign,
     "nova_aethrea": NovaAethrea,
 }
+
+
+def all_agent_identities() -> Dict[str, Any]:
+    return {name: describe_agent(name) for name in CORE_AGENTS}
