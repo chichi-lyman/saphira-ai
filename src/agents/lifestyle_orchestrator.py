@@ -3,6 +3,8 @@
 
 from typing import Dict, Any
 from src.agents.biometric_stress import BiometricStressDetector
+from src.integrations.wearable_connector import wearable_connector
+
 
 class LifestyleOrchestratorAgent:
     def __init__(self, router):
@@ -11,12 +13,11 @@ class LifestyleOrchestratorAgent:
 
     async def run(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         calendar = payload.get("calendar", [])
-        biometrics = payload.get("biometrics", {})
-        
-        # Estimate stress and adapt tone
+        biometrics = payload.get("biometrics") or wearable_connector.fetch_live_biometrics()
+
         stress_level = self.stress_detector.estimate_stress(biometrics)
         tone_instruction = self.stress_detector.adapt_agent_tone(stress_level)
-        
+
         prompt = f"""You are Saphira's Adaptive Lifestyle Orchestrator.
 Tone guidance: {tone_instruction}
 Calendar: {calendar}
@@ -28,12 +29,13 @@ Generate a realistic daily adjustment plan:
 - Meal suggestion based on available time/energy
 - Sleep window recommendation
 Make it 1% better and sustainable. Keep responses concise when stress is high."""
-        
+
         result = await self.router.generate_response(prompt)
         return {
             "status": "success",
             "agent": "lifestyle_orchestrator",
             "stress_level": stress_level,
             "plan": result,
-            "category": "wellness"
+            "category": "wellness",
+            "biometrics_source": biometrics.get("source"),
         }

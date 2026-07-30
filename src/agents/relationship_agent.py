@@ -3,6 +3,8 @@
 
 from typing import Dict, Any
 from src.agents.biometric_stress import BiometricStressDetector
+from src.integrations.wearable_connector import wearable_connector
+
 
 class RelationshipAgent:
     def __init__(self, router):
@@ -12,11 +14,11 @@ class RelationshipAgent:
     async def run(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         people = payload.get("people", [])
         context = payload.get("context", "")
-        biometrics = payload.get("biometrics", {})
-        
+        biometrics = payload.get("biometrics") or wearable_connector.fetch_live_biometrics()
+
         stress_level = self.stress_detector.estimate_stress(biometrics)
         tone_instruction = self.stress_detector.adapt_agent_tone(stress_level)
-        
+
         prompt = f"""You are Saphira's Relationship Continuity Agent.
 Tone guidance: {tone_instruction}
 People: {people}
@@ -29,12 +31,13 @@ Suggest:
 - Simple coordination for gatherings
 
 When the user is under high stress, prioritize low-effort actions that still maintain connection."""
-        
+
         result = await self.router.generate_response(prompt)
         return {
             "status": "success",
             "agent": "relationship",
             "stress_level": stress_level,
             "suggestions": result,
-            "category": "relationships"
+            "category": "relationships",
+            "biometrics_source": biometrics.get("source"),
         }
