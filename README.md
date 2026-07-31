@@ -1,5 +1,5 @@
-"""© 2026 Chelsea Megan Woods. All rights reserved.
-Licensed under the terms specified in the repository."""
+© 2026 Chelsea Megan Woods. All rights reserved.
+Licensed under the terms specified in the repository.
 
 
 ---
