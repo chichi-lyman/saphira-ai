@@ -10,12 +10,11 @@ from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
 from src.core.orchestrator import SaphiraOrchestrator
-from src.core.saphira_translator import SaphiraTranslator
+from src.core.saphira_translator import public_reply
 from src.avatar.grok_avatar_service import avatar_service
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 _orchestrator = SaphiraOrchestrator()
-_translator = SaphiraTranslator()
 
 
 class ChatRequest(BaseModel):
@@ -41,10 +40,7 @@ async def chat(req: ChatRequest) -> Dict[str, Any]:
     avatar_state = result.get("avatar_state", "talking")
 
     # Warm public-facing line (never expose agent names)
-    try:
-        public_message = _translator.to_public(final)
-    except Exception:
-        public_message = final.get("message") or "I heard you — working on it."
+    public_message = public_reply(req.message, final)
 
     # Optional: refresh avatar still for this state (stub-safe without API key)
     frame = avatar_service.generate_frame(state=avatar_state)

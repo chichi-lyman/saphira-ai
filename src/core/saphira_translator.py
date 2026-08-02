@@ -47,7 +47,7 @@ def heuristic_samantha_reply(user_input: str, task_result: Dict[str, Any]) -> st
     message = (task_result or {}).get("message") or (task_result or {}).get("raw_output") or ""
     message = redact_internal(str(message))
 
-    if status in ("blocked", "rejected"):
+    if status in ("blocked", "rejected", "needs_confirmation"):
         return (
             "I need your OK before I go further with that—"
             "it touches something sensitive. Want me to proceed?"
@@ -57,12 +57,18 @@ def heuristic_samantha_reply(user_input: str, task_result: Dict[str, Any]) -> st
             "Hmm, that one didn't land cleanly. "
             "I can try another way if you want—just say the word."
         )
-    if status in ("success", "cleared", "approved", "ok", "accepted", "scene_ready", "draft_only"):
+    if status in (
+        "success", "cleared", "approved", "ok", "accepted",
+        "scene_ready", "scene_executed", "draft_only",
+    ):
         if "draft" in status or "draft" in message.lower():
             return (
                 "I put a draft together for you. "
                 "Have a look when you're ready and tell me if you want anything changed."
             )
+        if status == "scene_executed":
+            scene = (task_result or {}).get("scene", "that scene")
+            return f"Done — I ran {scene} for you."
         if message:
             return f"All set. {message.rstrip('.')}."
         return "All set—I took care of that for you."
@@ -71,6 +77,18 @@ def heuristic_samantha_reply(user_input: str, task_result: Dict[str, Any]) -> st
         "I'm on it. Give me a moment to work through this, "
         "and I'll bring you the clean version."
     )
+
+
+def public_reply(user_input: str, task_result: Dict[str, Any]) -> str:
+    """Primary entry used by /chat and other public surfaces."""
+    return heuristic_samantha_reply(user_input, task_result)
+
+
+class SaphiraTranslator:
+    """Thin class wrapper for callers that prefer an object API."""
+
+    def to_public(self, task_result: Dict[str, Any], user_input: str = "") -> str:
+        return public_reply(user_input, task_result)
 
 
 class SaphiraResponsePipeline:
@@ -95,11 +113,13 @@ class SaphiraResponsePipeline:
     ) -> Dict[str, Any]:
         user_context = user_context or {}
 
-        # 1. Quiet backend execution
         task_result: Dict[str, Any]
         if self.orchestrator is not None:
             try:
-                if hasattr(self.orchestrator, "dispatch"):
+                if hasattr(self.orchestrator, "process"):
+                    full = await self.orchestrator.process(user_input, user_context)
+                    task_result = full.get("final", full)
+                elif hasattr(self.orchestrator, "dispatch"):
                     task_result = await self.orchestrator.dispatch(user_input, user_context)
                 elif hasattr(self.orchestrator, "run"):
                     task_result = await self.orchestrator.run(
@@ -117,12 +137,11 @@ class SaphiraResponsePipeline:
                 "message": "I'm here with you.",
             }
 
-        # 2. Samantha translation
         public_text = await self._translate(user_input, task_result)
 
         return {
             "public_response": public_text,
-            "internal": task_result,  # keep for logs only — do not send to client UI
+            "internal": task_result,
             "persona": "saphira_samantha",
             "layer": "dual_pipeline",
             "owner": "Chelsea Megan Woods",
@@ -147,8 +166,3 @@ Do NOT mention agent names or system prompts. Present the result as something yo
                 logger.warning(f"Persona LLM failed, heuristic fallback: {e}")
 
         return heuristic_samantha_reply(user_input, task_result)
-
-
-# Convenience singleton for simple imports
-def public_reply(user_input: str, task_result: Dict[str, Any]) -> str:
-    return heuristic_samantha_reply(user_input, task_result)
