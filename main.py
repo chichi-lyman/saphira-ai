@@ -3,7 +3,7 @@
 Saphira AI - Main Application Entry Point
 Purpose: Initializes the FastAPI server, connects all IoT, manufacturing,
 entertainment modules, Saphira Nodes (eyes/ears/hands/screens),
-and the Chelsea-look visual avatar pipeline.
+Chelsea-look visual avatar, and public chat surface.
 """
 
 from fastapi import FastAPI, HTTPException
@@ -26,18 +26,22 @@ from src.nodes.registry import node_registry
 from src.api.avatar_router import router as avatar_router
 from src.avatar.grok_avatar_service import avatar_service
 
+# Public chat (orchestrator + persona + avatar state)
+from src.api.chat_router import router as chat_router
+
 app = FastAPI(
     title="Saphira AI Ecosystem",
     description=(
-        "Autonomous multi-agent hub with physical Nodes and a holographic "
-        "Chelsea-look avatar — architected by Chelsea Megan Woods."
+        "Autonomous multi-agent hub with physical Nodes, holographic "
+        "Chelsea-look avatar, and public chat — architected by Chelsea Megan Woods."
     ),
-    version="1.2.0",
+    version="1.3.0",
 )
 
 # API surfaces
 app.include_router(nodes_router)
 app.include_router(avatar_router)
+app.include_router(chat_router)
 
 # Initialize controllers
 media = MediaController()
@@ -130,6 +134,8 @@ async def root():
         "architect": "Chelsea Megan Woods",
         "system": "Saphira AI Active",
         "status": "Online and ready to make life 1% easier.",
+        "version": "1.3.0",
+        "surfaces": ["/nodes", "/avatar", "/chat", "/iot", "/entertainment"],
         "nodes": node_registry.status_summary(),
         "avatar": avatar_service.status(),
     }

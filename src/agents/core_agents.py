@@ -3,6 +3,7 @@
 #
 # Six Core Agents — aligned with AI/Agent anatomy & taxonomy
 # Saphira | Agent Zero | Agent Two | Aura | Nova Reign | NovaAethrea
+# Agent Zero also routes node invokes (code / canvas / camera / system).
 
 from typing import Dict, Any, List, Optional
 import logging
@@ -21,6 +22,13 @@ from src.core.agent_contract import (
 )
 
 logger = logging.getLogger("SaphiraCoreAgents")
+
+# Node-related intents Agent Zero can dispatch
+NODE_INTENTS = {
+    "node_code", "node_exec", "node_test", "node_pr", "node_env",
+    "node_canvas", "node_dashboard", "node_camera", "node_snap",
+    "node_notify", "node_media_viz", "node_media_video",
+}
 
 
 class SelfHealingAgent:
@@ -75,6 +83,14 @@ class SaphiraCore(SelfHealingAgent):
         (r"\b(unlock (the )?(front )?door)\b", "unlock"),
         (r"\b(close (the )?(blinds|shades)|open (the )?(blinds|shades))\b", "set_cover"),
         (r"\b(good night|evening scene|movie mode|i'?m home|i am home)\b", "activate_scene"),
+        # Node / physical agency patterns
+        (r"\b(take a (photo|picture|selfie)|snap (a )?(photo|pic)|camera)\b", "node_snap"),
+        (r"\b(show (me )?(a )?dashboard|mission control|visual briefing)\b", "node_dashboard"),
+        (r"\b(run (the )?tests?|pytest|test suite)\b", "node_test"),
+        (r"\b(open (a )?pr|pull request|push (the )?code)\b", "node_pr"),
+        (r"\b(spin up|create).*(env|environment|postgres|redis)\b", "node_env"),
+        (r"\b(render|animate).*(chart|graph|viz)\b", "node_media_viz"),
+        (r"\b(make|render).*(intro|video clip)\b", "node_media_video"),
     ]
 
     def __init__(self, router=None):
@@ -106,7 +122,7 @@ class SaphiraCore(SelfHealingAgent):
 
 
 # ---------------------------------------------------------------------------
-# 2. Agent Zero — Execution
+# 2. Agent Zero — Execution (+ Nodes)
 # ---------------------------------------------------------------------------
 class AgentZero(SelfHealingAgent):
     name = "agent_zero"
@@ -115,6 +131,15 @@ class AgentZero(SelfHealingAgent):
     def __init__(self, router=None):
         self.router = router
         self.matter = matter_ha
+
+    async def _invoke_node(self, command: str, params: Optional[Dict[str, Any]] = None,
+                           preferred_type: Optional[str] = None) -> Dict[str, Any]:
+        try:
+            from src.nodes.invoke import node_invoker
+            return await node_invoker.invoke_any(command, params or {}, preferred_type=preferred_type)
+        except Exception as e:
+            logger.warning("Node invoke failed: %s", e)
+            return {"status": "error", "error": str(e), "command": command}
 
     async def run(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         intent = payload.get("intent") or payload.get("action", "")
@@ -128,6 +153,68 @@ class AgentZero(SelfHealingAgent):
                 "message": "Scenes handled by NovaAethrea then executed here as steps.",
             }
 
+        # --- Node surfaces ---
+        if intent == "node_snap":
+            result = await self._invoke_node("camera.snap", {"facing": params.get("facing", "front")}, "mobile_android")
+            return {"status": result.get("status", "ok"), "agent": "agent_zero", "role": self.role.value,
+                    "intent": intent, "node_result": result, "message": "Camera snap requested on a capable node."}
+
+        if intent == "node_dashboard":
+            result = await self._invoke_node(
+                "canvas.dashboard",
+                {"title": params.get("title", "Saphira Mission Control"),
+                 "sources": params.get("sources", ["calendar", "notion", "todos"])},
+                "canvas",
+            )
+            return {"status": result.get("status", "ok"), "agent": "agent_zero", "role": self.role.value,
+                    "intent": intent, "node_result": result}
+
+        if intent == "node_test":
+            result = await self._invoke_node("code.test", {"suite": params.get("suite", "pytest")}, "headless")
+            return {"status": result.get("status", "ok"), "agent": "agent_zero", "role": self.role.value,
+                    "intent": intent, "node_result": result}
+
+        if intent == "node_pr":
+            result = await self._invoke_node(
+                "code.pr",
+                {"title": params.get("title", "Saphira automated PR"),
+                 "branch": params.get("branch", "saphira/auto")},
+                "headless",
+            )
+            return {"status": result.get("status", "ok"), "agent": "agent_zero", "role": self.role.value,
+                    "intent": intent, "node_result": result}
+
+        if intent == "node_env":
+            result = await self._invoke_node(
+                "code.env",
+                {"name": params.get("name", "saphira-dev"),
+                 "services": params.get("services", ["postgres", "redis"])},
+                "headless",
+            )
+            return {"status": result.get("status", "ok"), "agent": "agent_zero", "role": self.role.value,
+                    "intent": intent, "node_result": result}
+
+        if intent == "node_media_viz":
+            result = await self._invoke_node(
+                "media.viz",
+                {"type": params.get("type", "bar"), "title": params.get("title", "Saphira Viz"),
+                 "data": params.get("data", [])},
+                "media",
+            )
+            return {"status": result.get("status", "ok"), "agent": "agent_zero", "role": self.role.value,
+                    "intent": intent, "node_result": result}
+
+        if intent == "node_media_video":
+            result = await self._invoke_node(
+                "media.video",
+                {"text": params.get("text", "Saphira"), "duration_sec": params.get("duration_sec", 5),
+                 "style": params.get("style", "gradient_fade")},
+                "media",
+            )
+            return {"status": result.get("status", "ok"), "agent": "agent_zero", "role": self.role.value,
+                    "intent": intent, "node_result": result}
+
+        # --- Matter / HA ---
         if intent in (
             "turn_on", "turn_off", "toggle", "set_brightness", "set_color",
             "set_temperature", "set_hvac_mode", "lock", "unlock",
@@ -159,7 +246,7 @@ class AgentZero(SelfHealingAgent):
 class AgentTwo(SelfHealingAgent):
     name = "agent_two"
     role = AgentRole.AUDITOR
-    SENSITIVE = {"unlock", "lock"}
+    SENSITIVE = {"unlock", "lock", "node_pr", "system.sms"}
 
     def __init__(self, router=None):
         self.router = router
@@ -246,6 +333,10 @@ class NovaReign(SelfHealingAgent):
         "set_cover", "open_cover", "close_cover",
         "media_play", "media_pause", "media_stop", "media_volume",
         "fan_percentage", "fan_preset", "activate_scene", "general", "matter",
+        # Node intents
+        "node_snap", "node_dashboard", "node_test", "node_pr", "node_env",
+        "node_media_viz", "node_media_video", "node_code", "node_exec",
+        "node_canvas", "node_camera", "node_notify",
     }
 
     def __init__(self, router=None):

@@ -3,6 +3,8 @@
 #
 # Full Orchestrator Chain for the Six Core Agents
 # Saphira → Aura → Agent Two → Nova Reign → NovaAethrea → Agent Zero
+# + Avatar state hints for the holographic Chelsea-look UI
+# + Optional Node invokes (code / canvas / camera)
 
 from typing import Dict, Any, List, Optional
 import logging
@@ -18,6 +20,22 @@ from src.agents.core_agents import (
 logger = logging.getLogger("SaphiraOrchestrator")
 
 
+def _avatar_state_for(final: Dict[str, Any], intent: str = "general") -> str:
+    """Map pipeline outcome → SaphiraAvatarView state."""
+    status = final.get("status", "")
+    if status == "needs_confirmation":
+        return "confirm"
+    if status in ("blocked", "rejected"):
+        return "thinking"
+    if status == "scene_executed":
+        return "glow"
+    if intent in ("general",) or status == "success":
+        return "talking"
+    if intent not in ("general", "activate_scene"):
+        return "talking"
+    return "idle"
+
+
 class SaphiraOrchestrator:
     """
     Runs the complete multi-agent pipeline:
@@ -27,7 +45,7 @@ class SaphiraOrchestrator:
     3. Agent Two   – security gate
     4. Nova Reign  – governance / policy
     5. NovaAethrea – memory + scene expansion
-    6. Agent Zero  – final execution (Matter / HA / system)
+    6. Agent Zero  – final execution (Matter / HA / system / nodes)
     """
 
     def __init__(self, router=None):
@@ -50,7 +68,7 @@ class SaphiraOrchestrator:
         })
         trace.append(saphira_result)
         if saphira_result.get("status") not in ("success", "recovered_from_failure"):
-            return self._finalize(trace, saphira_result)
+            return self._finalize(trace, saphira_result, intent="general")
 
         payload = saphira_result.get("payload", {"text": user_input})
         intent = payload.get("intent") or saphira_result.get("parsed_intent", {}).get("intent", "general")
@@ -63,7 +81,6 @@ class SaphiraOrchestrator:
         })
         trace.append(aura_result)
 
-        # Enrich params with Aura's suggested entities if missing
         params = payload.get("params", {})
         if not params.get("entity_id") and aura_result.get("suggested_entities"):
             params["entity_id"] = aura_result["suggested_entities"][0]
@@ -81,7 +98,7 @@ class SaphiraOrchestrator:
                 "status": "needs_confirmation",
                 "message": security_result.get("message"),
                 "intent": intent,
-            })
+            }, intent=intent)
 
         # ---- 4. Nova Reign: governance ----
         governance_result = await self.nova_reign.safe_run({
@@ -90,7 +107,7 @@ class SaphiraOrchestrator:
         })
         trace.append(governance_result)
         if governance_result.get("status") == "rejected":
-            return self._finalize(trace, governance_result)
+            return self._finalize(trace, governance_result, intent=intent)
 
         # ---- 5. NovaAethrea: memory + scenes ----
         memory_result = await self.nova_aethrea.safe_run({
@@ -100,14 +117,13 @@ class SaphiraOrchestrator:
         })
         trace.append(memory_result)
 
-        # If a scene was prepared, execute each step through Agent Zero
         if memory_result.get("status") == "scene_ready":
             step_results = []
             for step in memory_result.get("steps", []):
                 step_payload = {
                     "intent": step["intent"],
                     "params": step.get("params", {}),
-                    "confirmed": True,  # scene steps already approved upstream
+                    "confirmed": True,
                 }
                 exec_result = await self.agent_zero.safe_run(step_payload)
                 step_results.append(exec_result)
@@ -116,9 +132,9 @@ class SaphiraOrchestrator:
                 "scene": memory_result.get("scene"),
                 "steps": step_results,
                 "message": f"Scene '{memory_result.get('scene')}' completed.",
-            })
+            }, intent=intent)
 
-        # ---- 6. Agent Zero: single action execution ----
+        # ---- 6. Agent Zero: single action / node execution ----
         if intent not in ("general", "activate_scene"):
             exec_result = await self.agent_zero.safe_run({
                 **payload,
@@ -126,19 +142,26 @@ class SaphiraOrchestrator:
                 "params": params,
             })
             trace.append(exec_result)
-            return self._finalize(trace, exec_result)
+            return self._finalize(trace, exec_result, intent=intent)
 
-        # Pure conversational / memory response
         return self._finalize(trace, {
             "status": "success",
             "message": "Request processed. No device action required.",
             "intent": intent,
             "memory": memory_result,
-        })
+        }, intent=intent)
 
-    def _finalize(self, trace: List[Dict[str, Any]], final: Dict[str, Any]) -> Dict[str, Any]:
+    def _finalize(
+        self,
+        trace: List[Dict[str, Any]],
+        final: Dict[str, Any],
+        intent: str = "general",
+    ) -> Dict[str, Any]:
+        avatar_state = _avatar_state_for(final, intent)
         return {
             "final": final,
             "trace": trace,
             "agents_involved": [t.get("agent") for t in trace if t.get("agent")],
+            "avatar_state": avatar_state,
+            "owner": "Chelsea Megan Woods",
         }
