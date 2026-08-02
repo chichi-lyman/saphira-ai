@@ -2,8 +2,8 @@
 © 2026 Chelsea Megan Woods. All rights reserved.
 Saphira AI - Main Application Entry Point
 Purpose: Initializes the FastAPI server, connects all IoT, manufacturing,
-entertainment modules, and Saphira Nodes (eyes/ears/hands/screens),
-and serves as the central command hub for Saphira.
+entertainment modules, Saphira Nodes (eyes/ears/hands/screens),
+and the Chelsea-look visual avatar pipeline.
 """
 
 from fastapi import FastAPI, HTTPException
@@ -22,17 +22,22 @@ from saphira.entertainment.companion_hub import CompanionHub
 from src.api.nodes_router import router as nodes_router
 from src.nodes.registry import node_registry
 
+# Saphira Visual Avatar — Chelsea Megan Woods likeness via Grok Imagine
+from src.api.avatar_router import router as avatar_router
+from src.avatar.grok_avatar_service import avatar_service
+
 app = FastAPI(
     title="Saphira AI Ecosystem",
     description=(
-        "Autonomous multi-agent and IoT control hub with physical Nodes "
-        "(code, canvas, media, mobile) — architected by Chelsea Megan Woods."
+        "Autonomous multi-agent hub with physical Nodes and a holographic "
+        "Chelsea-look avatar — architected by Chelsea Megan Woods."
     ),
-    version="1.1.0",
+    version="1.2.0",
 )
 
-# Nodes API surface
+# API surfaces
 app.include_router(nodes_router)
+app.include_router(avatar_router)
 
 # Initialize controllers
 media = MediaController()
@@ -42,7 +47,7 @@ bed = SmartBedController()
 printer = PrintController()
 companion = CompanionHub()
 
-# Seed development nodes so /nodes and invoke work out of the box
+
 def _seed_dev_nodes():
     node_registry.register(
         name="saphira-headless",
@@ -126,6 +131,7 @@ async def root():
         "system": "Saphira AI Active",
         "status": "Online and ready to make life 1% easier.",
         "nodes": node_registry.status_summary(),
+        "avatar": avatar_service.status(),
     }
 
 
