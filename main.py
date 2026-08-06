@@ -3,8 +3,10 @@
 Saphira AI - Main Application Entry Point
 Purpose: Initializes the FastAPI server, connects all IoT, manufacturing,
 entertainment modules, Saphira Nodes (eyes/ears/hands/screens),
-Chelsea-look visual avatar, and public chat surface.
+Chelsea-look visual avatar, public chat, and wake-word presence surface.
 """
+
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -29,19 +31,35 @@ from src.avatar.grok_avatar_service import avatar_service
 # Public chat (orchestrator + persona + avatar state)
 from src.api.chat_router import router as chat_router
 
+# Wake-word presence + quiet background tasks
+from src.api.presence_router import router as presence_router
+from src.core.background_worker import background_worker, register_default_handlers
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    register_default_handlers()
+    await background_worker.start()
+    yield
+    await background_worker.stop()
+
+
 app = FastAPI(
     title="Saphira AI Ecosystem",
     description=(
         "Autonomous multi-agent hub with physical Nodes, holographic "
-        "Chelsea-look avatar, and public chat — architected by Chelsea Megan Woods."
+        "Chelsea-look avatar, wake-word conversation, and quiet background "
+        "real-world tasks — architected by Chelsea Megan Woods."
     ),
-    version="1.3.0",
+    version="1.4.0",
+    lifespan=lifespan,
 )
 
 # API surfaces
 app.include_router(nodes_router)
 app.include_router(avatar_router)
 app.include_router(chat_router)
+app.include_router(presence_router)
 
 # Initialize controllers
 media = MediaController()
@@ -134,10 +152,23 @@ async def root():
         "architect": "Chelsea Megan Woods",
         "system": "Saphira AI Active",
         "status": "Online and ready to make life 1% easier.",
-        "version": "1.3.0",
-        "surfaces": ["/nodes", "/avatar", "/chat", "/iot", "/entertainment"],
+        "version": "1.4.0",
+        "surfaces": [
+            "/nodes",
+            "/avatar",
+            "/chat",
+            "/presence",
+            "/iot",
+            "/entertainment",
+        ],
         "nodes": node_registry.status_summary(),
         "avatar": avatar_service.status(),
+        "presence": {
+            "wake": "POST /presence/wake",
+            "utter": "POST /presence/utter",
+            "widget": "GET /presence/widget",
+            "background": "POST /presence/background",
+        },
     }
 
 
