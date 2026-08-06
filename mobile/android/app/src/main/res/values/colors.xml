@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="saphira_ink">#FF0A0A12</color>
+    <color name="saphira_surface">#FF12121A</color>
+    <color name="saphira_electric_blue">#FF00E5FF</color>
+    <color name="saphira_ultraviolet">#FF9D00FF</color>
+    <color name="saphira_white">#FFFFFFFF</color>
+    <color name="saphira_white_70">#B3FFFFFF</color>
+    <color name="saphira_white_40">#66FFFFFF</color>
+</resources>

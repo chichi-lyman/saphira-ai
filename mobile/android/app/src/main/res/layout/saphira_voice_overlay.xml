@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Compact VoiceInteractionSession overlay for Saphira AI. Architected by Chelsea Megan Woods. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/saphira_overlay_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#99000000"
+    android:padding="24dp">
+
+    <LinearLayout
+        android:id="@+id/saphira_card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="48dp"
+        android:background="@drawable/saphira_overlay_bg"
+        android:elevation="12dp"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingTop="20dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="24dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/saphira_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:letterSpacing="0.08"
+                android:text="SAPHIRA"
+                android:textColor="@color/saphira_electric_blue"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <ImageButton
+                android:id="@+id/saphira_btn_close"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Close"
+                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                android:tint="@color/saphira_white_70" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/saphira_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Listening\u2026"
+            android:textColor="@color/saphira_white_70"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/saphira_transcript"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:minHeight="48dp"
+            android:text="Say something, or open the full app."
+            android:textColor="@color/saphira_white"
+            android:textSize="15sp" />
+
+        <FrameLayout
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:layout_marginTop="20dp"
+            android:background="@drawable/saphira_mic_circle">
+
+            <ImageButton
+                android:id="@+id/saphira_btn_mic"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Microphone"
+                android:scaleType="center"
+                android:src="@android:drawable/ic_btn_speak_now"
+                android:tint="@color/saphira_electric_blue" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/saphira_btn_open_app"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:backgroundTint="@color/saphira_ultraviolet"
+                android:text="Open Saphira"
+                android:textAllCaps="false"
+                android:textColor="@color/saphira_white" />
+
+            <Button
+                android:id="@+id/saphira_btn_done"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:backgroundTint="@color/saphira_electric_blue"
+                android:text="Done"
+                android:textAllCaps="false"
+                android:textColor="@color/saphira_ink" />
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>
