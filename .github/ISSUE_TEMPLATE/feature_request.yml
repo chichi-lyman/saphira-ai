@@ -1,0 +1,49 @@
+name: Feature Request
+description: Suggest a new capability or improvement for Saphira AI
+title: "[Feature]: "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share an idea that would make life 1% easier with Saphira.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / opportunity
+      description: What problem does this solve or what opportunity does it unlock?
+      placeholder: I'm always frustrated when...
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe the feature you would like to see.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any alternative solutions or features you've considered?
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Multi-agent / orchestration
+        - Persistent memory
+        - IoT / Nodes
+        - Avatar
+        - Chat / persona
+        - Mobile (Flutter / Android)
+        - Docs / DX
+        - Other
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and did not find a similar request
+          required: true

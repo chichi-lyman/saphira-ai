@@ -1,0 +1,21 @@
+name: Question / Discussion
+description: Ask a question about architecture, setup, or usage
+title: "[Question]: "
+labels: ["question", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Prefer discussions for open-ended topics. Use this for concrete questions.
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+      description: What would you like to know?
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Relevant setup, version, or what you already tried.

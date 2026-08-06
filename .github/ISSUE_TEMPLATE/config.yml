@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Live demo
+    url: https://saphira-delta.vercel.app
+    about: Try the public Saphira chat surface
+  - name: Repository discussions (if enabled)
+    url: https://github.com/chichi-lyman/saphira-ai/discussions
+    about: Open-ended conversation about Saphira AI
