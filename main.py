@@ -3,7 +3,7 @@
 Saphira AI - Main Application Entry Point
 Purpose: Initializes the FastAPI server, connects all IoT, manufacturing,
 entertainment modules, Saphira Nodes (eyes/ears/hands/screens),
-Chelsea-look visual avatar, public chat, and wake-word presence surface.
+Chelsea-look visual avatar, public chat, wake-word presence, and core features.
 """
 
 from contextlib import asynccontextmanager
@@ -35,6 +35,10 @@ from src.api.chat_router import router as chat_router
 from src.api.presence_router import router as presence_router
 from src.core.background_worker import background_worker, register_default_handlers
 
+# Core feature catalog
+from src.api.features_router import router as features_router
+from src.core.features import feature_summary
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -48,10 +52,11 @@ app = FastAPI(
     title="Saphira AI Ecosystem",
     description=(
         "Autonomous multi-agent hub with physical Nodes, holographic "
-        "Chelsea-look avatar, wake-word conversation, and quiet background "
-        "real-world tasks — architected by Chelsea Megan Woods."
+        "Chelsea-look avatar, wake-word conversation, multi-model routing, "
+        "persistent memory, and quiet background real-world tasks — "
+        "architected by Chelsea Megan Woods."
     ),
-    version="1.4.0",
+    version="1.5.0",
     lifespan=lifespan,
 )
 
@@ -60,6 +65,7 @@ app.include_router(nodes_router)
 app.include_router(avatar_router)
 app.include_router(chat_router)
 app.include_router(presence_router)
+app.include_router(features_router)
 
 # Initialize controllers
 media = MediaController()
@@ -152,15 +158,17 @@ async def root():
         "architect": "Chelsea Megan Woods",
         "system": "Saphira AI Active",
         "status": "Online and ready to make life 1% easier.",
-        "version": "1.4.0",
+        "version": "1.5.0",
         "surfaces": [
             "/nodes",
             "/avatar",
             "/chat",
             "/presence",
+            "/features",
             "/iot",
             "/entertainment",
         ],
+        "features": feature_summary(),
         "nodes": node_registry.status_summary(),
         "avatar": avatar_service.status(),
         "presence": {
