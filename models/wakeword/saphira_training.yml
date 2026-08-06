@@ -1,0 +1,18 @@
+# Reference config for training a custom Saphira wake word (openWakeWord)
+model_name: "saphira"
+
+target_phrase:
+  - "hey saphira"
+  - "saphira"
+
+custom_negative_phrases:
+  - "sapphire"
+  - "safira"
+  - "sophie"
+
+n_samples: 50000
+n_samples_val: 5000
+tts_batch_size: 50
+
+model_type: "dnn"
+layer_size: 32
