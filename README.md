@@ -3,6 +3,18 @@ Licensed under the terms specified in the repository.
 
 
 ---
+# Saphira AI 🐉
+
+**Role:** Executive Personal AI Assistant  
+**Ecosystem:** Nova Umbrella  
+
+## Overview
+Saphira is the primary executive assistant interface within the Nova Umbrella network. Combining advanced voice integration, local environment interaction, and an adaptable conversational engine, Saphira serves as the primary bridge between the user and the broader agent network.
+
+## Key Features
+- **Dual-Personality Framework:** Blends high-efficiency operational assistance with natural interaction.
+- **Native Android Integration:** Engineered for mobile terminal interfaces and background widgets via OpenWakeWord.
+- **System Command Routing:** Translates user directives into executable tasks for sub-agents.
 
 ## Introduction
 
