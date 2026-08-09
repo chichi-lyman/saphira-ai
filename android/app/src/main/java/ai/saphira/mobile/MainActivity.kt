@@ -1,7 +1,9 @@
 package ai.saphira.mobile
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
@@ -34,8 +36,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import kotlinx.coroutines.launch
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
     private lateinit var tts: TextToSpeech
@@ -47,6 +53,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
     private val requestAudio = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) startListening()
     }
+    private val requestNotifications = registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,9 +62,19 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         if (SpeechRecognizer.isRecognitionAvailable(this)) {
             speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
         }
+
+        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            requestNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+            startService(Intent(this, SaphiraForegroundService::class.java))
+        }
+        scheduleProactiveHealthCheck()
+
         val avatar = runCatching {
             val encoded = resources.openRawResource(R.raw.saphira_avatar).bufferedReader().use { it.readText() }
-            BitmapFactory.decodeByteArray(Base64.decode(encoded, Base64.DEFAULT), 0, Base64.decode(encoded, Base64.DEFAULT).size)
+            val bytes = Base64.decode(encoded, Base64.DEFAULT)
+            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
         }.getOrNull()
 
         setContent {
@@ -68,34 +85,29 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     avatar?.let {
-                        Image(
-                            bitmap = it.asImageBitmap(),
-                            contentDescription = "Saphira",
-                            modifier = Modifier.size(190.dp).clip(CircleShape)
-                        )
+                        Image(bitmap = it.asImageBitmap(), contentDescription = "Saphira", modifier = Modifier.size(190.dp).clip(CircleShape))
                     }
                     Text("Saphira AI", style = MaterialTheme.typography.headlineLarge)
                     Text("Your conversational executive assistant", style = MaterialTheme.typography.bodyMedium)
                     Text(response, modifier = Modifier.fillMaxWidth().height(120.dp))
-                    OutlinedTextField(
-                        value = input,
-                        onValueChange = { input = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        label = { Text("Talk to Saphira") }
-                    )
-                    Button(onClick = { sendToSaphira() }, modifier = Modifier.fillMaxWidth()) {
-                        Text("Ask Saphira")
-                    }
+                    OutlinedTextField(value = input, onValueChange = { input = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Talk to Saphira") })
+                    Button(onClick = { sendToSaphira() }, modifier = Modifier.fillMaxWidth()) { Text("Ask Saphira") }
                     Button(onClick = {
-                        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
-                            startListening()
-                        } else {
-                            requestAudio.launch(Manifest.permission.RECORD_AUDIO)
-                        }
+                        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) startListening()
+                        else requestAudio.launch(Manifest.permission.RECORD_AUDIO)
                     }, modifier = Modifier.fillMaxWidth()) { Text("🎙 Listen") }
                 }
             }
         }
+    }
+
+    private fun scheduleProactiveHealthCheck() {
+        val request = PeriodicWorkRequestBuilder<SaphiraProactiveWorker>(15, TimeUnit.MINUTES).build()
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "saphira-proactive-runtime",
+            ExistingPeriodicWorkPolicy.UPDATE,
+            request
+        )
     }
 
     private fun sendToSaphira() {
