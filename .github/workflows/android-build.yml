@@ -1,0 +1,73 @@
+name: Saphira Android Build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'android/**'
+      - '.github/workflows/android-build.yml'
+  pull_request:
+    paths:
+      - 'android/**'
+      - '.github/workflows/android-build.yml'
+  workflow_dispatch:
+
+env:
+  SAPHIRA_BASE_URL: ${{ vars.SAPHIRA_BASE_URL }}
+
+jobs:
+  build-android:
+    name: Build Saphira Android APK
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept Android SDK licenses
+        run: yes | sdkmanager --licenses >/dev/null || true
+
+      - name: Install Android build tools
+        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+
+      - name: Set up Gradle
+        uses: gradle/gradle-build-action@v3
+        with:
+          gradle-version: '8.11.1'
+
+      - name: Build debug APK
+        working-directory: android
+        env:
+          BUILD_BASE_URL: ${{ env.SAPHIRA_BASE_URL }}
+        run: |
+          if [ -n "$BUILD_BASE_URL" ]; then
+            gradle assembleDebug --no-daemon --stacktrace -PSAPHIRA_BASE_URL="$BUILD_BASE_URL"
+          else
+            echo 'SAPHIRA_BASE_URL is not configured; building against Android emulator localhost bridge.'
+            gradle assembleDebug --no-daemon --stacktrace
+          fi
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: saphira-ai-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Verify APK metadata
+        run: |
+          test -s android/app/build/outputs/apk/debug/app-debug.apk
+          ls -lh android/app/build/outputs/apk/debug/app-debug.apk
