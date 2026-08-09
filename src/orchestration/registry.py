@@ -1,4 +1,4 @@
-"""Capability registry for invisible background workers."""
+"""Capability registry for Saphira's invisible background workforce."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -21,16 +21,28 @@ class AgentRegistry:
     agents: dict[str, AgentSpec] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
-        if not self.agents:
-            self.register(AgentSpec("planner_agent", frozenset({"reasoning"}), 10, "Planning and decomposition"))
-            self.register(AgentSpec("research_agent", frozenset({"research"}), 20, "Research and analysis"))
-            self.register(AgentSpec("developer_agent", frozenset({"development"}), 20, "Code and engineering"))
-            self.register(AgentSpec("content_agent", frozenset({"content"}), 30, "Content production"))
-            self.register(AgentSpec("commerce_agent", frozenset({"commerce"}), 30, "Commerce operations"))
-            self.register(AgentSpec("communications_agent", frozenset({"communications"}), 30, "External communications"))
-            self.register(AgentSpec("scheduling_agent", frozenset({"scheduling"}), 30, "Calendar and scheduling"))
-            self.register(AgentSpec("operations_agent", frozenset({"operations"}), 30, "Business operations"))
-            self.register(AgentSpec("qa_agent", frozenset({"quality"}), 10, "Verification and quality control"))
+        if self.agents:
+            return
+        defaults = (
+            ("planner_agent", {"reasoning"}, 10, "Planning and decomposition"),
+            ("research_agent", {"research", "web"}, 20, "Research, retrieval and grounding"),
+            ("developer_agent", {"development", "system"}, 20, "Code, engineering and permitted system workflows"),
+            ("content_agent", {"content"}, 30, "Content production"),
+            ("commerce_agent", {"commerce"}, 30, "Commerce operations"),
+            ("communications_agent", {"communications"}, 30, "External communications"),
+            ("scheduling_agent", {"scheduling", "proactive"}, 30, "Calendar and proactive scheduling"),
+            ("operations_agent", {"operations"}, 30, "Business operations"),
+            ("voice_agent", {"voice"}, 20, "Speech input/output"),
+            ("vision_agent", {"vision"}, 20, "Visual and screen perception"),
+            ("stem_agent", {"stem"}, 20, "Deterministic math/science/engineering"),
+            ("cad_agent", {"cad"}, 30, "Parametric CAD/3D generation"),
+            ("system_agent", {"system"}, 30, "Explicitly scoped OS/device control"),
+            ("iot_agent", {"iot"}, 30, "Smart environment integrations"),
+            ("memory_agent", {"memory"}, 10, "Long-term memory and context"),
+            ("qa_agent", {"quality"}, 10, "Verification and quality control"),
+        )
+        for name, capabilities, priority, description in defaults:
+            self.register(AgentSpec(name, frozenset(capabilities), priority, description))
 
     def register(self, agent: AgentSpec) -> None:
         self.agents[agent.name] = agent
