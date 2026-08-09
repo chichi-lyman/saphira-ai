@@ -1,0 +1,5 @@
+<voice-interaction-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:sessionService="ai.saphira.mobile.SaphiraVoiceInteractionService"
+    android:recognitionService="android.speech.RecognitionService"
+    android:supportsAssist="true"
+    android:supportsLaunchVoiceInteractionSession="true" />
