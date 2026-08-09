@@ -6,14 +6,21 @@ import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.speech.tts.TextToSpeech
+import android.util.Base64
+import android.graphics.BitmapFactory
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -21,7 +28,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
@@ -45,28 +55,44 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         if (SpeechRecognizer.isRecognitionAvailable(this)) {
             speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
         }
+        val avatar = runCatching {
+            val encoded = resources.openRawResource(R.raw.saphira_avatar).bufferedReader().use { it.readText() }
+            BitmapFactory.decodeByteArray(Base64.decode(encoded, Base64.DEFAULT), 0, Base64.decode(encoded, Base64.DEFAULT).size)
+        }.getOrNull()
+
         setContent {
             MaterialTheme {
                 Column(
-                    modifier = Modifier.fillMaxSize().padding(24.dp),
+                    modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
+                    avatar?.let {
+                        Image(
+                            bitmap = it.asImageBitmap(),
+                            contentDescription = "Saphira",
+                            modifier = Modifier.size(190.dp).clip(CircleShape)
+                        )
+                    }
                     Text("Saphira AI", style = MaterialTheme.typography.headlineLarge)
-                    Text(response)
+                    Text("Your conversational executive assistant", style = MaterialTheme.typography.bodyMedium)
+                    Text(response, modifier = Modifier.fillMaxWidth().height(120.dp))
                     OutlinedTextField(
                         value = input,
                         onValueChange = { input = it },
                         modifier = Modifier.fillMaxWidth(),
                         label = { Text("Talk to Saphira") }
                     )
-                    Button(onClick = { sendToSaphira() }) { Text("Ask Saphira") }
+                    Button(onClick = { sendToSaphira() }, modifier = Modifier.fillMaxWidth()) {
+                        Text("Ask Saphira")
+                    }
                     Button(onClick = {
                         if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
                             startListening()
                         } else {
                             requestAudio.launch(Manifest.permission.RECORD_AUDIO)
                         }
-                    }) { Text("🎙 Listen") }
+                    }, modifier = Modifier.fillMaxWidth()) { Text("🎙 Listen") }
                 }
             }
         }
