@@ -22,3 +22,7 @@ httpx[http2]==0.25.1
 gunicorn==21.2.0
 orjson==3.9.10
 slowapi==0.1.9
+PyGithub>=2.0.0
+sounddevice>=0.4.6
+faster-whisper>=1.0.0
+numpy>=1.24.0
