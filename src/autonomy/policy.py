@@ -1,30 +1,33 @@
-"""Classify actions before Saphira delegates them to real-world tools."""
-
+"""Risk-aware autonomy policy for real-world actions."""
 from __future__ import annotations
+
+import re
 
 from src.orchestration.task import AutonomyDecision, Task
 
 
 class AutonomyPolicy:
-    """Conservative default policy for autonomous execution.
+    """Conservative-by-default policy with explicit risk classification."""
 
-    Research, drafting, analysis, organization, testing, and other reversible
-    work can proceed automatically. External commitments, financial actions,
-    destructive operations, and irreversible changes require approval.
-    """
-
-    APPROVAL_TERMS = (
-        "send", "publish", "purchase", "buy", "pay", "transfer", "delete",
-        "remove", "sign", "merge to production", "deploy production",
+    HIGH_RISK = (
+        "transfer", "wire", "withdraw", "sign contract", "legal agreement",
+        "delete production", "drop database", "rotate production", "buy",
+    )
+    EXTERNAL_COMMITMENT = (
+        "send", "publish", "post", "reply", "contact", "email", "message",
+        "merge", "deploy production", "create order", "purchase", "pay",
+    )
+    REVERSIBLE = (
+        "research", "draft", "analyze", "summarize", "organize", "test",
+        "inspect", "plan", "compare", "generate", "prepare",
     )
 
     def classify(self, task: Task) -> AutonomyDecision:
-        text = task.objective.lower()
-        restricted = [term for term in self.APPROVAL_TERMS if term in text]
-        if restricted:
-            return AutonomyDecision(
-                level="approval_required",
-                requires_approval=True,
-                reason=f"Restricted action detected: {restricted[0]}",
-            )
-        return AutonomyDecision(level="autonomous", requires_approval=False)
+        text = re.sub(r"\s+", " ", task.objective.lower())
+        high = next((term for term in self.HIGH_RISK if term in text), None)
+        if high:
+            return AutonomyDecision("approval_required", True, f"High-risk action: {high}", "high")
+        external = next((term for term in self.EXTERNAL_COMMITMENT if term in text), None)
+        if external:
+            return AutonomyDecision("approval_required", True, f"External commitment: {external}", "medium")
+        return AutonomyDecision("autonomous", False, None, "low")
