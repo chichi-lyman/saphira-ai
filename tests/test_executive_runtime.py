@@ -1,7 +1,6 @@
-import pytest
+import asyncio
 
 from src.assistant.runtime import build_saphira
-from src.orchestration.executor import AgentWorker
 from src.orchestration.task import TaskStatus
 
 
@@ -31,12 +30,11 @@ def test_conversation_routes_to_hidden_workers():
     assert "research_agent" not in task.objective
 
 
-@pytest.mark.asyncio
-async def test_autonomous_task_executes_and_is_remembered():
+def test_autonomous_task_executes_and_is_remembered():
     assistant = build_saphira([FakeResearchAgent(), FakeQAAgent()])
     task = assistant.accept("Research the best options")
 
-    result = await assistant.execute(task.id)
+    result = asyncio.run(assistant.execute(task.id))
 
     assert result.status == TaskStatus.COMPLETED
     assert assistant.memory.recent_tasks(1)[0]["task_id"] == task.id
