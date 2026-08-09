@@ -1,7 +1,7 @@
-"""Background execution contract for Saphira's worker agents."""
-
+"""Async worker supervisor for Saphira's background execution."""
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from typing import Any, Protocol
 
@@ -12,7 +12,7 @@ class AgentWorker(Protocol):
     name: str
     capabilities: set[str]
 
-    async def execute(self, task: Task, step: dict[str, Any]) -> dict[str, Any]: ...
+    async def execute(self, task: Task, step: dict[str, Any]) -> dict[str, Any] | None: ...
 
 
 @dataclass
@@ -24,37 +24,59 @@ class ExecutionResult:
 
 
 class TaskExecutor:
-    """Executes a task graph through registered workers.
+    """Executes routed steps while isolating worker failures."""
 
-    The executor is intentionally framework-agnostic so it can later be
-    backed by asyncio, Celery, a queue service, or a distributed worker pool.
-    """
-
-    def __init__(self, workers: dict[str, AgentWorker] | None = None) -> None:
+    def __init__(self, workers: dict[str, AgentWorker] | None = None, timeout_seconds: float = 300) -> None:
         self.workers = workers or {}
+        self.timeout_seconds = timeout_seconds
+
+    def register(self, worker: AgentWorker) -> None:
+        self.workers[worker.name] = worker
 
     async def run(self, task: Task) -> ExecutionResult:
-        task.status = TaskStatus.RUNNING
+        if task.autonomy.requires_approval and task.approval_status != "approved":
+            task.approval_status = "pending"
+            task.set_status(TaskStatus.WAITING_APPROVAL)
+            task.emit("approval_required", reason=task.autonomy.reason)
+            return ExecutionResult(task.id, task.status, [], [])
+
+        task.set_status(TaskStatus.RUNNING)
         artifacts: list[dict[str, Any]] = []
         errors: list[str] = []
 
         for step in task.plan:
-            worker_name = next(
-                (name for name, worker in self.workers.items()
-                 if step["capability"] in worker.capabilities),
-                None,
-            )
-            if not worker_name:
-                # Planning-only deployments may not have every worker wired yet.
+            if step["status"] == "completed":
                 continue
+            worker_name = step.get("agent")
+            worker = self.workers.get(worker_name) if worker_name else None
+            if not worker:
+                step["status"] = "skipped"
+                task.emit("step_skipped", step=step["id"], reason="worker_not_connected")
+                continue
+            step["status"] = "running"
+            task.emit("step_started", step=step["id"], agent=worker.name)
             try:
-                result = await self.workers[worker_name].execute(task, step)
+                result = await asyncio.wait_for(worker.execute(task, step), timeout=self.timeout_seconds)
                 if result:
                     artifacts.append(result)
-            except Exception as exc:  # worker boundary: isolate one failure
-                errors.append(f"{worker_name}: {exc}")
+                step["status"] = "completed"
+                task.emit("step_completed", step=step["id"], agent=worker.name)
+            except Exception as exc:
+                step["status"] = "failed"
+                error = f"{worker.name}: {type(exc).__name__}: {exc}"
+                errors.append(error)
+                task.emit("step_failed", step=step["id"], error=error)
+                break
 
         task.artifacts.extend(artifacts)
         task.errors.extend(errors)
-        task.status = TaskStatus.FAILED if errors else TaskStatus.COMPLETED
+        if errors:
+            task.set_status(TaskStatus.FAILED)
+        elif any(s["status"] == "pending" for s in task.plan):
+            task.set_status(TaskStatus.RUNNING)
+        else:
+            task.set_status(TaskStatus.VERIFYING)
+            task.verification = {"passed": True, "checks": ["all_connected_steps_completed"]}
+            task.set_status(TaskStatus.COMPLETED)
+            task.emit("task_completed", artifact_count=len(artifacts))
         return ExecutionResult(task.id, task.status, artifacts, errors)
