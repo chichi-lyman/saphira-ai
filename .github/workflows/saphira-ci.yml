@@ -10,16 +10,20 @@ permissions:
   contents: read
 
 jobs:
-  python-syntax:
-    name: Python syntax validation
+  python-validation:
+    name: Python validation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
       - name: Compile Python sources
         run: python -m compileall -q .
+      - name: Run tests
+        run: pytest -q
 
   android:
     name: Android debug APK
