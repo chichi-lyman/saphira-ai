@@ -23,10 +23,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import java.util.Locale
 
 class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
     private lateinit var tts: TextToSpeech
+    private lateinit var api: SaphiraApi
     private var speechRecognizer: SpeechRecognizer? = null
     private var input by mutableStateOf("")
     private var response by mutableStateOf("Hi. I'm Saphira. What are we getting done?")
@@ -38,6 +41,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         tts = TextToSpeech(this, this)
+        api = SaphiraApi(BuildConfig.SAPHIRA_BASE_URL)
         if (SpeechRecognizer.isRecognitionAvailable(this)) {
             speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
         }
@@ -55,19 +59,29 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                         modifier = Modifier.fillMaxWidth(),
                         label = { Text("Talk to Saphira") }
                     )
-                    Button(onClick = { speak(input.ifBlank { "I'm here." }) }) {
-                        Text("Speak")
-                    }
+                    Button(onClick = { sendToSaphira() }) { Text("Ask Saphira") }
                     Button(onClick = {
                         if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
                             startListening()
                         } else {
                             requestAudio.launch(Manifest.permission.RECORD_AUDIO)
                         }
-                    }) {
-                        Text("🎙 Listen")
-                    }
+                    }) { Text("🎙 Listen") }
                 }
+            }
+        }
+    }
+
+    private fun sendToSaphira() {
+        val message = input.trim()
+        if (message.isEmpty()) return
+        response = "I'm working on it..."
+        lifecycleScope.launch {
+            api.sendMessage(message).onSuccess { answer ->
+                response = answer
+                speak(answer)
+            }.onFailure { error ->
+                response = "I couldn't reach my Saphira backend yet: ${error.message}"
             }
         }
     }
@@ -81,8 +95,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         }
         recognizer.setRecognitionListener(SimpleRecognitionListener { text ->
             input = text
-            response = "I heard: $text"
-            speak(response)
+            sendToSaphira()
         })
         recognizer.startListening(intent)
     }
