@@ -1,30 +1,30 @@
 # Saphira Android
 
-Native Android companion for Saphira AI.
+Native Android companion for Saphira AI Production.
 
-## Architecture
+## What this app is
 
-- Native Kotlin Android client
-- Voice input through Android SpeechRecognizer
-- Native Text-to-Speech response
-- Saphira backend bridge through HTTPS
-- Android VoiceInteractionService scaffold for default-assistant integration
-- No OpenAI/API credentials are stored in the APK
+The phone-facing client for Saphira: one conversational assistant on the surface, with Saphira's autonomous agents remaining behind the backend. The app includes the supplied Saphira portrait as her identity/avatar, chat, speech recognition, spoken responses, secure HTTPS backend bridging, and a VoiceInteractionService foundation for supported Android devices.
+
+## Security boundary
+
+- No OpenAI or provider API keys are stored in the APK.
+- The Android client talks to the trusted Saphira backend.
+- External/destructive actions must be approved by the backend autonomy policy.
 
 ## Backend configuration
 
-Set `SAPHIRA_BASE_URL` in `android/app/build.gradle` to the deployed HTTPS Saphira backend before building. The placeholder is intentional.
-
-The Android app must never contain the OpenAI API key. The key belongs only on the trusted Saphira backend.
+Set `SAPHIRA_BASE_URL` to the deployed HTTPS Saphira backend before building. The placeholder is intentional until the production backend URL exists.
 
 ## Motorola setup
 
-1. Build and install the Android app.
-2. Grant microphone permission.
-3. Set the Saphira backend URL.
-4. Select Saphira as the phone's digital assistant if the device exposes the VoiceInteractionService.
-5. Grant only the Android permissions required for the features you enable.
+1. Build the debug APK from the GitHub Actions `saphira-ai-debug-apk` artifact or Android Studio.
+2. Install it on the Motorola phone.
+3. Grant microphone and notification permissions as requested.
+4. Configure the Saphira backend URL.
+5. Select Saphira as the phone's digital assistant if the Motorola/Android build exposes the VoiceInteractionService option.
+6. Grant only the device permissions required by enabled capabilities.
 
 ## Current boundary
 
-This first native layer provides the phone UI, voice loop, backend bridge, and assistant-service foundation. Full device automation, screen interaction, proactive background execution, and production voice streaming require additional Android permission adapters and backend tool integrations.
+This native layer provides the first real phone interface, avatar, voice loop, backend bridge, and assistant-service foundation. Full device automation, screen interaction, proactive background execution, and production low-latency voice streaming require their corresponding Android permission adapters and backend tool integrations.
