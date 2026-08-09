@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="#17131D">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Saphira AI"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tap to talk"
+        android:textColor="#D9D0E0"
+        android:textSize="13sp" />
+
+    <Button
+        android:id="@+id/saphira_widget_activate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🎙 Ask Saphira" />
+</LinearLayout>
