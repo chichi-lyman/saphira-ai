@@ -13,7 +13,11 @@ android {
         versionCode 1
         versionName '0.1.0'
     }
-    buildFeatures { compose true }
+    buildFeatures { compose true; buildConfig true }
+    buildTypes {
+        debug { buildConfigField 'String', 'SAPHIRA_BASE_URL', '"https://YOUR-SAPHIRA-BACKEND.example.com"' }
+        release { buildConfigField 'String', 'SAPHIRA_BASE_URL', '"https://YOUR-SAPHIRA-BACKEND.example.com"' }
+    }
 }
 
 dependencies {
