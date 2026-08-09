@@ -3,6 +3,12 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
+// The backend origin is injected at build time. Provider secrets never belong in the APK.
+def saphiraBaseUrl = (project.findProperty('SAPHIRA_BASE_URL') ?: System.getenv('SAPHIRA_BASE_URL') ?: 'http://10.0.2.2:8000').toString().trim().replaceAll('/+$', '')
+if (saphiraBaseUrl.contains('YOUR-SAPHIRA-BACKEND.example.com')) {
+    throw new GradleException('SAPHIRA_BASE_URL is still a placeholder. Pass -PSAPHIRA_BASE_URL=https://your-backend.example.com for a deployable build.')
+}
+
 android {
     namespace 'ai.saphira.mobile'
     compileSdk 35
@@ -15,8 +21,8 @@ android {
     }
     buildFeatures { compose true; buildConfig true }
     buildTypes {
-        debug { buildConfigField 'String', 'SAPHIRA_BASE_URL', '"https://YOUR-SAPHIRA-BACKEND.example.com"' }
-        release { buildConfigField 'String', 'SAPHIRA_BASE_URL', '"https://YOUR-SAPHIRA-BACKEND.example.com"' }
+        debug { buildConfigField 'String', 'SAPHIRA_BASE_URL', "\"${saphiraBaseUrl}\"" }
+        release { buildConfigField 'String', 'SAPHIRA_BASE_URL', "\"${saphiraBaseUrl}\"" }
     }
 }
 
