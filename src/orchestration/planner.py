@@ -8,13 +8,22 @@ from .task import Task, TaskStatus
 
 
 CAPABILITY_RULES: tuple[tuple[str, tuple[str, ...], str], ...] = (
-    ("research", ("research", "find", "compare", "investigate", "look up", "analyze"), "research"),
-    ("development", ("build", "code", "fix", "github", "deploy", "implement", "debug"), "development"),
-    ("content", ("content", "script", "post", "youtube", "social", "write", "seo"), "content"),
-    ("commerce", ("shopify", "store", "product", "commerce", "sell", "order"), "commerce"),
-    ("communications", ("email", "message", "contact", "outreach", "reply", "follow up"), "communications"),
-    ("scheduling", ("calendar", "schedule", "meeting", "appointment", "remind"), "scheduling"),
-    ("operations", ("organize", "file", "document", "workflow", "automate", "cleanup"), "operations"),
+    ("research", ("research", "find", "compare", "investigate", "look up", "analyze", "fact check"), "research"),
+    ("development", ("build", "code", "fix", "github", "deploy", "implement", "debug", "refactor", "test code"), "development"),
+    ("content", ("content", "script", "post", "youtube", "social", "write", "seo", "caption"), "content"),
+    ("commerce", ("shopify", "store", "product", "commerce", "sell", "order", "catalog"), "commerce"),
+    ("communications", ("email", "message", "contact", "outreach", "reply", "follow up", "send"), "communications"),
+    ("scheduling", ("calendar", "schedule", "meeting", "appointment", "remind", "deadline"), "scheduling"),
+    ("operations", ("organize", "file", "document", "workflow", "automate", "cleanup", "operate"), "operations"),
+    ("voice", ("voice", "speak", "listen", "audio", "transcribe", "read aloud"), "voice"),
+    ("vision", ("image", "photo", "screenshot", "screen", "ocr", "camera", "look at"), "vision"),
+    ("stem", ("calculate", "equation", "math", "physics", "engineering", "formula"), "stem"),
+    ("cad", ("cad", "3d model", "openscad", "build123d", "3d print", "parametric"), "cad"),
+    ("system", ("computer", "cpu", "gpu", "ram", "thermal", "application", "app", "terminal", "device"), "system"),
+    ("iot", ("smart home", "home assistant", "matter", "lights", "thermostat", "sensor", "iot"), "iot"),
+    ("web", ("web", "website", "online", "weather", "navigation", "current information", "search online"), "web"),
+    ("memory", ("remember", "forget", "memory", "what did we decide", "my preference"), "memory"),
+    ("proactive", ("monitor", "watch for", "when this happens", "every day", "every week", "automatically remind"), "proactive"),
 )
 
 
