@@ -5,9 +5,11 @@
   const send = document.getElementById('send');
   const status = document.getElementById('statusText');
 
-  // Set this at deploy time if the FastAPI service lives on another origin:
-  // window.SAPHIRA_API_URL = 'https://your-saphira-api.example.com';
-  const apiBase = (window.SAPHIRA_API_URL || '').replace(/\/$/, '');
+  // Production FastAPI runtime. Override with window.SAPHIRA_API_URL at deploy time if needed.
+  const apiBase = (window.SAPHIRA_API_URL || 'https://saphira-ai.onrender.com/api').replace(/\/$/, '');
+  const sessionKey = 'saphira-session-id';
+  const sessionId = localStorage.getItem(sessionKey) || crypto.randomUUID();
+  localStorage.setItem(sessionKey, sessionId);
 
   const addMessage = (role, text) => {
     const article = document.createElement('article');
@@ -18,30 +20,29 @@
     messages.scrollTop = messages.scrollHeight;
   };
 
-  const localResponse = (text) => {
-    const value = text.toLowerCase();
-    if (value.includes('sales') || value.includes('prospect') || value.includes('lead')) {
-      return 'I can coordinate research, qualification, sales strategy, outreach, CRM synchronization, and verification. Connect the production sales provider to execute external actions.';
-    }
-    if (value.includes('tool') || value.includes('plugin')) {
-      return 'My unified capability fabric is designed to route work through approved GitHub, Shopify, Stripe, CRM, calendar, research, memory, device, analytics, and MCP integrations.';
-    }
-    if (value.includes('growth') || value.includes('business')) {
-      return 'I can turn a growth objective into a task graph, select the appropriate capabilities, apply approval policies, and verify the result. The production backend determines which connected tools can execute it.';
-    }
-    return 'I received your request. The Saphira web shell is online; connect the production API endpoint to enable full cloud execution and persistent memory.';
+  const speak = (text) => {
+    if (!('speechSynthesis' in window) || !text) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.96;
+    utterance.pitch = 1.04;
+    utterance.volume = 1;
+    window.speechSynthesis.speak(utterance);
   };
 
   async function askSaphira(text) {
-    if (!apiBase) return localResponse(text);
     const response = await fetch(`${apiBase}/chat`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({message: text, source: 'saphira-web'})
+      body: JSON.stringify({
+        message: text,
+        source: 'saphira-web',
+        session_id: sessionId
+      })
     });
     if (!response.ok) throw new Error(`API ${response.status}`);
     const data = await response.json();
-    return data.response || data.message || data.output || 'Saphira completed the request.';
+    return data.message || data.response || data.output || 'I am here. What do you want to work on?';
   }
 
   async function submit(text) {
@@ -51,13 +52,15 @@
     input.value = '';
     input.style.height = 'auto';
     send.disabled = true;
-    status.textContent = apiBase ? 'Thinking' : 'Local shell';
+    status.textContent = 'Thinking';
     try {
       const reply = await askSaphira(clean);
       addMessage('saphira', reply);
       status.textContent = 'Ready';
+      speak(reply);
     } catch (error) {
-      addMessage('saphira', 'The cloud runtime is unavailable from this deployment. Your request is safe; check the Saphira API URL and deployment environment variables, then try again.');
+      console.error('Saphira API error:', error);
+      addMessage('saphira', "I'm here, but I can't reach my cloud runtime right now. Give me a moment and try again.");
       status.textContent = 'API offline';
     } finally {
       send.disabled = false;
