@@ -3,19 +3,43 @@ services:
     name: saphira-ai
     runtime: python
     plan: free
-    branch: main
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
-    healthCheckPath: /health
-    autoDeploy: true
     envVars:
-      - key: OPENAI_API_KEY
-        sync: false
-      - key: SAPHIRA_DEVICE_TOKEN
-        sync: false
       - key: DATABASE_URL
         sync: false
       - key: REDIS_URL
         sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
       - key: SAPHIRA_ALLOWED_ORIGINS
+        sync: false
+
+  - type: worker
+    name: saphira-finance-worker
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: celery -A celery_app.celery_app worker --loglevel=INFO
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+
+  - type: cron
+    name: saphira-billing-beat
+    runtime: python
+    plan: free
+    schedule: "*/5 * * * *"
+    buildCommand: pip install -r requirements.txt
+    startCommand: celery -A celery_app.celery_app call finance.tasks.sync_stripe_metered_billing
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: STRIPE_SECRET_KEY
         sync: false
