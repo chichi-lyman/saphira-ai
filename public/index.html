@@ -25,7 +25,7 @@
     <main class="main">
       <section class="hero" aria-labelledby="title">
         <div class="orb hero-orb" aria-hidden="true"><span></span></div>
-        <p class="eyebrow">SAP HIRA AI · EXECUTIVE RUNTIME</p>
+        <p class="eyebrow">SAPHIRA AI · EXECUTIVE RUNTIME</p>
         <h1 id="title">Your intelligence.<br><em>Unified.</em></h1>
         <p class="lede">One conversational interface coordinating memory, reasoning, agents, business automation, tools and connected capabilities.</p>
       </section>
@@ -34,14 +34,14 @@
         <div id="messages" class="messages" aria-live="polite">
           <article class="message saphira">
             <div class="avatar">S</div>
-            <div><span class="label">SAPHIRA</span><p>I'm online. Tell me what you want to accomplish.</p></div>
+            <div><span class="label">SAPHIRA</span><p>I'm here. Tell me what you're thinking about.</p></div>
           </article>
         </div>
         <form id="chatForm" class="composer">
-          <textarea id="prompt" rows="1" placeholder="Ask Saphira anything…" aria-label="Message Saphira"></textarea>
+          <textarea id="prompt" rows="1" placeholder="Talk to Saphira…" aria-label="Message Saphira"></textarea>
           <button id="send" type="submit" aria-label="Send message">➤</button>
         </form>
-        <p class="hint">Enter to send · Shift+Enter for a new line</p>
+        <p class="hint">Enter to send · Shift+Enter for a new line · Saphira can speak replies</p>
       </section>
 
       <section class="capabilities" aria-label="Capabilities">
@@ -54,6 +54,10 @@
 
     <footer><span>Saphira AI</span><span>© 2026 Chelsea Megan Woods</span></footer>
   </div>
+  <script>
+    // Public endpoint only; no secret is stored in the browser.
+    window.SAPHIRA_API_URL = 'https://saphira-ai.onrender.com/api';
+  </script>
   <script src="/app.js" defer></script>
 </body>
 </html>
