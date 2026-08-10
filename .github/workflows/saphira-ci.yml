@@ -28,6 +28,7 @@ jobs:
   android:
     name: Android debug APK
     runs-on: ubuntu-latest
+    
     if: ${{ hashFiles('android/settings.gradle', 'android/settings.gradle.kts') != '' }}
     steps:
       - uses: actions/checkout@v4
