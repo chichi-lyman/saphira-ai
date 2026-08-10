@@ -1,0 +1,91 @@
+{
+  "name": "Saphira AI",
+  "architecture": "persistent-multimodal-intelligence-operating-system",
+  "canonical_surface": "single-conversational-assistant",
+  "version": "unified-2026-08-10",
+  "owner": "Chelsea Megan Woods",
+  "repository": "chichi-lyman/saphira-ai",
+  "runtime_flow": [
+    "conversation",
+    "intent_context",
+    "executive_planner",
+    "task_graph",
+    "capability_registry",
+    "specialized_workers",
+    "tool_api_fabric",
+    "verification",
+    "memory_event_ledger",
+    "response"
+  ],
+  "capability_domains": [
+    "reasoning",
+    "research",
+    "development",
+    "sales",
+    "growth",
+    "communications",
+    "commerce",
+    "creator",
+    "business_intelligence",
+    "automation",
+    "device",
+    "quality_assurance"
+  ],
+  "memory_domains": [
+    "identity",
+    "preferences",
+    "goals",
+    "projects",
+    "relationships",
+    "business_context",
+    "episodic",
+    "semantic",
+    "procedural",
+    "outcomes"
+  ],
+  "modalities": [
+    "text",
+    "speech_input",
+    "speech_output",
+    "vision",
+    "web_grounding"
+  ],
+  "device_direction": [
+    "okay_saphira_wake_word",
+    "android_voice_service",
+    "notifications",
+    "audio",
+    "bluetooth",
+    "accessibility",
+    "files",
+    "sensors",
+    "smart_environment"
+  ],
+  "enterprise": {
+    "multi_tenant": true,
+    "control_plane": true,
+    "rbac": true,
+    "audit_logging": true,
+    "approval_gates": true,
+    "tenant_isolation": true
+  },
+  "reliability": [
+    "retry",
+    "circuit_breaker",
+    "bulkhead",
+    "health_checks",
+    "verification",
+    "observability"
+  ],
+  "commercialization": [
+    "consumer_subscription",
+    "pro_tier",
+    "business_automation",
+    "enterprise",
+    "api_usage",
+    "marketplace",
+    "custom_agent_deployments"
+  ],
+  "design_rule": "Agents are background workers. Saphira is the single conversational interface.",
+  "migration_rule": "Reuse existing implementations behind stable contracts; avoid duplicate orchestration stacks."
+}
