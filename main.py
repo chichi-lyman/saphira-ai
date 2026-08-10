@@ -5,45 +5,48 @@ import os
 
 from src.api.chat_router import router as chat_router
 from src.api.device_ws import router as device_router
+from core.control_plane import router as control_plane_router
+from observability.telemetry import router as telemetry_router
+from core.audit_middleware import AuditEventMiddleware
 
 load_dotenv()
 
 app = FastAPI(
-    title="Saphira AI Production",
-    description="Conversational executive assistant with autonomous background workers.",
-    version="1.1.0",
+    title="Saphira AI Enterprise",
+    description="Conversational executive assistant with governed autonomous agents and enterprise control plane.",
+    version="17.0.0",
 )
 
-allowed_origins = [
-    origin.strip()
-    for origin in os.getenv("SAPHIRA_ALLOWED_ORIGINS", "http://localhost:3000").split(",")
-    if origin.strip()
-]
-
+allowed_origins = [o.strip() for o in os.getenv("SAPHIRA_ALLOWED_ORIGINS", "http://localhost:3000").split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "X-Saphira-Device"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Saphira-Device", "X-Tenant-ID", "X-Agent-DID"],
 )
+app.add_middleware(AuditEventMiddleware)
 
 app.include_router(chat_router, prefix="/api")
 app.include_router(device_router, prefix="/api")
+app.include_router(control_plane_router)
+app.include_router(telemetry_router)
 
 
 @app.get("/")
 async def root():
     return {
-        "name": "Saphira AI Production",
+        "name": "Saphira AI",
         "status": "running",
-        "architecture": "executive-assistant",
+        "version": "17.0.0",
+        "role": "conversational-ai-assistant",
+        "architecture": "autonomous-agent-operating-platform",
     }
 
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy"}
+    return {"status": "healthy", "service": "saphira-ai", "version": "17.0.0"}
 
 
 if __name__ == "__main__":

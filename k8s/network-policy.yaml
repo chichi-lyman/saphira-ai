@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: saphira-network-isolation
+  namespace: saphira-enterprise
+spec:
+  podSelector:
+    matchLabels: {app: saphira-api}
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 8000
+  egress:
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 5432
+        - protocol: TCP
+          port: 6379
+    - ports:
+        - protocol: TCP
+          port: 443
