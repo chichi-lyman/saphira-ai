@@ -17,11 +17,18 @@ app = FastAPI(
     version="17.0.0",
 )
 
-allowed_origins = [o.strip() for o in os.getenv("SAPHIRA_ALLOWED_ORIGINS", "http://localhost:3000").split(",") if o.strip()]
+allowed_origins = [
+    o.strip()
+    for o in os.getenv("SAPHIRA_ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
+    if o.strip()
+]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_credentials=True,
+    # Saphira's public web shell is deployed on Vercel. This keeps preview
+    # deployments usable without requiring a Render redeploy for every URL.
+    allow_origin_regex=r"https://.*\.vercel\.app$",
+    allow_credentials=False,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "X-Saphira-Device", "X-Tenant-ID", "X-Agent-DID"],
 )
