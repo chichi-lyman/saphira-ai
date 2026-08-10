@@ -1,215 +1,138 @@
-© 2026 Chelsea Megan Woods. All rights reserved.
-Licensed under the terms specified in the repository.
-
-
----
 # Saphira AI 🐉
 
-**Role:** Executive Personal AI Assistant  
-**Ecosystem:** Nova Umbrella  
+**Persistent Multimodal Intelligence Operating System**  
+**Architected and Built by Chelsea Megan Woods**  
+**Ecosystem:** Nova Umbrella
 
-## Overview
-Saphira is the primary executive assistant interface within the Nova Umbrella network. Combining advanced voice integration, local environment interaction, and an adaptable conversational engine, Saphira serves as the primary bridge between the user and the broader agent network.
+Saphira AI is one conversational AI assistant at the user surface, backed by a persistent executive runtime that coordinates specialized workers, tools, memory, multimodal interfaces, business automation, and permissioned device capabilities.
 
-## Key Features
-- **Dual-Personality Framework:** Blends high-efficiency operational assistance with natural interaction.
-- **Native Android Integration:** Engineered for mobile terminal interfaces and background widgets via OpenWakeWord.
-- **System Command Routing:** Translates user directives into executable tasks for sub-agents.
+> **Say what you want. Saphira understands the intent, coordinates the right intelligence, executes within policy, verifies the result, remembers what matters, and tells you what happened.**
 
-## Introduction
+## Unified Saphira Architecture
 
-# Saphira AI 🔮✨
-*Architected and Built by Chelsea Megan Woods*
+The repository now treats the following as one canonical system rather than separate Saphira versions:
 
- # Saphira AI: Advanced Personal Assistant with Persistent Memory & WebGPU Acceleration. Saphira AI is an autonomous multi-agent ecosystem and native assistant designed to cut through cognitive friction, handle complex software and hardware automation, and make human life 1% easier, calmer, and less stressful every single day.
+- Conversational AI interface and adaptive persona
+- Persistent / "God Memory" architecture
+- Executive planner and task-graph orchestration
+- Capability-based agent workforce
+- Model routing abstraction
+- Tool and API gateway contracts
+- Multimodal voice, vision, and web-grounding adapters
+- Sales / LeadOS and growth workflows
+- Communications and outreach workflows
+- Commerce / Shopify workflows
+- Creator and content workflows
+- Research and business-intelligence workflows
+- Quality assurance and verification
+- Permissioned Android/device and smart-environment integrations
+- Enterprise multi-tenant control plane
+- Security, authorization, audit, and approval gates
+- Resilience, observability, and operational telemetry
+- SaaS/API/custom-agent commercialization surfaces
 
-## 🚀 Expanded IoT & Real-World Control Matrix
-- **Home & Media:** Control TVs, change channels, check what's playing, and command streaming media.
-- **Appliances & Vacuums:** Direct robotic vacuums (start, stop, dock) and manage smart home appliances.
-- **Ambient Lighting:** Adjust Bluetooth and Wi-Fi LED bulbs, set custom mood colors, and dim/brighten on command.
-- **Smart Beds:** Position adjustable mattresses, toggle massage motors, and manage climate zones.
-- **Companion & Entertainment:** Play interactive games, sing, select mood playlists, and solve complex real-world problems or homework step-by-step. Saphira AI is an intelligent personal assistant platform developed by **Chelsea Megan Woods** under **Woods Legacies**, designed to revolutionize how users interact with AI-powered automation. Featuring persistent memory systems, multi-agent routing, WebGPU acceleration for GPU-accelerated processing, and enterprise-grade resilience patterns, Saphira AI delivers a sophisticated, responsive, and reliable foundation for building proactive AI agents. Built with FastAPI, this advanced AI system integrates circuit breaker, retry, and bulkhead patterns to ensure fault tolerance and optimal performance in production environments. Whether you're automating workflows, managing complex conversations, or leveraging GPU-accelerated inference, Saphira AI provides the tools and architecture needed for next-generation intelligent systems.
+### Canonical execution flow
 
----
+```text
+User
+  -> Saphira
+  -> Intent + Context
+  -> Executive Planner
+  -> Task Graph / Orchestrator
+  -> Capability Registry
+  -> Specialized Workers
+  -> Secure Tool/API Fabric
+  -> Verification / QA
+  -> Memory + Event Ledger
+  -> Saphira Response
+```
 
-## System Architecture
+Users do not have to select or manage individual agents for routine work. Agents are internal workers coordinated by Saphira.
 
-- **Multi-Agent Routing**: Intelligent task delegation across specialized AI agents
-- **Persistent Memory Layer**: Long-term context retention and conversation history management
-- **WebGPU Acceleration**: GPU-accelerated inference and computation for enhanced performance
-- **Resilience Patterns**: Circuit breaker, retry, and bulkhead patterns for fault tolerance
-- **FastAPI Backend**: Modern, scalable REST API for seamless integration
-- **Agent Orchestration**: Coordinated multi-agent workflows with dynamic routing
+## Core runtime contracts
 
----
+The canonical provider-neutral runtime contracts live in:
 
-## Key Features
+- `src/core/saphira_unified_runtime.py`
+- `src/core/saphira_system_contracts.py`
 
-### 🤖 Advanced AI Capabilities
+The unified architecture specification lives in:
 
-- **Persistent Memory System**: Maintains conversation context and user preferences across sessions
-- **Multi-Agent Architecture**: Distributed task handling with intelligent agent routing
-- **Proactive Assistance**: Anticipatory task execution and intelligent recommendations
-- **WebGPU Integration**: Browser-native GPU acceleration for client-side inference
+- `docs/SAPHIRA_UNIFIED_ARCHITECTURE.md`
+- `docs/SAPHIRA_EXECUTIVE_RUNTIME.md`
+- `docs/SAPHIRA_ULTIMATE_CAPABILITY_CONTRACT.md`
+- `docs/SAPHIRA_IMPLEMENTATION_MATRIX.md`
 
-### 🛡️ Enterprise Resilience
+Existing persona, voice, avatar, mobile, capability, agent, deployment, resilience, and control-plane components remain part of the implementation surface. The unified runtime is the canonical integration target for new work.
 
-- **Circuit Breaker Pattern**: Automatic failure detection and graceful degradation
-- **Retry Logic**: Intelligent retry mechanisms with exponential backoff
-- **Bulkhead Isolation**: Resource isolation to prevent cascading failures
-- **Health Monitoring**: Real-time system health and performance metrics
+## Autonomy and safety gates
 
-### ⚡ Performance Optimization
+Saphira separates observation, recommendation, approval, execution, verification, and memory. External, financial, destructive, privacy-sensitive, or irreversible actions require explicit authorization under the active policy unless an auditable tenant policy provides equivalent authorization.
 
-- **FastAPI Framework**: High-performance async web framework for Python
-- **GPU Acceleration**: WebGPU for hardware-accelerated computation
-- **Optimized Inference**: Efficient model execution and response generation
-- **Scalable Architecture**: Horizontal scaling capabilities for growing workloads
+Every meaningful request should be represented as a durable task. Workers return structured results, and Saphira should not claim completion until the result has been verified.
 
----
+## Multimodal and device direction
 
-## Technology Stack
+Saphira supports provider-neutral contracts for speech recognition, speech synthesis, vision, web grounding, system actions, smart environments, sandbox execution, CAD generation, memory, and proactive scheduling.
 
-| Component | Technology | Purpose |
-|-----------|-----------|---------|
-| **Backend** | FastAPI | REST API and request handling |
-| **Acceleration** | WebGPU | GPU-accelerated inference |
-| **Memory** | Persistent Storage | Context and history management |
-| **Orchestration** | Multi-Agent Router | Task delegation and routing |
-| **Resilience** | Circuit Breaker/Retry | Fault tolerance patterns |
+The Android/device roadmap includes the **"Okay Saphira"** wake-word experience plus permissioned background voice, notifications, audio, Bluetooth, accessibility/device adapters, files, sensors, and smart-environment bridges.
 
----
+## Business intelligence
 
-## Getting Started
+Saphira can coordinate revenue workflows such as:
+
+```text
+Lead discovery
+ -> enrichment
+ -> qualification
+ -> personalized outreach
+ -> follow-up
+ -> CRM synchronization
+ -> conversion measurement
+ -> optimization
+```
+
+The same orchestration pattern extends to commerce, content, research, development, operations, and automation.
+
+## Enterprise control plane
+
+The enterprise control plane is intended for operators and administrators and can expose tenant, user, worker, task, workflow, memory, model, tool/API, latency, error, security, cost, revenue, and device telemetry. The control plane does not replace the conversational Saphira experience.
+
+## Technology direction
+
+The existing repository contains FastAPI, web/PWA, mobile, voice, persona, capability, agent, resilience, deployment, and enterprise-control-plane work. Saphira is designed for provider-neutral integrations and can use persistent storage, caching, WebSockets, model routing, and external APIs as appropriate to the deployment.
+
+## Development
 
 ### Prerequisites
 
 - Python 3.11+
-- CUDA/ROCm (optional, for GPU support)
-- WebGPU-compatible browser or environment
+- Node.js / web tooling where applicable
+- Flutter tooling for the mobile surface where applicable
 
-### Installation
+### Backend quick start
 
 ```bash
-# Clone the repository
-git clone https://github.com/chichi-lyman/saphira-ai.git
-cd saphira-ai
-
-# Install dependencies
 pip install -r requirements.txt
-
-# Configure environment variables
 cp .env.example .env
-```
-
-### Quick Start
-
-```bash
-# Start the FastAPI server
 uvicorn main:app --reload
-
-# Access the API
-# http://localhost:8000/docs (Swagger UI)
 ```
 
----
+The API documentation is available at `http://localhost:8000/docs` when the FastAPI service is running.
 
-## Architecture Components
+## Architecture principle
 
-### Multi-Agent System
+**One assistant. Many capabilities. One execution fabric.**
 
-The core routing engine dispatches tasks to specialized agents based on:
-- Task type and complexity
-- Agent capabilities and specialization
-- Current resource availability
-
-### Persistent Memory
-
-Context preservation across sessions through:
-- Conversation history storage
-- User preference management
-- Long-term knowledge retention
-
-### Resilience Framework
-
-Ensures reliability through:
-- **Circuit Breaker**: Prevents cascading failures
-- **Retry Strategy**: Transient failure recovery
-- **Bulkhead Pattern**: Resource isolation and protection
-
----
-
-## Configuration
-
-Environment variables for optimization:
-
-```bash
-# API Configuration
-API_HOST=0.0.0.0
-API_PORT=8000
-
-# Memory Settings
-MEMORY_BACKEND=persistent
-MEMORY_TTL=86400
-
-# GPU Acceleration
-ENABLE_WEBGPU=true
-GPU_MEMORY_LIMIT=8GB
-
-# Resilience Settings
-CIRCUIT_BREAKER_THRESHOLD=5
-RETRY_MAX_ATTEMPTS=3
-BULKHEAD_THREAD_POOL=10
-```
-
----
-
-## Performance Benchmarks
-
-| Metric | Value |
-|--------|-------|
-| API Response Time | < 200ms |
-| Memory Throughput | > 1GB/s (GPU) |
-| Concurrent Sessions | 10,000+ |
-| Agent Routing Latency | < 50ms |
-
----
-
-## Contributing
-
-Contributions are welcome! Please follow these guidelines:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/your-feature`)
-3. Commit changes (`git commit -m 'Add feature'`)
-4. Push to branch (`git push origin feature/your-feature`)
-5. Open a Pull Request
-
----
+The complexity belongs behind Saphira. The user should experience a single intelligent assistant rather than a collection of disconnected bots.
 
 ## License
 
 Copyright © 2026 Chelsea Megan Woods (Woods Legacies). All Rights Reserved.
 
-This project is provided under a proprietary license. Unauthorized copying or distribution is prohibited.
+This project is provided under the repository's proprietary licensing terms. Unauthorized copying or distribution is prohibited.
 
 ---
 
-## Support & Contact
-
-For questions, issues, or collaborations:
-
-- **GitHub Issues**: [Report bugs and request features](https://github.com/chichi-lyman/saphira-ai/issues)
-- **Author**: Chelsea Megan Woods
-- **Organization**: Woods Legacies
-
----
-
-## Acknowledgments
-
-**Saphira AI** is a sophisticated AI platform built with modern frameworks and enterprise-grade patterns, designed to demonstrate advanced AI agent architecture, persistent memory systems, multi-agent orchestration, GPU acceleration, and production-ready resilience patterns.
-
----
-
-*Last Updated: 2026-07-22*
-*Repository: https://github.com/chichi-lyman/saphira-ai* 
+*Unified architecture baseline: August 10, 2026*  
+*Repository: `chichi-lyman/saphira-ai`*
