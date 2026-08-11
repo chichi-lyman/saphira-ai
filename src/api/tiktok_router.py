@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import os
-from urllib.parse import urlencode
+import secrets
 
-from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi import APIRouter, Header, HTTPException, Response
 from pydantic import BaseModel, Field, HttpUrl
 
 from src.integrations.tiktok_content_posting import (
@@ -15,7 +15,6 @@ from src.integrations.tiktok_content_posting import (
 )
 
 router = APIRouter(prefix="/tiktok", tags=["TikTok"])
-OPEN_ID_COOKIE = "saphira_tiktok_open_id"
 
 
 def service() -> TikTokContentPostingService:
@@ -23,6 +22,14 @@ def service() -> TikTokContentPostingService:
         return TikTokContentPostingService()
     except TikTokConfigError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+
+def require_automation_key(x_saphira_automation_key: str | None) -> None:
+    expected = os.getenv("SAPHIRA_TIKTOK_AUTOMATION_KEY", "")
+    if not expected:
+        raise HTTPException(status_code=503, detail="SAPHIRA_TIKTOK_AUTOMATION_KEY is not configured.")
+    if not x_saphira_automation_key or not secrets.compare_digest(x_saphira_automation_key, expected):
+        raise HTTPException(status_code=401, detail="Unauthorized TikTok automation request.")
 
 
 class PublishVideoRequest(BaseModel):
@@ -36,11 +43,9 @@ class PublishVideoRequest(BaseModel):
 
 
 @router.get("/oauth/start")
-async def oauth_start(response: Response):
+async def oauth_start():
     svc = service()
     state = await svc.create_oauth_state()
-    # State is persisted server-side in Redis. The browser only receives the
-    # authorization URL and never receives a TikTok client secret/token.
     return {"authorization_url": svc.authorization_url(state)}
 
 
@@ -60,27 +65,15 @@ async def oauth_callback(code: str | None = None, state: str | None = None, erro
     if frontend:
         return Response(
             status_code=302,
-            headers={"Location": f"{frontend.rstrip('/')}/settings/tiktok?connected=1"},
+            headers={"Location": f"{frontend.rstrip('/')}/settings/tiktok?connected=1&open_id={token.open_id}"},
             media_type="text/plain",
         )
     return {"connected": True, "open_id": token.open_id, "scope": token.scope}
 
 
-@router.get("/connection")
-async def connection(request: Request):
-    open_id = request.cookies.get(OPEN_ID_COOKIE)
-    # Cookie support is intentionally opt-in; production deployments should
-    # set the open-id cookie at the frontend gateway after OAuth callback.
-    return {"connected": bool(open_id)}
-
-
 @router.post("/connect/code")
 async def connect_code(code: str):
-    """Exchange a short-lived authorization code and return only non-secret metadata.
-
-    This endpoint is useful when the frontend performs the OAuth redirect and
-    sends the one-time code directly to Saphira over HTTPS.
-    """
+    """Exchange a short-lived authorization code over HTTPS; never expose client_secret."""
     svc = service()
     try:
         token = await svc.exchange_code(code)
@@ -90,7 +83,8 @@ async def connect_code(code: str):
 
 
 @router.get("/creator-info/{open_id}")
-async def creator_info(open_id: str):
+async def creator_info(open_id: str, x_saphira_automation_key: str | None = Header(default=None)):
+    require_automation_key(x_saphira_automation_key)
     svc = service()
     try:
         return await svc.creator_info(open_id)
@@ -99,7 +93,12 @@ async def creator_info(open_id: str):
 
 
 @router.post("/publish/{open_id}")
-async def publish(open_id: str, payload: PublishVideoRequest):
+async def publish(
+    open_id: str,
+    payload: PublishVideoRequest,
+    x_saphira_automation_key: str | None = Header(default=None),
+):
+    require_automation_key(x_saphira_automation_key)
     svc = service()
     try:
         result = await svc.direct_post_video(
@@ -118,7 +117,12 @@ async def publish(open_id: str, payload: PublishVideoRequest):
 
 
 @router.post("/status/{open_id}/{publish_id:path}")
-async def status(open_id: str, publish_id: str):
+async def status(
+    open_id: str,
+    publish_id: str,
+    x_saphira_automation_key: str | None = Header(default=None),
+):
+    require_automation_key(x_saphira_automation_key)
     svc = service()
     try:
         return await svc.publish_status(open_id, publish_id)
@@ -127,7 +131,8 @@ async def status(open_id: str, publish_id: str):
 
 
 @router.delete("/disconnect/{open_id}")
-async def disconnect(open_id: str):
+async def disconnect(open_id: str, x_saphira_automation_key: str | None = Header(default=None)):
+    require_automation_key(x_saphira_automation_key)
     svc = service()
     await svc.disconnect(open_id)
     return {"connected": False}
