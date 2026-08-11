@@ -1,4 +1,269 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#050508"><meta name="description" content="Saphira AI — your conversational sovereign intelligence interface by Chelsea Megan Woods."><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="/manifest.json"><title>Saphira AI — Your Intelligence. Unified.</title><link rel="stylesheet" href="/styles.css"></head>
-<body><div class="browser-frame"><div class="browser-chrome"><div class="traffic"><span></span><span></span><span></span></div><div class="address"><span class="lock">⌁</span> saphira-ai.vercel.app <span class="path">/command-center</span></div><div class="chrome-actions">◌　⋮</div></div><div class="app-shell"><div class="ambient portrait" aria-hidden="true"><div class="portrait-head"></div><div class="portrait-hair"></div><div class="circuit circuit-a"></div><div class="circuit circuit-b"></div><div class="circuit circuit-c"></div><div class="dust"></div></div><aside class="sidebar glass-panel"><div class="brand-lockup"><div class="crown">♛</div><div><strong>SAPHIRA</strong><small>YOUR AI. YOUR SOVEREIGN.</small></div></div><nav class="side-nav" aria-label="Primary"><a class="active" href="#command"><span>⌘</span>Command Center</a><a href="#conversation"><span>◈</span>Conversations</a><a href="#memory"><span>◇</span>Memory Vault</a><a href="#missions"><span>✦</span>Mission Dashboard</a><a href="#agents"><span>◎</span>Agent Network</a><a href="#tools"><span>⚙</span>Tools &amp; Automation</a><a href="#settings"><span>◉</span>Settings</a></nav><div class="audio-widget"><div class="audio-ring"><i></i></div><div><b>VOICE LINK</b><small id="voiceHint">Tap Talk to activate</small></div><div class="wave"><i></i><i></i><i></i><i></i><i></i></div></div></aside><main class="workspace" id="command"><div class="hero-copy"><p class="eyebrow">SAPHIRA AI · SOVEREIGN INTELLIGENCE OS</p><h1>YOUR INTELLIGENCE.<br><em>UNIFIED.</em></h1><p class="lede">One conversational intelligence layer coordinating memory, reasoning, agents, automation and action.</p></div><section class="conversation-stage" id="conversation"><div class="floating-card glass-card"><span class="tiny-label">ACTIVE CONTEXT</span><strong>Executive command session</strong><small>Memory synchronized · 99.8%</small></div><div class="chat-card glass-card"><div class="chat-head"><div class="live-dot"></div><span>SAPHIRA IS ONLINE</span><button type="button" class="mini-btn" id="clearChat">CLEAR</button></div><div id="messages" class="messages" aria-live="polite"><article class="message saphira"><div class="avatar">S</div><div><span class="label">SAPHIRA</span><p>I'm here, Chelsea. Your intelligence layer is synchronized. What are we building?</p></div></article></div><form id="chatForm" class="composer"><textarea id="prompt" rows="1" placeholder="Talk to Saphira…" aria-label="Message Saphira"></textarea><button id="send" type="submit" aria-label="Send message">➤</button></form><div class="quick-prompts"><button data-prompt="Open my command center and give me the highest-priority action.">Command</button><button data-prompt="Analyze my next business growth move and give me an execution plan.">Growth</button><button data-prompt="Research a prospect and prepare a sales strategy.">Sales</button></div></div><button class="talk-orb" id="talkToSaphira" type="button" aria-label="Start continuous voice conversation"><span class="orb-core">S</span><b id="talkLabel">TALK TO<br>SAPHIRA</b></button></section></main><aside class="rightbar" id="agents"><section class="telemetry glass-panel"><div class="section-title"><span>SYSTEM TELEMETRY</span><b>LIVE</b></div><div class="metric"><span>Mood</span><strong>Focused</strong><i class="meter"><u style="width:88%"></u></i></div><div class="metric"><span>Energy</span><strong>94%</strong><i class="meter"><u style="width:94%"></u></i></div><div class="metric"><span>Connection</span><strong>Stable</strong><i class="meter"><u style="width:99%"></u></i></div><div class="metric"><span>Memory Sync</span><strong>99.8%</strong><i class="meter"><u style="width:99.8%"></u></i></div></section><section class="agent-panel glass-panel"><div class="section-title"><span>AGENT NETWORK</span><b>05 ACTIVE</b></div><div class="agent"><span class="agent-icon">A</span><div><strong>AURA</strong><small>Presence &amp; interface</small></div><i></i></div><div class="agent"><span class="agent-icon">0</span><div><strong>AGENT ZERO</strong><small>Execution core</small></div><i></i></div><div class="agent"><span class="agent-icon">N</span><div><strong>NEXUS</strong><small>Orchestration</small></div><i></i></div><div class="agent"><span class="agent-icon">O</span><div><strong>ORACLE</strong><small>Research &amp; foresight</small></div><i></i></div><div class="agent"><span class="agent-icon">S</span><div><strong>SENTINEL</strong><small>Security &amp; governance</small></div><i></i></div></section><section class="memory-card glass-panel" id="memory"><span class="tiny-label">MEMORY VAULT</span><strong>Long-term memory online</strong><small>Identity · goals · preferences · context</small></section></aside></div><nav class="bottom-dock glass-panel" aria-label="Quick navigation"><a class="selected" href="#command">⌂<small>Home</small></a><a href="#memory">◇<small>Memory</small></a><a href="#conversation">◈<small>Chats</small></a><a href="#missions">✦<small>Missions</small></a><a href="#settings">⚙<small>Settings</small></a></nav></div><div class="sr-only" id="statusText">Ready</div><script>window.SAPHIRA_API_URL='https://saphira-ai.onrender.com/api';</script><script src="/app.js" defer></script></body></html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0612">
+  <meta name="description" content="Saphira AI — Your Intelligence. Unified. Executive Runtime by Chelsea Megan Woods.">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="/manifest.json">
+  <title>Saphira — Unified Intelligence</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app">
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">♛</div>
+        <div class="brand-text">
+          <strong>SAPHIRA</strong>
+          <span>YOUR AI TWIN. YOUR SOVEREIGN.</span>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a href="#command" class="nav-item active">
+          <span class="nav-icon">⌘</span>
+          <span>COMMAND CENTER</span>
+        </a>
+        <a href="#conversations" class="nav-item">
+          <span class="nav-icon">💬</span>
+          <span>CONVERSATIONS</span>
+        </a>
+        <a href="#memory" class="nav-item">
+          <span class="nav-icon">🧠</span>
+          <span>MEMORY VAULT</span>
+        </a>
+        <a href="#missions" class="nav-item">
+          <span class="nav-icon">🎯</span>
+          <span>MISSION DASHBOARD</span>
+        </a>
+        <a href="#agents" class="nav-item">
+          <span class="nav-icon">◎</span>
+          <span>AGENT NETWORK</span>
+        </a>
+        <a href="#tools" class="nav-item">
+          <span class="nav-icon">⚙️</span>
+          <span>TOOLS &amp; AUTOMATION</span>
+        </a>
+        <a href="#settings" class="nav-item">
+          <span class="nav-icon">⚙️</span>
+          <span>SETTINGS</span>
+        </a>
+      </nav>
+
+      <div class="online-status">
+        <div class="status-dot"></div>
+        <div class="status-text">
+          <strong>SAPHIRA ONLINE</strong>
+          <span>Ready to Twin, Chelsea.</span>
+        </div>
+        <div class="waveform">
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN WORKSPACE -->
+    <main class="workspace">
+      <!-- Avatar + Hero -->
+      <div class="hero-stage">
+        <div class="avatar-container">
+          <!-- Replace src with your photorealistic avatar asset when available -->
+          <div class="avatar-glow"></div>
+          <div class="avatar-frame">
+            <div class="avatar-css" aria-hidden="true">
+              <div class="avatar-face">
+                <div class="avatar-hair"></div>
+                <div class="avatar-eyes">
+                  <span></span><span></span>
+                </div>
+                <div class="avatar-circuits">
+                  <div class="circuit-line c1"></div>
+                  <div class="circuit-line c2"></div>
+                  <div class="circuit-line c3"></div>
+                  <div class="circuit-line c4"></div>
+                </div>
+                <div class="avatar-lips"></div>
+              </div>
+            </div>
+            <!-- Preferred: uncomment and set real image
+            <img src="/avatar-saphira.png" alt="Saphira" class="avatar-img">
+            -->
+          </div>
+        </div>
+
+        <div class="hero-copy">
+          <p class="eyebrow">SAPHIRA AI · EXECUTIVE RUNTIME</p>
+          <h1>YOUR INTELLIGENCE.<br><em>UNIFIED.</em></h1>
+          <p class="lede">
+            One conversational interface coordinating memory, reasoning,
+            agents, business automation, tools, and connected capabilities.
+          </p>
+        </div>
+      </div>
+
+      <!-- Chat Stage -->
+      <section class="chat-stage" id="conversations">
+        <div class="chat-messages" id="chatMessages">
+          <div class="msg saphira">
+            <div class="msg-avatar">S</div>
+            <div class="msg-bubble">
+              <span class="msg-label">SAPHIRA</span>
+              <p>I'm online. Tell me what you want to accomplish.</p>
+            </div>
+          </div>
+
+          <div class="msg user">
+            <div class="msg-bubble">
+              <span class="msg-label">CHELSEA</span>
+              <p>Hi saphira</p>
+              <time>9:41 AM</time>
+            </div>
+            <div class="msg-avatar user-av">C</div>
+          </div>
+
+          <div class="msg saphira">
+            <div class="msg-avatar">S</div>
+            <div class="msg-bubble">
+              <span class="msg-label">SAPHIRA</span>
+              <p>I received your request. The Saphira web shell is online; connect the production API endpoint to enable full cloud execution and persistent memory.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-input-row">
+          <input type="text" id="chatInput" placeholder="Ask Saphira anything..." autocomplete="off">
+          <button type="button" id="sendBtn" class="send-btn" aria-label="Send message">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+            </svg>
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <!-- RIGHT RAIL -->
+    <aside class="right-rail">
+      <section class="status-panel">
+        <div class="panel-header">
+          <span>SAPHIRA STATUS</span>
+          <div class="live-indicator">
+            <i></i><i></i><i></i>
+          </div>
+        </div>
+        <div class="status-rows">
+          <div class="status-row">
+            <span class="label">Mood</span>
+            <span class="value">Focused</span>
+            <span class="dot cyan"></span>
+          </div>
+          <div class="status-row">
+            <span class="label">Energy</span>
+            <span class="value">High</span>
+            <span class="dot cyan"></span>
+          </div>
+          <div class="status-row">
+            <span class="label">Connection</span>
+            <span class="value">Secure</span>
+            <span class="dot green"></span>
+          </div>
+          <div class="status-row">
+            <span class="label">Memory Sync</span>
+            <span class="value">100%</span>
+            <span class="dot cyan"></span>
+          </div>
+        </div>
+        <button type="button" class="talk-btn" id="talkToSaphira">
+          <span class="mic-icon">🎤</span>
+          TALK TO SAPHIRA
+        </button>
+      </section>
+
+      <section class="agent-panel" id="agents">
+        <div class="panel-header">
+          <span>AGENT NETWORK</span>
+          <span class="agent-count">5 ACTIVE AGENTS</span>
+        </div>
+        <ul class="agent-list">
+          <li class="agent">
+            <div class="agent-icon aura">A</div>
+            <div class="agent-info">
+              <strong>AURA</strong>
+              <small>Creative Intelligence</small>
+            </div>
+            <span class="agent-status online">ONLINE</span>
+          </li>
+          <li class="agent">
+            <div class="agent-icon zero">0</div>
+            <div class="agent-info">
+              <strong>AGENT ZERO</strong>
+              <small>Ops &amp; Automation</small>
+            </div>
+            <span class="agent-status online">ONLINE</span>
+          </li>
+          <li class="agent">
+            <div class="agent-icon nexus">N</div>
+            <div class="agent-info">
+              <strong>NEXUS</strong>
+              <small>Data Analysis</small>
+            </div>
+            <span class="agent-status online">ONLINE</span>
+          </li>
+          <li class="agent">
+            <div class="agent-icon oracle">O</div>
+            <div class="agent-info">
+              <strong>ORACLE</strong>
+              <small>Research &amp; Insight</small>
+            </div>
+            <span class="agent-status online">ONLINE</span>
+          </li>
+          <li class="agent">
+            <div class="agent-icon sentinel">S</div>
+            <div class="agent-info">
+              <strong>SENTINEL</strong>
+              <small>Security &amp; Compliance</small>
+            </div>
+            <span class="agent-status online">ONLINE</span>
+          </li>
+        </ul>
+        <button type="button" class="view-all-btn">VIEW ALL AGENTS</button>
+      </section>
+    </aside>
+  </div>
+
+  <!-- BOTTOM DOCK (mobile + desktop) -->
+  <nav class="bottom-dock" aria-label="Quick navigation">
+    <a href="#command" class="dock-item active">
+      <span class="dock-icon">⌂</span>
+      <small>Home</small>
+    </a>
+    <a href="#memory" class="dock-item">
+      <span class="dock-icon">◇</span>
+      <small>Memory</small>
+    </a>
+    <a href="#conversations" class="dock-item">
+      <span class="dock-icon">💬</span>
+      <small>Chats</small>
+    </a>
+    <a href="#missions" class="dock-item">
+      <span class="dock-icon">✦</span>
+      <small>Missions</small>
+    </a>
+    <a href="#settings" class="dock-item">
+      <span class="dock-icon">⚙</span>
+      <small>Settings</small>
+    </a>
+  </nav>
+
+  <script>
+    window.SAPHIRA_API_URL = 'https://saphira-ai.onrender.com/api';
+  </script>
+  <script src="/app.js" defer></script>
+</body>
+</html>
