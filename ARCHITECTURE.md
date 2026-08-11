@@ -14,4 +14,14 @@
 
 ## 4. Resilience & Testing
 - Automated adversarial testing suite running jailbreak and load benchmarks.
-- 
+
+## 5. Autonomous Commerce OS (foundation)
+
+Implemented under `src/commerce/`:
+
+- `CommercialAuthorityPolicy` — ALLOW / REQUIRE_APPROVAL / DENY
+- `AuditStore` — append-only, hash-chained audit records
+- `CommercialStateMachine` — validated commercial lifecycle transitions
+- `StripeWebhookVerifier` — signature verification + idempotent activation
+
+See `docs/COMMERCE_OS.md`. External autonomous communication is not enabled until policy test gates pass.
