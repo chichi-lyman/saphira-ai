@@ -72,6 +72,37 @@ class SalesSwarmAdapter:
             "status": "PENDING_APPROVAL",
         }
 
+    def discover_fixture_leads(self, html_text: str, *, source_url: str,
+                               source_name: str, industry: str, city: str = "",
+                               state: str = "", max_leads: int = 50) -> list[dict[str, Any]]:
+        """Parse deterministic public-business fixtures through the free scraper."""
+        from src.tools.free_scraper import parse_fixture_html
+
+        if max_leads < 1 or max_leads > 1000:
+            raise AdapterError("max_leads must be between 1 and 1000")
+        leads = parse_fixture_html(
+            html_text,
+            source_url=source_url,
+            source_name=source_name,
+            industry=industry,
+            city=city,
+            state=state,
+        )
+        return [
+            {
+                "business_name": lead.business_name,
+                "website": lead.website,
+                "business_phone": lead.business_phone,
+                "city": lead.city,
+                "state": lead.state,
+                "industry": lead.industry,
+                "source_url": lead.source_url,
+                "source_name": lead.source_name,
+                "discovered_at": lead.discovered_at,
+            }
+            for lead in leads[:max_leads]
+        ]
+
 
 @dataclass
 class SentinelAdapter:
@@ -112,7 +143,6 @@ class TwinVaultAdapter:
     def put_reference(self, key: str, secret_reference: str) -> None:
         if not key or not secret_reference:
             raise AdapterError("key and secret_reference are required")
-        # Store a reference, never plaintext credentials.
         self._store[key] = secret_reference
 
     def get_reference(self, key: str) -> str | None:
