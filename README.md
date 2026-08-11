@@ -211,45 +211,65 @@ Production requirements include:
 
 ---
 
-# 🧪 Integration Testing
+# 🧲 Zero-Cost B2B Lead Engine
 
-P0 integration tests live under:
+Saphira now contains a dependency-light lead-discovery foundation designed for a first revenue test without requiring a paid data broker.
 
-```text
-tests/integration/test_p0_adapters.py
-tests/integration/test_unified_p0_flow.py
-```
-
-The CI workflow is:
+The implementation lives in:
 
 ```text
-.github/workflows/p0-integration.yml
+src/tools/free_scraper.py
 ```
 
-The test layer covers the P0 adapter contracts, approval boundaries, security paths, structured outputs, health checks, and the unified planning-to-execution flow.
+The Sales Swarm adapter exposes the discovery contract through:
 
-CI is the source of truth for the actual runtime test result; committed test files and workflows should not be interpreted as proof that a provider or credential is connected.
+```text
+SalesSwarmAdapter.discover_fixture_leads(...)
+```
 
----
+### Initial revenue-test configuration
 
-# 🎙️ Multimodal & Device Intelligence
+```text
+Industry: Roofing Contractors
+Geography: Tampa Bay, Florida
+Target: 50 qualified business accounts
+Priority threshold: 7/10
+Output: storage/leads/tampa_bay_roofing_leads.csv
+```
 
-Saphira supports provider-neutral contracts for:
+The tool uses Python's standard library and provides deterministic fixture parsing for safe integration testing. A live source must be explicitly selected and must permit the intended automated access.
 
-- text
-- speech recognition
-- speech synthesis
-- vision
-- web grounding
-- realtime/WebSocket interaction
-- sandbox execution
-- device operations
-- smart environments
-- proactive scheduling
+The engine is intentionally designed **not** to bypass CAPTCHAs, authentication, access controls, or source restrictions. It should collect appropriate business-level information, preserve source attribution, apply rate limits, deduplicate records, and keep a human approval gate before outbound communication.
 
-The Android/device roadmap includes the **“Okay Saphira”** wake-word experience and permissioned integrations for voice services, notifications, audio, Bluetooth, accessibility, files, sensors, and device gateways.
+### Lead lifecycle
 
-Device capabilities remain permission-gated.
+```text
+Public Business Discovery
+        ↓
+Normalization / Deduplication
+        ↓
+Qualification
+        ↓
+Personalized Draft
+        ↓
+Human Approval
+        ↓
+Outbound Communication
+        ↓
+Opportunity
+        ↓
+Payment
+        ↓
+Recurring Revenue
+```
+
+The raw CSV is an internal prospecting artifact. The commercial product is the qualified pipeline, business intelligence, personalized outreach, and resulting revenue workflow.
+
+Tests live in:
+
+```text
+tests/integration/test_free_lead_engine.py
+```
 
 ---
 
@@ -338,6 +358,49 @@ http://localhost:8000/docs
 
 ---
 
+# 🧪 Integration Testing
+
+P0 integration tests live under:
+
+```text
+tests/integration/test_p0_adapters.py
+tests/integration/test_unified_p0_flow.py
+tests/integration/test_free_lead_engine.py
+```
+
+The CI workflow is:
+
+```text
+.github/workflows/p0-integration.yml
+```
+
+The test layer covers the P0 adapter contracts, approval boundaries, security paths, structured outputs, health checks, unified planning-to-execution flow, lead normalization, fixture parsing, and CSV generation.
+
+CI is the source of truth for the actual runtime test result; committed test files and workflows should not be interpreted as proof that a provider or credential is connected.
+
+---
+
+# 🎙️ Multimodal & Device Intelligence
+
+Saphira supports provider-neutral contracts for:
+
+- text
+- speech recognition
+- speech synthesis
+- vision
+- web grounding
+- realtime/WebSocket interaction
+- sandbox execution
+- device operations
+- smart environments
+- proactive scheduling
+
+The Android/device roadmap includes the **“Okay Saphira”** wake-word experience and permissioned integrations for voice services, notifications, audio, Bluetooth, accessibility, files, sensors, and device gateways.
+
+Device capabilities remain permission-gated.
+
+---
+
 # 🗺️ Upgrade Roadmap
 
 The current implementation roadmap is maintained in:
@@ -379,7 +442,8 @@ Saphira is the executive interface; specialized systems are the workforce.
 **Architecture:** Unified  
 **P0 integration layer:** Implemented  
 **Adapter contracts:** Implemented  
-**Integration tests:** Added  
+**Zero-cost lead discovery foundation:** Implemented  
+**Lead-engine integration tests:** Added  
 **CI workflow:** Added  
 **External provider credentials:** Deployment-dependent  
 **Full production integration:** In progress
