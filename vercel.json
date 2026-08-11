@@ -1,4 +1,23 @@
 {
+  "version": 2,
+  "framework": null,
+  "buildCommand": "echo 'Saphira static production build ready'",
   "outputDirectory": "public",
-  "cleanUrls": true
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    },
+    {
+      "source": "/(.*\\.(?:js|css|svg|png|jpg|jpeg|webp|ico|woff2))",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    }
+  ]
 }
