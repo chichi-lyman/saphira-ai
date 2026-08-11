@@ -5,6 +5,7 @@ import os
 
 from src.api.chat_router import router as chat_router
 from src.api.device_ws import router as device_router
+from src.api.tiktok_router import router as tiktok_router
 from core.control_plane import router as control_plane_router
 from observability.telemetry import router as telemetry_router
 from core.audit_middleware import AuditEventMiddleware
@@ -25,17 +26,16 @@ allowed_origins = [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    # Saphira's public web shell is deployed on Vercel. This keeps preview
-    # deployments usable without requiring a Render redeploy for every URL.
-    allow_origin_regex=r"https://.*\.vercel\.app$",
+    allow_origin_regex=r"https://.*\\.vercel\\.app$",
     allow_credentials=False,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "X-Saphira-Device", "X-Tenant-ID", "X-Agent-DID"],
+    allow_headers=["Authorization", "Content-Type", "X-Saphira-Device", "X-Tenant-ID", "X-Agent-DID", "X-Saphira-Automation-Key"],
 )
 app.add_middleware(AuditEventMiddleware)
 
 app.include_router(chat_router, prefix="/api")
 app.include_router(device_router, prefix="/api")
+app.include_router(tiktok_router, prefix="/api")
 app.include_router(control_plane_router)
 app.include_router(telemetry_router)
 
