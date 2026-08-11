@@ -4,8 +4,9 @@
   const messages = document.getElementById('messages');
   const send = document.getElementById('send');
   const status = document.getElementById('statusText');
+  const talk = document.getElementById('talkToSaphira');
+  const clear = document.getElementById('clearChat');
 
-  // Production FastAPI runtime. Override with window.SAPHIRA_API_URL at deploy time if needed.
   const apiBase = (window.SAPHIRA_API_URL || 'https://saphira-ai.onrender.com/api').replace(/\/$/, '');
   const sessionKey = 'saphira-session-id';
   const sessionId = localStorage.getItem(sessionKey) || crypto.randomUUID();
@@ -27,6 +28,8 @@
     utterance.rate = 0.96;
     utterance.pitch = 1.04;
     utterance.volume = 1;
+    utterance.onstart = () => { if (status) status.textContent = 'Speaking'; };
+    utterance.onend = () => { if (status) status.textContent = 'Ready'; };
     window.speechSynthesis.speak(utterance);
   };
 
@@ -34,11 +37,7 @@
     const response = await fetch(`${apiBase}/chat`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        message: text,
-        source: 'saphira-web',
-        session_id: sessionId
-      })
+      body: JSON.stringify({message: text, source: 'saphira-web', session_id: sessionId})
     });
     if (!response.ok) throw new Error(`API ${response.status}`);
     const data = await response.json();
@@ -52,16 +51,16 @@
     input.value = '';
     input.style.height = 'auto';
     send.disabled = true;
-    status.textContent = 'Thinking';
+    if (status) status.textContent = 'Thinking';
     try {
       const reply = await askSaphira(clean);
       addMessage('saphira', reply);
-      status.textContent = 'Ready';
+      if (status) status.textContent = 'Ready';
       speak(reply);
     } catch (error) {
       console.error('Saphira API error:', error);
       addMessage('saphira', "I'm here, but I can't reach my cloud runtime right now. Give me a moment and try again.");
-      status.textContent = 'API offline';
+      if (status) status.textContent = 'API offline';
     } finally {
       send.disabled = false;
       input.focus();
@@ -70,10 +69,20 @@
 
   form.addEventListener('submit', (event) => { event.preventDefault(); submit(input.value); });
   input.addEventListener('input', () => { input.style.height = 'auto'; input.style.height = `${Math.min(input.scrollHeight, 130)}px`; });
-  input.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); form.requestSubmit(); }
-  });
+  input.addEventListener('keydown', (event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); form.requestSubmit(); } });
   document.querySelectorAll('[data-prompt]').forEach((button) => button.addEventListener('click', () => submit(button.dataset.prompt)));
+
+  if (talk) talk.addEventListener('click', () => {
+    input.focus();
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    if (status) status.textContent = 'Listening';
+    input.placeholder = 'I\'m listening…';
+  });
+
+  if (clear) clear.addEventListener('click', () => {
+    messages.innerHTML = '<article class="message saphira"><div class="avatar">S</div><div><span class="label">SAPHIRA</span><p>Conversation cleared. I\'m ready.</p></div></article>';
+    if (status) status.textContent = 'Ready';
+  });
 
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
 })();
