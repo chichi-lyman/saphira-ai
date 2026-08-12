@@ -106,5 +106,49 @@ class EvaluatorAgent(BaseSubAgent):
         if "```json" in json_str:
             raw_json = json_str.split("```json")[1].split("```")[0].strip()
         elif "```" in json_str:
-            raw_json = json_str.split("
-      
+            raw_json = json_str.split("```")[1].split("```")[0].strip()
+
+        try:
+            json.loads(raw_json)
+            return EvaluationReport(is_valid=True, score=1.0, issues=[])
+        except json.JSONDecodeError as e:
+            error_msg = f"JSONDecodeError: {e.msg} (line {e.lineno}, col {e.colno})"
+            logger.warning(f"Static JSON validation failed: {error_msg}")
+            return EvaluationReport(
+                is_valid=False,
+                score=0.2,
+                issues=[error_msg],
+                suggested_fix="Ensure the response is valid JSON (or a ```json fenced block)."
+            )
+
+    async def run_llm_critic(self, original_prompt: str, content: str) -> EvaluationReport:
+        """Optional semantic critique via an injected LLM callable."""
+        if not self.llm_critic_func:
+            return EvaluationReport(is_valid=True, score=1.0, issues=[])
+
+        critic_prompt = (
+            "You are a strict evaluator. Given the user request and the candidate answer, "
+            "reply with a short JSON object only: "
+            '{"is_valid": true|false, "score": 0.0-1.0, "issues": ["..."], "suggested_fix": "..." or null}.\n\n'
+            f"User request:\n{original_prompt}\n\nCandidate answer:\n{content}"
+        )
+        try:
+            raw = await self.llm_critic_func(original_prompt, critic_prompt)
+            if "```json" in raw:
+                raw = raw.split("```json")[1].split("```")[0].strip()
+            elif "```" in raw:
+                raw = raw.split("```")[1].split("```")[0].strip()
+            data = json.loads(raw)
+            return EvaluationReport(
+                is_valid=bool(data.get("is_valid", True)),
+                score=float(data.get("score", 0.5)),
+                issues=list(data.get("issues") or []),
+                suggested_fix=data.get("suggested_fix"),
+            )
+        except Exception as e:
+            logger.warning(f"LLM critic failed: {e}")
+            return EvaluationReport(
+                is_valid=True,
+                score=0.7,
+                issues=[f"LLM critic unavailable: {e}"],
+            )

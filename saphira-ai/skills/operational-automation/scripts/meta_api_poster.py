@@ -1,85 +1,74 @@
+"""
+Automated Meta (Facebook) publishing helper using the Graph API.
 
----
+Publishes text, image, or video posts to a Business Page.
+Requires META_PAGE_ACCESS_TOKEN and META_PAGE_ID in the environment.
+"""
 
-### 2. Automated Meta Publishing Script (`meta_api_poster.py`)
+from __future__ import annotations
 
-Save this file as `skills/operational-automation/scripts/meta_api_poster.py`. It uses the **Meta Graph API** to publish text, image, or video posts directly to your Facebook Business Page.
-
-```python
-import os
 import argparse
+import os
+import sys
+from typing import Optional
+
 import requests
 from dotenv import load_dotenv
 
-# Load environment variables
 load_dotenv()
 
-PAGE_ACCESS_TOKEN = os.getenv("META_PAGE_ACCESS_TOKEN")
-PAGE_ID = os.getenv("META_PAGE_ID")
+PAGE_ACCESS_TOKEN = os.getenv("META_PAGE_ACCESS_TOKEN", "")
+PAGE_ID = os.getenv("META_PAGE_ID", "")
 GRAPH_API_URL = "https://graph.facebook.com/v19.0"
 
-def publish_text_post(message):
-    """Publishes a standard text/link post to the Facebook Business Page."""
+
+def post_text(message: str) -> dict:
+    if not PAGE_ACCESS_TOKEN or not PAGE_ID:
+        raise RuntimeError("META_PAGE_ACCESS_TOKEN and META_PAGE_ID must be set")
     url = f"{GRAPH_API_URL}/{PAGE_ID}/feed"
-    payload = {
-        "message": message,
-        "access_token": PAGE_ACCESS_TOKEN
-    }
-    response = requests.post(url, data=payload)
-    return response.json()
+    resp = requests.post(
+        url,
+        data={"message": message, "access_token": PAGE_ACCESS_TOKEN},
+        timeout=30,
+    )
+    resp.raise_for_status()
+    return resp.json()
 
-def publish_image_post(message, image_url):
-    """Publishes an image post with a caption to the Facebook Business Page."""
+
+def post_photo(message: str, image_url: str) -> dict:
+    if not PAGE_ACCESS_TOKEN or not PAGE_ID:
+        raise RuntimeError("META_PAGE_ACCESS_TOKEN and META_PAGE_ID must be set")
     url = f"{GRAPH_API_URL}/{PAGE_ID}/photos"
-    payload = {
-        "caption": message,
-        "url": image_url,
-        "access_token": PAGE_ACCESS_TOKEN
-    }
-    response = requests.post(url, data=payload)
-    return response.json()
+    resp = requests.post(
+        url,
+        data={
+            "url": image_url,
+            "caption": message,
+            "access_token": PAGE_ACCESS_TOKEN,
+        },
+        timeout=60,
+    )
+    resp.raise_for_status()
+    return resp.json()
 
-def publish_video_post(title, description, video_url):
-    """Publishes a video or short Reel to the Facebook Business Page."""
-    url = f"{GRAPH_API_URL}/{PAGE_ID}/videos"
-    payload = {
-        "title": title,
-        "description": description,
-        "file_url": video_url,
-        "access_token": PAGE_ACCESS_TOKEN
-    }
-    response = requests.post(url, data=payload)
-    return response.json()
+
+def main(argv: Optional[list] = None) -> int:
+    parser = argparse.ArgumentParser(description="Post to Meta/Facebook Page")
+    parser.add_argument("--message", required=True, help="Post text / caption")
+    parser.add_argument("--image-url", default="", help="Optional public image URL")
+    args = parser.parse_args(argv)
+
+    try:
+        if args.image_url:
+            result = post_photo(args.message, args.image_url)
+        else:
+            result = post_text(args.message)
+        print(result)
+        return 0
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Saphira AI - Meta Graph API Auto-Poster")
-    parser.add_argument("--type", choices=["text", "image", "video"], required=True, help="Type of post to publish")
-    parser.add_argument("--message", required=True, help="Post caption or message body")
-    parser.add_argument("--media-url", help="URL of the image or video to publish")
-    parser.add_argument("--title", help="Title for video posts")
-
-    args = parser.parse_args()
-
-    if not PAGE_ACCESS_TOKEN or not PAGE_ID:
-        print(" Error: META_PAGE_ACCESS_TOKEN or META_PAGE_ID is not set in environment.")
-        exit(1)
-
-    print(f" Executing Meta publication task via Saphira Engine...")
-
-    if args.type == "text":
-        result = publish_text_post(args.message)
-    elif args.type == "image":
-        if not args.media_url:
-            print(" Error: --media-url is required for image posts.")
-            exit(1)
-        result = publish_image_post(args.message, args.media_url)
-    elif args.type == "video":
-        if not args.media_url:
-            print(" Error: --media-url is required for video posts.")
-            exit(1)
-        result = publish_video_post(args.title or "New Video", args.message, args.media_url)
-
-    if "id" in result:
-        print(f" Post published successfully! Post ID: {result['id']}")
-    else:
-        print(f" Failed to publish post. Response: {result}")
+    raise SystemExit(main())
