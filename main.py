@@ -6,6 +6,7 @@ import os
 from src.api.chat_router import router as chat_router
 from src.api.device_ws import router as device_router
 from src.api.tiktok_router import router as tiktok_router
+from src.api.platform_router import router as platform_router
 from core.control_plane import router as control_plane_router
 from observability.telemetry import router as telemetry_router
 from core.audit_middleware import AuditEventMiddleware
@@ -36,6 +37,7 @@ app.add_middleware(AuditEventMiddleware)
 app.include_router(chat_router, prefix="/api")
 app.include_router(device_router, prefix="/api")
 app.include_router(tiktok_router, prefix="/api")
+app.include_router(platform_router, prefix="/api")
 app.include_router(control_plane_router)
 app.include_router(telemetry_router)
 
@@ -48,6 +50,7 @@ async def root():
         "version": "17.0.0",
         "role": "conversational-ai-assistant",
         "architecture": "autonomous-agent-operating-platform",
+        "platform_layer": "enabled",
     }
 
 
