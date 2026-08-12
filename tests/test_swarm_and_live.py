@@ -13,7 +13,9 @@ from src.agents.biometric_stress import BiometricStressDetector
 
 @pytest.fixture
 def mock_agent():
-    agent = MagicMock()
+    # spec=["run"] prevents MagicMock from auto-creating a non-awaitable
+    # safe_run attribute; LiveAgentOrchestrator prefers safe_run when present.
+    agent = MagicMock(spec=["run"])
     agent.run = AsyncMock(return_value={
         "status": "success",
         "agent": "mock",
