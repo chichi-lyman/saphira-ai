@@ -44,6 +44,7 @@ class AutonomyPolicy:
     l1_capabilities: Set[str] = field(default_factory=lambda: set(DEFAULT_L1_CAPABILITIES))
     l3_allowlist: Set[str] = field(default_factory=set)
     disabled_capabilities: Set[str] = field(default_factory=set)
+    stress_raise_to_l1: bool = True
 
     def decide(self, capability: str, context: Optional[Dict[str, Any]] = None) -> AutonomyDecision:
         context = context or {}
@@ -58,12 +59,16 @@ class AutonomyPolicy:
                 capability=cap,
             )
 
-        if cap in self.l1_capabilities or context.get("force_l1"):
+        stress = (context.get("stress_level") or "").lower()
+        force_l1 = bool(context.get("force_l1")) or (
+            getattr(self, "stress_raise_to_l1", True) and stress in ("high", "critical")
+        )
+        if cap in self.l1_capabilities or force_l1:
             return AutonomyDecision(
                 allowed=True,
                 level=AutonomyLevel.L1_CONFIRM_FIRST,
                 requires_confirmation=not bool(context.get("confirmed")),
-                reason="L1 capability requires explicit confirmation",
+                reason="L1 capability requires explicit confirmation" if not force_l1 else "Elevated to L1 due to high user stress or force flag",
                 capability=cap,
                 preview={
                     "capability": cap,
@@ -98,14 +103,15 @@ class CounterfactualPreview:
         intent: str,
         capability: str,
         tools: List[str],
-        side_effects: List[str],
+        side_effects: Optional[List[str]] = None,
         rollback: Optional[str] = None,
     ) -> Dict[str, Any]:
         return {
+            "title": f"Confirm action: {capability}",
             "intent": intent,
             "capability": capability,
             "tools": tools,
-            "side_effects": side_effects,
-            "rollback_plan": rollback or "Manual review required; no automatic rollback.",
-            "requires_explicit_confirm": True,
+            "side_effects": side_effects or [],
+            "rollback": rollback or "Manual reversal required",
+            "prompt": f"Saphira is about to execute '{capability}'. Please confirm or cancel.",
         }
