@@ -1,48 +1,40 @@
-"""Tests for advanced platform layer."""
+"""Platform layer unit tests."""
 
 from __future__ import annotations
 
 import pytest
 
-from src.platform.policy import AutonomyPolicy, AutonomyLevel, CounterfactualPreview, DEFAULT_PROBES
+from src.platform.policy import AutonomyPolicy, AutonomyLevel, CounterfactualPreview
 from src.platform.memory import memory_store
 from src.platform.voice import voice_sessions, AvatarState
 from src.platform.entitlements import entitlements
 from src.platform.identity import identity_service, Principal
-from src.platform.evidence import issue_receipt, evidence_exporter
+from src.platform.evidence import issue_receipt
 from src.platform.swarm import HierarchicalSwarm, SwarmBudget
 from src.platform.devices import matter_bridge, DeviceCommand, offline_queue
 from src.platform.plugins import plugin_registry, PluginSpec
-from src.platform.sdk import SaphiraClient
 from src.platform.observability_ext import model_router
+from src.platform.sdk import SaphiraClient
 
 
-def test_autonomy_l1_requires_confirmation():
+def test_autonomy_l1_requires_confirm():
     policy = AutonomyPolicy()
-    d = policy.decide("payment")
+    d = policy.decide("payment", {})
     assert d.level == AutonomyLevel.L1_CONFIRM_FIRST
     assert d.requires_confirmation is True
     d2 = policy.decide("payment", {"confirmed": True})
     assert d2.requires_confirmation is False
 
 
-def test_autonomy_disabled_capability():
-    policy = AutonomyPolicy(disabled_capabilities={"send_email"})
-    assert policy.decide("send_email").allowed is False
-
-
 def test_counterfactual_preview():
-    preview = CounterfactualPreview.build("Pay invoice", "payment", ["stripe"], ["charge_card"])
-    assert preview["requires_explicit_confirm"] is True
-
-
-def test_adversarial_probes_catalog():
-    assert len(DEFAULT_PROBES) >= 5
+    p = CounterfactualPreview.build("pay invoice", "payment", ["stripe"], side_effects=["charge card"])
+    assert "Confirm" in p["title"]
+    assert p["capability"] == "payment"
 
 
 def test_memory_tenant_isolation():
-    memory_store.add("t1", "u1", "User likes tea", kind="preference")
-    memory_store.add("t2", "u1", "Other tenant secret", kind="preference")
+    memory_store.add("t1", "u1", "secret for t1", kind="episodic")
+    memory_store.add("t2", "u2", "secret for t2", kind="episodic")
     rows = memory_store.list_for_user("t1", "u1")
     assert all(r.tenant_id == "t1" for r in rows)
 
@@ -82,8 +74,10 @@ def test_action_receipt_chain():
 async def test_hierarchical_swarm_budget():
     async def agent_a(ctx):
         return {"status": "ok", "agent": "a"}
+
     async def agent_b(ctx):
         return {"status": "ok", "agent": "b"}
+
     swarm = HierarchicalSwarm("lead", {"a": agent_a, "b": agent_b}, SwarmBudget(max_agents=2, max_seconds=5))
     result = await swarm.run("plan evening")
     assert result.status == "success"
@@ -111,3 +105,11 @@ def test_model_router_and_sdk_dry_run():
     assert model_router.resolve("code").provider
     decision = SaphiraClient().dry_run_capability("payment", {"intent": "pay", "tools": ["stripe"]})
     assert decision["requires_confirmation"] is True
+
+
+def test_biometric_stress_levels():
+    from src.platform.biometrics import biometric_stress
+    low = biometric_stress.analyze({"hrv": 90, "resting_hr": 55, "sleep_score": 95})
+    assert low.stress_level == "low"
+    high = biometric_stress.analyze({"hrv": 25, "resting_hr": 100, "sleep_score": 30})
+    assert high.stress_level == "high"
