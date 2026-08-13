@@ -132,3 +132,11 @@ The control plane provides the operational foundation for multi-tenant operation
 ---
 
 For full platform documentation, architecture notes, and deployment guidance, see `ARCHITECTURE.md`, `DEPLOY.md`, and `docs/`.
+---
+
+## ⚖️ Legal & Copyright
+
+**Saphira-AI™** is created, maintained, and owned by **Chelsea Megan Woods™ #**.
+
+* **Copyright:** © 2026 Chelsea Megan Woods™ #. All rights reserved.
+* **Trademarks:** Saphira-AI™, Nova Umbrella™, and associated logos are registered or common-law trademarks of Chelsea Megan Woods™ #.
