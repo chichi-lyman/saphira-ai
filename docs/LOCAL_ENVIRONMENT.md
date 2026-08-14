@@ -13,10 +13,32 @@ Secrets and environment-specific settings are managed on the developer machine o
 
 Both root `.gitignore` and `saphira-app/.gitignore` exclude `.env`, `.env.local`, and related local env files.
 
+## Automated generation
+
+From the repository root:
+
+```bash
+chmod +x scripts/generate_local_env.sh   # once, if needed
+./scripts/generate_local_env.sh
+```
+
+This creates:
+
+- `.env` from `.env.example`
+- `saphira-app/.env.local` from `saphira-app/.env.local.example`
+
+Existing files are left unchanged unless you pass `--force` (a timestamped `.bak.*` backup is written first):
+
+```bash
+./scripts/generate_local_env.sh --force
+```
+
+The script does **not** inject secrets. After generation, edit the local files and fill in only the values you need.
+
 ## Backend (FastAPI / runtime)
 
 ```bash
-# From repository root
+# Manual alternative
 cp .env.example .env
 # Edit .env and set only the keys you need for local work
 ```
@@ -32,6 +54,7 @@ Load is handled by the application (for example via `python-dotenv` / `load_dote
 ## Frontend (saphira-app)
 
 ```bash
+# Manual alternative
 cd saphira-app
 cp .env.local.example .env.local
 # Edit .env.local
@@ -60,6 +83,9 @@ git check-ignore -v .env .env.local saphira-app/.env.local
 
 # Confirm example templates exist
 ls -la .env.example saphira-app/.env.local.example
+
+# Regenerate safely (no overwrite of existing secrets)
+./scripts/generate_local_env.sh
 ```
 
 See also: `docs/SAPHIRA_ENVIRONMENT_CONTRACT.md` for the full deployment variable contract.
