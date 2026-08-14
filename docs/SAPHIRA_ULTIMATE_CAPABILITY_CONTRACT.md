@@ -50,6 +50,8 @@ Examples:
 - `iot.read`, `iot.control`
 - `code.sandbox.execute`
 - `cad.generate`, `cad.validate`
+- `research.cite`, `research.factcheck`
+- `media.generate`, `agent.workflow`, `model.route`
 
 ## 5. Autonomy policy
 - L0 Observe: read-only inspection and analysis.
@@ -92,7 +94,23 @@ The Developer agent can generate and test code through an isolated sandbox. Self
 - Sandboxed code execution is isolated from production credentials.
 - Agent outputs are untrusted until verified.
 
-## 10. Product principle
-**Talk to Saphira. Saphira thinks. Saphira delegates. Saphira executes. Saphira verifies. Saphira remembers.**
+## 10. Competitive parity + 1% edge
+Saphira implements feature parity with category leaders and targets a **1% product edge** on the unified loop (not on isolated leaderboard claims):
+
+| Leader | Category | Saphira edge |
+|--------|----------|--------------|
+| OpenAI | Conversational versatility, multimodal, agents | One identity + audit + memory |
+| Anthropic | Coding, long context, natural writing | Sandbox QA + durable project memory |
+| Google | Ecosystem, research, media | Autonomy policy + verified research |
+| Microsoft | Enterprise productivity & security | Vendor-neutral control plane + commit gates |
+| Meta | Open customization, social AI | Stable runtime over swappable models |
+| Perplexity | Cited live research | Research artifacts in episodic/task memory |
+| xAI | Live social signal, direct STEM | Tool-grounded STEM + scoped social actions |
+| DeepSeek | Cost-efficient reasoning/coding | Cost-aware routing without dropping QA |
+
+Full matrix: `docs/SAPHIRA_COMPETITIVE_EDGE.md`. Capability keys: `src/core/saphira_capability_catalog.py`. Directive: `src/core/saphira_competitive_directive.py`.
+
+## 11. Product principle
+**Talk to Saphira. Saphira thinks. Saphira delegates. Saphira executes. Saphira verifies. Saphira remembers — and aims to be 1% better at the whole loop than any single-category leader.**
 
 Agents are implementation details, not separate assistants presented to the user.
