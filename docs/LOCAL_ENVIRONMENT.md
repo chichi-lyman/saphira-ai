@@ -33,7 +33,38 @@ Existing files are left unchanged unless you pass `--force` (a timestamped `.bak
 ./scripts/generate_local_env.sh --force
 ```
 
+Generate and validate in one step:
+
+```bash
+./scripts/generate_local_env.sh --validate
+```
+
 The script does **not** inject secrets. After generation, edit the local files and fill in only the values you need.
+
+## Dotenv validation
+
+Environment values are validated with **pydantic-settings** (`src/config/settings.py`).
+
+### At application startup
+
+`main.py` loads `.env` / `.env.local`, then calls `validate_environment()`. Invalid types or constraint violations abort process start so misconfiguration fails fast.
+
+### Offline CLI
+
+```bash
+python scripts/validate_env.py
+python scripts/validate_env.py --strict    # require at least one LLM provider key
+python scripts/validate_env.py --json      # machine-readable report (no secret values)
+```
+
+The `/health` endpoint also returns a non-secret `config` summary derived from the same settings object.
+
+Validated fields include (among others):
+
+- `PORT` (1–65535)
+- `ENVIRONMENT` / `LOG_LEVEL` (normalized enums)
+- `SAPHIRA_ALLOWED_ORIGINS` (parsed to a list for CORS)
+- Optional provider and commerce keys (presence reported; not required for minimal local boot)
 
 ## Backend (FastAPI / runtime)
 
@@ -48,8 +79,6 @@ Minimum useful local set often includes:
 - `PORT` (default `8000`)
 - `SAPHIRA_ALLOWED_ORIGINS` (include `http://localhost:3000` for the Vite app)
 - At least one provider key if the chat path requires it (`OPENAI_API_KEY`, `GEMINI_API_KEY`, or `XAI_API_KEY`)
-
-Load is handled by the application (for example via `python-dotenv` / `load_dotenv()` in `main.py`).
 
 ## Frontend (saphira-app)
 
@@ -78,7 +107,7 @@ Vite embeds only variables that start with `VITE_` into the client bundle. Resta
 ## Verification
 
 ```bash
-# Confirm ignored status (should list .env / .env.local as ignored if present)
+# Confirm ignored status
 git check-ignore -v .env .env.local saphira-app/.env.local
 
 # Confirm example templates exist
@@ -86,6 +115,9 @@ ls -la .env.example saphira-app/.env.local.example
 
 # Regenerate safely (no overwrite of existing secrets)
 ./scripts/generate_local_env.sh
+
+# Validate types and presence summary
+python scripts/validate_env.py
 ```
 
 See also: `docs/SAPHIRA_ENVIRONMENT_CONTRACT.md` for the full deployment variable contract.

@@ -3,21 +3,18 @@
 # Saphira AI — Generate local environment files from committed templates
 # =============================================================================
 # Usage:
-#   ./scripts/generate_local_env.sh           # create missing files only
-#   ./scripts/generate_local_env.sh --force   # overwrite existing local env files
+#   ./scripts/generate_local_env.sh              # create missing files only
+#   ./scripts/generate_local_env.sh --force      # overwrite existing local env files
+#   ./scripts/generate_local_env.sh --validate   # run validate_env.py after generation
+#   ./scripts/generate_local_env.sh --force --validate
 #   ./scripts/generate_local_env.sh --help
-#
-# Creates:
-#   .env                         (from .env.example)
-#   saphira-app/.env.local       (from saphira-app/.env.local.example)
-#
-# Never commits secrets. Real values must be edited by hand after generation.
 # =============================================================================
 
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 FORCE=0
+VALIDATE=0
 
 usage() {
   cat <<'EOF'
@@ -27,14 +24,16 @@ Usage:
   ./scripts/generate_local_env.sh [options]
 
 Options:
-  --force    Overwrite existing .env and saphira-app/.env.local
-  -h, --help Show this help
+  --force      Overwrite existing .env and saphira-app/.env.local
+  --validate   Run scripts/validate_env.py after generation
+  -h, --help   Show this help
 
 Behavior:
   - Copies .env.example -> .env if missing (or with --force)
   - Copies saphira-app/.env.local.example -> saphira-app/.env.local if missing (or with --force)
   - Does not inject secrets; edit generated files locally
   - Generated files remain gitignored
+  - With --validate, loads dotenv and reports type/presence status (non-strict)
 EOF
 }
 
@@ -42,6 +41,10 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --force)
       FORCE=1
+      shift
+      ;;
+    --validate)
+      VALIDATE=1
       shift
       ;;
     -h|--help)
@@ -101,10 +104,24 @@ else
 fi
 
 echo
+if [[ "$VALIDATE" -eq 1 ]]; then
+  echo "Running environment validation..."
+  if command -v python3 >/dev/null 2>&1; then
+    python3 "$ROOT_DIR/scripts/validate_env.py" || {
+      echo "Validation reported issues (see above). Edit .env and re-run with --validate." >&2
+      exit 1
+    }
+  else
+    echo "WARNING: python3 not found; skip validation" >&2
+  fi
+  echo
+fi
+
 echo "Next steps:"
 echo "  1. Edit .env and set provider keys / local settings as needed."
 echo "  2. Edit saphira-app/.env.local (VITE_* values) if using the web app."
-echo "  3. Restart backend and 'npm run dev' in saphira-app after changes."
-echo "  4. Confirm ignore: git check-ignore -v .env saphira-app/.env.local"
+echo "  3. Validate: python scripts/validate_env.py   (add --strict if required)"
+echo "  4. Restart backend and 'npm run dev' in saphira-app after changes."
+echo "  5. Confirm ignore: git check-ignore -v .env saphira-app/.env.local"
 echo
 echo "Done."
