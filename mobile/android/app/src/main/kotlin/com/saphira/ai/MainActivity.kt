@@ -38,11 +38,6 @@ class MainActivity : FlutterActivity() {
         }
 
         handleAssistantIntent(intent)
-
-        MethodChannel(
-            flutterEngine.dartExecutor.binaryMessenger,
-            SaphiraActionHandler.CHANNEL
-        ).setMethodCallHandler(SaphiraActionHandler(this))
     }
 
     private fun requestAssistantRole(result: MethodChannel.Result) {
@@ -63,7 +58,12 @@ class MainActivity : FlutterActivity() {
         } catch (e: Exception) {
             pendingRoleResult = null
             SaphiraRoleHelper.openVoiceInputSettings(this)
-            result.success(mapOf("held" to false, "requested" to false, "openedSettings" to true, "error" to e.message))
+            result.success(mapOf(
+                "held" to false,
+                "requested" to false,
+                "openedSettings" to true,
+                "error" to e.message
+            ))
         }
     }
 
@@ -92,11 +92,29 @@ class MainActivity : FlutterActivity() {
         val fromAssistant =
             intent.action == SaphiraVoiceInteractionService.ACTION_ASSISTANT_INVOKED ||
                 intent.action == Intent.ACTION_ASSIST ||
-                intent.getBooleanExtra("show_overlay", false)
+                intent.getBooleanExtra("show_overlay", false) ||
+                intent.getBooleanExtra("triggered_by_assistant", false)
+
         if (fromAssistant) {
             val source = intent.getStringExtra("source")
                 ?: if (intent.action == Intent.ACTION_ASSIST) "action_assist" else "voice_interaction"
-            methodChannel?.invokeMethod("openOverlay", mapOf("source" to source, "show_overlay" to true))
+            val assistSummary = intent.getStringExtra("assist_summary") ?: ""
+            val assistPackage = intent.getStringExtra("assist_package")
+
+            val payload = mutableMapOf<String, Any?>(
+                "source" to source,
+                "show_overlay" to true,
+                "triggered_by_assistant" to true
+            )
+            if (assistSummary.isNotBlank()) {
+                payload["assist_summary"] = assistSummary
+            }
+            if (!assistPackage.isNullOrBlank()) {
+                payload["assist_package"] = assistPackage
+            }
+
+            Log.i(TAG, "Assistant invoke → Flutter openOverlay source=$source summaryLen=${assistSummary.length}")
+            methodChannel?.invokeMethod("openOverlay", payload)
         }
     }
 
