@@ -2,7 +2,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import logging
-import os
 
 from src.api.chat_router import router as chat_router
 from src.api.device_ws import router as device_router
@@ -12,7 +11,7 @@ from src.commerce.stripe_checkout import router as checkout_router
 from core.control_plane import router as control_plane_router
 from observability.telemetry import router as telemetry_router
 from core.audit_middleware import AuditEventMiddleware
-from src.config.settings import get_settings, validate_environment
+from src.config.settings import validate_environment
 
 load_dotenv()
 load_dotenv(".env.local", override=False)
@@ -30,10 +29,18 @@ allowed_origins = settings.allowed_origins_list()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_origin_regex=r"https://.*\\.vercel\\.app$",
+    # Correctly match Vercel preview + production deployments.
+    allow_origin_regex=r"https://.*\.vercel\.app$",
     allow_credentials=False,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "X-Saphira-Device", "X-Tenant-ID", "X-Agent-DID", "X-Saphira-Automation-Key"],
+    allow_headers=[
+        "Authorization",
+        "Content-Type",
+        "X-Saphira-Device",
+        "X-Tenant-ID",
+        "X-Agent-DID",
+        "X-Saphira-Automation-Key",
+    ],
 )
 app.add_middleware(AuditEventMiddleware)
 
@@ -62,7 +69,12 @@ async def root():
 @app.get("/health")
 async def health():
     report = settings.validation_report()
-    return {"status": "healthy", "service": "saphira-ai", "version": "17.0.0", "config": report}
+    return {
+        "status": "healthy",
+        "service": "saphira-ai",
+        "version": "17.0.0",
+        "config": report,
+    }
 
 
 if __name__ == "__main__":
