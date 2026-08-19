@@ -1,7 +1,7 @@
 {
   "version": 2,
   "framework": null,
-  "buildCommand": "echo 'Saphira static production build ready'",
+  "buildCommand": "node -e \"const fs=require('fs');const u=process.env.SAPHIRA_API_URL||'https://saphira-ai.onrender.com/api';fs.writeFileSync('public/runtime-config.js','window.SAPHIRA_API_URL='+JSON.stringify(u)+';\\n');\"",
   "outputDirectory": "public",
   "cleanUrls": true,
   "trailingSlash": false,
