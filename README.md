@@ -136,7 +136,7 @@ For full platform documentation, architecture notes, and deployment guidance, se
 
 ## ⚖️ Legal & Copyright
 
-**Saphira-AI™** is created, maintained, and owned by **Chelsea Megan Woods™ #**.
+**Saphira-AI™** is created, maintained, and owned by **Chelsea Megan Woods™ **.
 
-* **Copyright:** © 2026 Chelsea Megan Woods™ #. All rights reserved.
+* **Copyright:** © 2026 Chelsea Megan Woods™ . All rights reserved.
 * **Trademarks:** Saphira-AI™, Nova Umbrella™, and associated logos are registered or common-law trademarks of Chelsea Megan Woods™ #ChelseaMeganWoods #SaphiraAI #NovaUmbrella
