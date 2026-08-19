@@ -1,22 +1,22 @@
 {
   "version": 2,
   "framework": null,
-  "buildCommand": "bash scripts/vercel-build.sh",
+  "buildCommand": "echo 'Saphira static production build ready'",
   "outputDirectory": "public",
   "cleanUrls": true,
   "trailingSlash": false,
   "headers": [
     {
-      "source": "/runtime-config.js",
-      "headers": [
-        { "key": "Cache-Control", "value": "no-store, max-age=0" }
-      ]
-    },
-    {
       "source": "/(.*)",
       "headers": [
         { "key": "X-Content-Type-Options", "value": "nosniff" },
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    },
+    {
+      "source": "/runtime-config.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, max-age=0" }
       ]
     },
     {
