@@ -24,7 +24,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v5
 
       - name: Set up JDK 17
         uses: actions/setup-java@v5
@@ -39,7 +39,7 @@ jobs:
       - name: Accept Android SDK licenses
         run: yes | sdkmanager --licenses >/dev/null || true
 
-      - name: Install Android build tools
+      - name: Install Android SDK components
         run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
 
       - name: Set up Gradle
@@ -47,27 +47,40 @@ jobs:
         with:
           gradle-version: '8.11.1'
 
-      - name: Build debug APK
+      - name: Validate production backend URL
+        env:
+          BUILD_BASE_URL: ${{ env.SAPHIRA_BASE_URL }}
+        run: |
+          if [ -z "$BUILD_BASE_URL" ]; then
+            echo "SAPHIRA_BASE_URL is missing. Add it as a GitHub Actions repository variable before building the installable APK."
+            exit 1
+          fi
+          case "$BUILD_BASE_URL" in
+            http://10.0.2.2:*|http://localhost:*|http://127.0.0.1:*)
+              echo "SAPHIRA_BASE_URL points to a local development endpoint: $BUILD_BASE_URL"
+              exit 1
+              ;;
+          esac
+          echo "Using Saphira backend: $BUILD_BASE_URL"
+
+      - name: Build installable debug APK
         working-directory: android
         env:
           BUILD_BASE_URL: ${{ env.SAPHIRA_BASE_URL }}
         run: |
-          if [ -n "$BUILD_BASE_URL" ]; then
-            gradle assembleDebug --no-daemon --stacktrace -PSAPHIRA_BASE_URL="$BUILD_BASE_URL"
-          else
-            echo 'SAPHIRA_BASE_URL is not configured; building against Android emulator localhost bridge.'
-            gradle assembleDebug --no-daemon --stacktrace
-          fi
+          gradle clean assembleDebug --no-daemon --stacktrace -PSAPHIRA_BASE_URL="$BUILD_BASE_URL"
 
-      - name: Upload APK
+      - name: Verify APK
+        run: |
+          APK="android/app/build/outputs/apk/debug/app-debug.apk"
+          test -s "$APK"
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | grep -E "package: name='ai.saphira.mobile'|application-label:'Saphira AI'"
+          ls -lh "$APK"
+
+      - name: Upload installable APK
         uses: actions/upload-artifact@v4
         with:
-          name: saphira-ai-debug-apk
+          name: saphira-ai-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
-          retention-days: 14
-
-      - name: Verify APK metadata
-        run: |
-          test -s android/app/build/outputs/apk/debug/app-debug.apk
-          ls -lh android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
