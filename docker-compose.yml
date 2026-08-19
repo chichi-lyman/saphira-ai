@@ -11,6 +11,7 @@ services:
       CELERY_BROKER_URL: redis://saphira-redis:6379/0
       CELERY_RESULT_BACKEND: redis://saphira-redis:6379/1
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      SAPHIRA_AWARENESS_MODEL: ${SAPHIRA_AWARENESS_MODEL:-gemini-2.5-flash}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       SEARCH_API_KEY: ${SEARCH_API_KEY:-}
       SAPHIRA_SENTINEL_SECRET: ${SAPHIRA_SENTINEL_SECRET:-}
@@ -24,12 +25,14 @@ services:
   saphira-worker:
     build: .
     container_name: saphira_worker
-    command: celery -A workers.celery_app.celery_app worker --loglevel=INFO --concurrency=2
+    command: celery -A celery_app.celery_app worker --loglevel=INFO --concurrency=2
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-chelsea_admin}:${POSTGRES_PASSWORD:-change-me}@saphira-db:5432/${POSTGRES_DB:-saphira_god_memory}
       REDIS_URL: redis://saphira-redis:6379/0
       CELERY_BROKER_URL: redis://saphira-redis:6379/0
       CELERY_RESULT_BACKEND: redis://saphira-redis:6379/1
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      SAPHIRA_AWARENESS_MODEL: ${SAPHIRA_AWARENESS_MODEL:-gemini-2.5-flash}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       SEARCH_API_KEY: ${SEARCH_API_KEY:-}
       SAPHIRA_SENTINEL_SECRET: ${SAPHIRA_SENTINEL_SECRET:-}
