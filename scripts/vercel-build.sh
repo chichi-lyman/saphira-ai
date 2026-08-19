@@ -2,5 +2,5 @@
 set -euo pipefail
 
 API_URL="${SAPHIRA_API_URL:-https://saphira-ai.onrender.com/api}"
-printf 'window.SAPHIRA_API_URL=%s;\n' "$(python -c 'import json,sys; print(json.dumps(sys.argv[1]))' "$API_URL")" > public/runtime-config.js
+node -e 'const fs=require("fs"); const u=process.env.SAPHIRA_API_URL || "https://saphira-ai.onrender.com/api"; fs.writeFileSync("public/runtime-config.js", `window.SAPHIRA_API_URL=${JSON.stringify(u)};\n`);'
 printf 'Saphira Vercel production build configured for %s\n' "$API_URL"
