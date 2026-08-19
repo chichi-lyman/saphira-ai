@@ -11,10 +11,17 @@ services:
       CELERY_BROKER_URL: redis://saphira-redis:6379/0
       CELERY_RESULT_BACKEND: redis://saphira-redis:6379/1
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
-      SAPHIRA_AWARENESS_MODEL: ${SAPHIRA_AWARENESS_MODEL:-gemini-2.5-flash}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       SEARCH_API_KEY: ${SEARCH_API_KEY:-}
       SAPHIRA_SENTINEL_SECRET: ${SAPHIRA_SENTINEL_SECRET:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_PRICE_MONTHLY: ${STRIPE_PRICE_MONTHLY:-}
+      PRODUCTION_DOMAIN_URL: ${PRODUCTION_DOMAIN_URL:-http://localhost:3000}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_FROM: ${RESEND_FROM:-}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
     depends_on:
       saphira-db:
         condition: service_healthy
@@ -32,10 +39,12 @@ services:
       CELERY_BROKER_URL: redis://saphira-redis:6379/0
       CELERY_RESULT_BACKEND: redis://saphira-redis:6379/1
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
-      SAPHIRA_AWARENESS_MODEL: ${SAPHIRA_AWARENESS_MODEL:-gemini-2.5-flash}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       SEARCH_API_KEY: ${SEARCH_API_KEY:-}
       SAPHIRA_SENTINEL_SECRET: ${SAPHIRA_SENTINEL_SECRET:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
     depends_on:
       saphira-db:
         condition: service_healthy
@@ -54,7 +63,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+      - ./src/storage/schema.sql:/docker-entrypoint-initdb.d/001_saphira.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
