@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   saphira-core:
     build: .
@@ -7,33 +5,75 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - PORT=8000
-      - DATABASE_URL=postgresql://saphira_user:saphira_pass@saphira-db:5432/saphira_db
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      PORT: 8000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-chelsea_admin}:${POSTGRES_PASSWORD:-change-me}@saphira-db:5432/${POSTGRES_DB:-saphira_god_memory}
+      REDIS_URL: redis://saphira-redis:6379/0
+      CELERY_BROKER_URL: redis://saphira-redis:6379/0
+      CELERY_RESULT_BACKEND: redis://saphira-redis:6379/1
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      SEARCH_API_KEY: ${SEARCH_API_KEY:-}
+      SAPHIRA_SENTINEL_SECRET: ${SAPHIRA_SENTINEL_SECRET:-}
     depends_on:
       saphira-db:
         condition: service_healthy
-    restart: always
+      saphira-redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  saphira-worker:
+    build: .
+    container_name: saphira_worker
+    command: celery -A workers.celery_app.celery_app worker --loglevel=INFO --concurrency=2
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-chelsea_admin}:${POSTGRES_PASSWORD:-change-me}@saphira-db:5432/${POSTGRES_DB:-saphira_god_memory}
+      REDIS_URL: redis://saphira-redis:6379/0
+      CELERY_BROKER_URL: redis://saphira-redis:6379/0
+      CELERY_RESULT_BACKEND: redis://saphira-redis:6379/1
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      SEARCH_API_KEY: ${SEARCH_API_KEY:-}
+      SAPHIRA_SENTINEL_SECRET: ${SAPHIRA_SENTINEL_SECRET:-}
+    depends_on:
+      saphira-db:
+        condition: service_healthy
+      saphira-redis:
+        condition: service_healthy
+    restart: unless-stopped
 
   saphira-db:
     image: pgvector/pgvector:pg16
     container_name: saphira_db
     environment:
-      POSTGRES_USER: saphira_user
-      POSTGRES_PASSWORD: saphira_pass
-      POSTGRES_DB: saphira_db
+      POSTGRES_USER: ${POSTGRES_USER:-chelsea_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+      POSTGRES_DB: ${POSTGRES_DB:-saphira_god_memory}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U saphira_user -d saphira_db"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
-      retries: 5
-    restart: always
+      retries: 10
+    restart: unless-stopped
+
+  saphira-redis:
+    image: redis:7-alpine
+    container_name: saphira_redis
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
 
 volumes:
   postgres_data:
+  redis_data:
