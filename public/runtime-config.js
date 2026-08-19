@@ -1,2 +1,3 @@
-// Local/default runtime configuration. Vercel replaces this file during production build.
-window.SAPHIRA_API_URL = "/api";
+// Production-safe default backend endpoint.
+// Replace this file or set the Vercel build configuration when Railway becomes canonical.
+window.SAPHIRA_API_URL = "https://saphira-ai.onrender.com/api";
