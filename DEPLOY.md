@@ -1,43 +1,135 @@
-# Saphira AI — FastAPI Backend Deployment Guide
+# Saphira AI — Deployment Matrix
 
 **Architected by Chelsea Megan Woods**
 
-## Fastest Path: Railway (already configured)
+## Canonical production topology
 
-Your repository already contains `railway.json` and a working Dockerfile.
-
-### Steps
-
-1. Go to [railway.app](https://railway.app) and create a new project.
-2. Choose **Deploy from GitHub repo** → select `chichi-lyman/saphira-ai`.
-3. Railway will detect the Dockerfile and build automatically.
-4. In the service **Variables** tab, add at minimum:
-
+```text
+Vercel Production Web
+        |
+        | SAPHIRA_API_URL
+        v
+Railway Production FastAPI
+        |
+        +--> PostgreSQL
+        +--> Redis / Celery
+        +--> AI providers
+        +--> Stripe / commerce
+        |
+        +--> Android APK (SAPHIRA_BASE_URL)
 ```
-ELEVENLABS_API_KEY=sk_...
-ELEVENLABS_VOICE_ID=your_cloned_voice_id
+
+Vercel serves the static production UI. Railway runs the FastAPI control plane. The Android app calls the same production FastAPI endpoint. Do not put provider secrets in Vercel static assets or the Android application.
+
+## 1. Railway backend
+
+Railway uses `railway.json` and the repository Dockerfile. Set these variables in the Railway production service:
+
+```text
+ENVIRONMENT=production
+PORT=8000
+SAPHIRA_ALLOWED_ORIGINS=https://YOUR-VERCEL-DOMAIN.vercel.app,https://YOUR-CUSTOM-DOMAIN
+OPENAI_API_KEY=...
+GEMINI_API_KEY=...
+DATABASE_URL=...
+REDIS_URL=...
+CELERY_BROKER_URL=...
+CELERY_RESULT_BACKEND=...
+SAPHIRA_JWT_SECRET=...
+SAPHIRA_ENCRYPTION_KEY=...
+SAPHIRA_ADMIN_AUDIT_KEY=...
+STRIPE_SECRET_KEY=...
+STRIPE_PRICE_ID=...
+STRIPE_WEBHOOK_SECRET=...
+PRODUCTION_DOMAIN_URL=https://YOUR-VERCEL-DOMAIN.vercel.app
+ELEVENLABS_API_KEY=...
+ELEVENLABS_VOICE_ID=...
 ELEVENLABS_MODEL_ID=eleven_multilingual_v2
 SAPHIRA_TTS_PROVIDER=elevenlabs
-GEMINI_API_KEY=...          # or OPENAI_API_KEY / XAI_API_KEY
-ENVIRONMENT=production
 ```
 
-5. After deploy, copy the public URL (e.g. `https://saphira-ai-production.up.railway.app`).
-6. Paste that URL into the Saphira mobile app Settings → Backend API Base URL.
+Use the public Railway service URL as the backend base URL, for example:
 
-### Verify
+```text
+https://YOUR-RAILWAY-SERVICE.up.railway.app
+```
+
+Verify:
 
 ```bash
-curl https://YOUR-RAILWAY-URL/
-curl https://YOUR-RAILWAY-URL/tts/status
+curl https://YOUR-RAILWAY-SERVICE.up.railway.app/
+curl https://YOUR-RAILWAY-SERVICE.up.railway.app/health
 ```
 
-## ElevenLabs Setup (Chelsea Voice Clone)
+Expected root status is `running`; `/health` must return `healthy`.
 
-1. Create an ElevenLabs Instant Voice Clone using your voice samples.
-2. Copy the Voice ID.
-3. Set ELEVENLABS_API_KEY and ELEVENLABS_VOICE_ID as environment variables.
-4. Test: POST /tts with {"text":"Hello, I am Saphira.","style":"assist"}
+## 2. Vercel production
+
+The repository deploys `public/` as a static site. Set the Vercel project environment variable:
+
+```text
+SAPHIRA_API_URL=https://YOUR-RAILWAY-SERVICE.up.railway.app/api
+```
+
+The Vercel build writes this value into `public/runtime-config.js`, so the browser never relies on the old Render endpoint unless the variable is omitted. The build retains a temporary Render fallback for backwards compatibility.
+
+Also set:
+
+```text
+PRODUCTION_DOMAIN_URL=https://YOUR-VERCEL-DOMAIN.vercel.app
+```
+
+Redeploy Production after changing variables.
+
+## 3. Android APK
+
+GitHub Actions reads repository variable:
+
+```text
+SAPHIRA_BASE_URL=https://YOUR-RAILWAY-SERVICE.up.railway.app
+```
+
+The workflow rejects localhost/emulator URLs and builds `app-debug.apk` only against an HTTPS production backend.
+
+Artifact:
+
+```text
+saphira-ai-apk/app-debug.apk
+```
+
+## 4. Stripe
+
+Stripe checkout is exposed at:
+
+```text
+POST /api/v1/checkout/create-session
+```
+
+Webhook:
+
+```text
+POST /api/v1/billing/webhooks
+```
+
+Configure Stripe's webhook destination to the Railway backend and use the generated endpoint secret as `STRIPE_WEBHOOK_SECRET`.
+
+## 5. Voice
+
+Browser voice uses the Web Speech APIs. Server TTS uses the configured provider. Android has native speech recognition and Text-to-Speech support in the companion application.
+
+## 6. Deployment acceptance test
+
+A deployment is considered green only when all of these pass:
+
+- Vercel Production deployment: completed
+- Railway Production deployment: completed
+- `GET /` on Railway: `status=running`
+- `GET /health` on Railway: `status=healthy`
+- Vercel chat reaches `POST /api/chat` on the configured backend
+- Stripe checkout returns a hosted checkout session when billing secrets are configured
+- Stripe webhook signature verification succeeds
+- Android workflow produces `app-debug.apk`
+- APK points to the Railway HTTPS backend
 
 ## Ownership
 
