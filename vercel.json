@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "framework": null,
-  "buildCommand": "echo 'Saphira static production build ready'",
-  "outputDirectory": "public",
+  "framework": "vite",
+  "buildCommand": "cd saphira-app && npm ci && npm run build",
+  "outputDirectory": "saphira-app/dist",
   "cleanUrls": true,
   "trailingSlash": false,
   "headers": [
@@ -14,13 +14,20 @@
       ]
     },
     {
-      "source": "/runtime-config.js",
+      "source": "/sw.js",
       "headers": [
-        { "key": "Cache-Control", "value": "no-store, max-age=0" }
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+        { "key": "Service-Worker-Allowed", "value": "/" }
       ]
     },
     {
-      "source": "/(.*\\.(?:js|css|svg|png|jpg|jpeg|webp|ico|woff2))",
+      "source": "/manifest.json",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=3600" }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
