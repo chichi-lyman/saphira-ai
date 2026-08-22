@@ -1,7 +1,7 @@
 {
   "version": 2,
   "framework": "vite",
-  "buildCommand": "cd saphira-app && npm ci && npm run build",
+  "buildCommand": "cd saphira-app && npm install && npm run build",
   "outputDirectory": "saphira-app/dist",
   "cleanUrls": true,
   "trailingSlash": false,
