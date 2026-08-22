@@ -1,0 +1,32 @@
+# Vercel hosts the React/Vite client only.
+# Saphira Core runs separately on Railway.
+requirements.txt
+requirements-*.txt
+pyproject.toml
+setup.py
+setup.cfg
+Pipfile
+Pipfile.lock
+poetry.lock
+uv.lock
+
+# Backend/runtime source is not part of the Vercel client bundle.
+src/
+agents/
+memory/
+governance/
+execution/
+infrastructure/
+perception/
+tests/
+
+# Local/runtime artifacts
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.coverage
