@@ -67,6 +67,25 @@ The user does **not** need to select individual agents for routine work. Saphira
 
 ---
 
+## ☂️ Nova Umbrella™ Architecture & Governance
+
+Saphira operates within the **Nova Umbrella™** framework, maintaining a strict operational division between executive planning and side-effect execution:
+
+| Layer | Role | Autonomy |
+|-------|------|----------|
+| **Saphira** | L2 Executive — user interaction, context ingestion, task graph construction | L2 gated |
+| **Nova Core** | L1 Governance — non-bypassable safety policy, financial limits, state integrity | L1 hard gates |
+| **Workers** | L3 Execution — isolated engines for targeted tasks (code, workspace, security, creative) | L3 / L2 as classified |
+
+**Gemini-parity intent:** multimodal context processing, direct grounded task execution, and iterative refinement — with scored equilibrium (**NovaReign** + **NovaAethrea**) before consequential side effects.
+
+> Full mathematical equilibrium formulas, agent roster, capability matrices, and the Gemini-parity technical roadmap: **[`docs/NOVA_ECOSYSTEM.md`](docs/NOVA_ECOSYSTEM.md)**  
+> Implementation breakdown: **[`docs/GEMINI_PARITY_IMPLEMENTATION_PLAN.md`](docs/GEMINI_PARITY_IMPLEMENTATION_PLAN.md)**  
+> Landing schema: **[`schemas/landing_page_chelsea_io.json`](schemas/landing_page_chelsea_io.json)**
+
+
+---
+
 # 🔒 Autonomous Commerce OS (Foundation)
 
 Policy-controlled commercial infrastructure is under `src/commerce/`.
@@ -98,7 +117,9 @@ Enrichment
  ↓
 Qualification
  ↓
-Personalized outreach
+Outreach draft
+ ↓
+Approval gate
  ↓
 Follow-up
  ↓
@@ -132,6 +153,7 @@ The control plane provides the operational foundation for multi-tenant operation
 ---
 
 For full platform documentation, architecture notes, and deployment guidance, see `ARCHITECTURE.md`, `DEPLOY.md`, and `docs/`.
+
 ---
 
 ## ⚖️ Legal & Copyright
