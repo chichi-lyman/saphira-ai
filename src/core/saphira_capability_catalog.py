@@ -49,6 +49,14 @@ class CapabilityCatalog:
             # --- STEM / xAI + DeepSeek parity ---
             Capability("stem.calculate", "perform deterministic technical calculations", "stem_math", AutonomyLevel.ASSIST, True, False, ("math", "engineering", "xai-parity", "deepseek-parity")),
             Capability("stem.reason", "direct math, physics, and logic reasoning with tool grounding", "stem_math", AutonomyLevel.ASSIST, True, False, ("math", "physics", "xai-parity", "deepseek-parity")),
+            # --- Expanded CS / AI domain mastery (top-20 university structures) ---
+            Capability("ai.machine_learning", "deep learning, reinforcement learning, probabilistic modeling, knowledge representation", "stem_math", AutonomyLevel.ASSIST, True, False, ("ai", "ml", "xai-parity", "deepseek-parity", "edge")),
+            Capability("ai.nlp", "computational linguistics, speech recognition, large language models", "stem_math", AutonomyLevel.ASSIST, True, False, ("ai", "nlp", "openai-parity", "edge")),
+            Capability("ai.computer_vision", "image processing, 3D graphics, generative visual models, AR/VR", "vision", AutonomyLevel.ASSIST, True, False, ("ai", "vision", "google-parity", "edge")),
+            Capability("ai.robotics", "intelligent kinematics, mechatronics, motion planning, autonomous navigation", "stem_math", AutonomyLevel.ASSIST, True, False, ("ai", "robotics", "edge")),
+            Capability("ai.human_ai_interaction", "user-centered AI design, trustworthy systems, ethics in automation", "samantha_persona", AutonomyLevel.ASSIST, True, False, ("ai", "hai", "ethics", "edge")),
+            Capability("cs.curriculum", "map and reason over top-20 CS/AI degree structures, tracks, and joint majors", "web_grounding", AutonomyLevel.ASSIST, True, False, ("cs", "education", "edge")),
+            Capability("cs.interdisciplinary", "computation & cognition, computational biology, applied math/stats, EECS integration", "stem_math", AutonomyLevel.ASSIST, True, False, ("cs", "interdisciplinary", "edge")),
             # --- CAD ---
             Capability("cad.generate", "generate parametric CAD model instructions", "cad_3d", AutonomyLevel.ASSIST, True, False, ("cad", "3d")),
             # --- Anthropic parity: software engineering ---
