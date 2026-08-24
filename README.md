@@ -1,53 +1,63 @@
-# Saphira AI™ — Personal AI Assistant, Business Automation & Multi-Agent Intelligence Platform
+# Saphira AI 🐉
 
-**Saphira AI™** is a conversational personal AI assistant and intelligent automation platform architected by **Chelsea Megan Woods** as part of the **Nova Umbrella™** ecosystem.
+**Personal AI Assistant · Multi-Agent Intelligence Operating System**  
+**Architected and Built by Chelsea Megan Woods**  
+**Ecosystem:** Nova Umbrella™
 
-Saphira is designed to give one person a natural conversational interface to a broader execution system: she can understand requests, retain relevant context, plan multi-step work, route tasks to specialized capabilities, use approved tools, verify results, and communicate the outcome back to the user.
+Saphira AI is a persistent, multimodal personal AI assistant and executive runtime. She understands natural-language intent, coordinates specialized intelligence workers, executes tasks within strict policy, verifies results, remembers what matters, and reports clearly — all through one unified conversational interface.
 
-> **Talk to Saphira. Describe the outcome you want. She coordinates the work behind the conversation.**
-
-[![Saphira AI](https://img.shields.io/badge/Saphira%20AI-Personal%20AI%20Assistant-111827)](https://github.com/chichi-lyman/saphira-ai)
-[![GitHub](https://img.shields.io/badge/GitHub-chichi--lyman%2Fsaphira--ai-181717?logo=github)](https://github.com/chichi-lyman/saphira-ai)
-
----
-
-## What Is Saphira AI?
-
-Saphira AI is being developed as a **personal AI operating system for conversation, reasoning, memory, automation, business workflows, and multimodal interaction**.
-
-Instead of forcing users to manually select a collection of disconnected AI agents, Saphira presents a single conversational experience while specialized capabilities operate behind the interface.
-
-The core product direction combines:
-
-- Personal AI assistance
-- Conversational AI
-- Persistent memory and contextual recall
-- Multi-step task planning
-- Multi-agent orchestration
-- Intelligent model and capability routing
-- Tool and API integration
-- Voice and multimodal interaction boundaries
-- Business process automation
-- Lead qualification and follow-up workflows
-- Research and business intelligence
-- Content and creator workflows
-- Development and repository automation
-- Commerce and subscription infrastructure
-- Authorization, approvals, auditability, and verification
-- Resilient execution and observability
-- SaaS, API, enterprise, and custom AI-agent commercialization paths
-
-### The product principle
-
-**The interface stays simple. The intelligence underneath can be sophisticated.**
-
-Saphira is intended to feel like a natural conversational partner rather than a dashboard full of autonomous-agent controls.
+> **Say what you want.**  
+> Saphira understands the intent, coordinates the right intelligence, executes within policy, verifies the result, remembers what matters, and tells you what happened.
 
 ---
 
-## Why Saphira Is Different
+## What Saphira Is
 
-Most AI products expose individual models, tools, or agents directly to the user. Saphira is designed around an **executive conversational layer** that coordinates those capabilities for the user.
+Saphira AI is designed as a single conversational identity backed by a governed multi-agent execution fabric. Users talk to one assistant. Behind the scenes, Saphira plans, delegates, executes, verifies, and remembers.
+
+She is built for:
+
+- **Personal AI assistance** — continuous context, memory, and proactive support  
+- **Conversational AI** — natural, adaptive dialogue across text, voice, and multimodal inputs  
+- **Multi-agent AI systems** — specialized workers coordinated by a single orchestrator  
+- **AI orchestration & automation** — goal decomposition, task graphs, and verified execution  
+- **Business automation** — lead generation, qualification, outreach, CRM sync, and revenue workflows  
+- **AI SaaS & enterprise AI** — multi-tenant control plane, RBAC, audit, and approval gates  
+- **Custom AI agents** — capability-based workers that remain invisible to the end user  
+- **Multimodal & voice AI** — vision, screen context, speech-to-text, text-to-speech, and avatar interfaces  
+- **Developer & commerce automation** — code generation, sandbox execution, Shopify/Stripe workflows  
+- **Governed intelligence** — explicit autonomy levels, verification, audit, and human-in-the-loop controls
+
+Saphira is the product. Specialized systems operate as background workers, not competing user-facing assistants.
+
+---
+
+## Who Built Saphira
+
+**Chelsea Megan Woods** is the architect and primary developer of Saphira AI and the Nova Umbrella™ ecosystem.  
+Saphira-AI™, Nova Umbrella™, and associated marks are owned by Chelsea Megan Woods.
+
+This repository is the master runtime and public technical authority for the platform.
+
+---
+
+## Core Capabilities
+
+| Area | What Saphira Delivers |
+|------|------------------------|
+| Conversational Intelligence | Adaptive persona, multimodal chat (text, voice, vision, screen), low-latency voice pipeline |
+| Executive Runtime | Intent understanding → planning → task-graph orchestration → verification → memory |
+| Multi-Agent Workforce | Specialized agents (Developer, STEM, Vision, Voice, Memory, Commerce, Communications, QA, and more) coordinated under one identity |
+| Persistent Memory | Session, episodic, semantic, procedural, preference, and task memory |
+| Business & Revenue Automation | Lead discovery, enrichment, qualification, outreach sequencing, CRM synchronization, conversion measurement |
+| Commerce OS | Policy-controlled Stripe/Shopify workflows, authority gates, hash-chained audit |
+| Enterprise Control Plane | Multi-tenant operation, RBAC, observability, cost/revenue telemetry, policy administration |
+| Device & Multimodal | Android/voice services, IoT/Matter integration, camera and screen context |
+| Governance & Safety | Autonomy levels (Observe → Assist → Execute → Commit), dual-prompt security, approval gates, audit events |
+
+---
+
+## How It Works
 
 ```text
 User
@@ -56,339 +66,103 @@ Saphira Conversational Interface
   ↓
 Intent + Context
   ↓
-Executive Planning
+Executive Planner
   ↓
-Task Graph / Orchestration
+Task Graph / Orchestrator
   ↓
 Capability Registry
   ↓
-Specialized Workers + Tools
+Specialized Workers / Adapters
   ↓
-Verification / Policy Gates
+Plugin + Tool Fabric
+  ↓
+Verification / QA
   ↓
 Memory + Event Ledger
   ↓
 Saphira Response
 ```
 
-The goal is straightforward:
-
-**Less tool switching. Less operational friction. More completed work.**
+The user never needs to select individual agents for routine work. Saphira routes to the appropriate internal capability while keeping every consequential action policy-checked and auditable.
 
 ---
 
-## Core Capabilities
+## Nova Umbrella™ Architecture
 
-### 🧠 Conversational Intelligence
+Saphira operates inside the Nova Umbrella™ governance model:
 
-Saphira is designed to communicate through natural language and maintain the conversational context required to move from a request to an actionable result.
+| Layer | Role | Autonomy |
+|-------|------|----------|
+| **Saphira** | L2 Executive — user interaction, context, task-graph construction | Gated |
+| **Nova Core** | L1 Governance — non-bypassable safety, financial limits, state integrity | Hard gates |
+| **Workers** | L3 Execution — isolated engines for code, research, commerce, creative, device tasks | Classified |
 
-### 🗂️ Persistent Memory
+Full equilibrium formulas, agent roster, and capability matrices: [`docs/NOVA_ECOSYSTEM.md`](docs/NOVA_ECOSYSTEM.md)
 
-The architecture supports persistent memory and contextual recall so information that matters can be carried across sessions rather than treated as isolated prompts.
+---
 
-### 🧩 Multi-Agent Orchestration
+## Intelligence Evolution Continuum
 
-Specialized workers can be coordinated behind a single executive interface. The user does not need to manually select an agent for every task.
+Saphira is architected to advance deliberately through a six-stage continuum while preserving governance and verification at every transition:
 
-### 🔀 Intelligent Routing
+1. **Artificial Narrow Intelligence (ANI)** — specialized domain excellence (current production foundation)  
+2. **Artificial General Intelligence (AGI)** — human-level cross-domain adaptability (primary near-term target)  
+3. **Artificial Superintelligence (ASI)** — super-human recursive self-improvement  
+4. **Technological Singularity** — intelligence growth beyond unaugmented human tracking  
+5. **Post-Human & Transhuman Intelligence** — biological–synthetic cognitive merger  
+6. **Universal (Cosmic) Intelligence** — planetary-to-galactic computational substrate  
 
-Requests can be classified and routed toward the appropriate model, capability, tool, or worker based on task requirements and system policy.
+Full stage definitions, examples, tasks, and transition triggers: [`docs/INTELLIGENCE_EVOLUTION_STAGES.md`](docs/INTELLIGENCE_EVOLUTION_STAGES.md)  
+Near-term sequencing: [`docs/SAPHIRA_UPGRADE_ROADMAP.md`](docs/SAPHIRA_UPGRADE_ROADMAP.md)
 
-### 🔎 Research & Business Intelligence
+---
 
-Saphira is designed to support research, information synthesis, business analysis, lead intelligence, and decision-support workflows.
+## Business Automation & Revenue
 
-### 📈 LeadOS & Revenue Automation
-
-The execution fabric can support commercial workflows such as:
+Saphira coordinates end-to-end revenue workflows:
 
 ```text
-Lead Discovery
-      ↓
-Enrichment
-      ↓
-Qualification
-      ↓
-Outreach Draft
-      ↓
-Human Approval
-      ↓
-Follow-Up
-      ↓
-CRM / System Sync
-      ↓
-Conversion Measurement
-      ↓
-Optimization
+Lead discovery → Enrichment → Qualification → Outreach draft → Approval gate → Follow-up → CRM sync → Conversion measurement → Optimization
 ```
 
-This creates a foundation for AI-powered lead intake, qualification, follow-up, appointment workflows, customer operations, and revenue intelligence.
-
-### 🛒 Commerce Automation
-
-The repository includes a policy-controlled commerce foundation for subscription and payment-related workflows. Financial state is intentionally separated from unrestricted LLM decision-making.
-
-### 🎙️ Voice & Multimodal Interaction
-
-The architecture is intended to support conversational voice, streaming interaction, visual context, and other multimodal interfaces while preserving execution boundaries and verification requirements.
-
-### 💻 Development & Operations
-
-Saphira can serve as an interface for development workflows, repository operations, automation, research, analytics, and operational tasks through controlled capabilities.
+The same fabric extends to commerce, subscriptions, customer operations, content production, research, development, and analytics.  
+Commerce foundation and policy controls: [`docs/COMMERCE_OS.md`](docs/COMMERCE_OS.md)
 
 ---
 
-## Safety, Governance & Verification
+## Technical Documentation
 
-Saphira is not designed around blind autonomous execution.
+| Document | Purpose |
+|----------|---------|
+| [`docs/SAPHIRA_ULTIMATE_CAPABILITY_CONTRACT.md`](docs/SAPHIRA_ULTIMATE_CAPABILITY_CONTRACT.md) | Canonical capability and autonomy contract |
+| [`docs/SAPHIRA_COMPETITIVE_EDGE.md`](docs/SAPHIRA_COMPETITIVE_EDGE.md) | Parity + 1% product edge matrix |
+| [`docs/SAPHIRA_UPGRADE_ROADMAP.md`](docs/SAPHIRA_UPGRADE_ROADMAP.md) | Phased engineering roadmap |
+| [`docs/INTELLIGENCE_EVOLUTION_STAGES.md`](docs/INTELLIGENCE_EVOLUTION_STAGES.md) | Long-horizon intelligence continuum |
+| [`docs/SOVEREIGN_INTELLIGENCE.md`](docs/SOVEREIGN_INTELLIGENCE.md) | Local / air-gapped deployment |
+| [`DEPLOY.md`](DEPLOY.md) | Production topology (Vercel + Railway) |
+| [`ARCHITECTURE.md`](ARCHITECTURE.md) | High-level architecture notes |
 
-The architecture separates **planning** from **side-effect execution** and uses authorization, approval, verification, and audit mechanisms for consequential operations.
-
-Within the Nova Umbrella™ architecture:
-
-| Layer | Responsibility | Control Model |
-|---|---|---|
-| **Saphira** | Conversational executive layer, context, planning | Gated execution |
-| **Nova Core** | Governance, policy, state integrity, financial controls | Hard policy gates |
-| **Specialized Workers** | Isolated execution for targeted capabilities | Classified permissions |
-
-The commerce foundation currently includes:
-
-- `src/commerce/authority.py` — commercial authority policy
-- `src/commerce/audit.py` — append-only, hash-chained audit records
-- `src/commerce/states.py` — commercial lifecycle state machine
-- `src/commerce/stripe_webhooks.py` — Stripe event verification
-
-Key design principle:
-
-> **An AI suggestion is not automatically an authorized side effect.**
-
-Consequential actions should pass through the appropriate policy and verification layer before execution.
+Capability catalog and competitive directive live in `src/core/`.
 
 ---
 
-## Business & Commercial Use Cases
+## Keywords & Discoverability
 
-Saphira's architecture is intended to support individuals, creators, entrepreneurs, agencies, service businesses, and organizations that want to turn conversational AI into operational infrastructure.
+Saphira AI · Chelsea Megan Woods · personal AI assistant · conversational AI · multi-agent AI · AI orchestration · persistent AI memory · business automation · lead generation · lead qualification · revenue automation · AI SaaS · enterprise AI · custom AI agents · multimodal AI · voice AI · AI operating system · executive AI runtime · governed AI · AI for business · autonomous agents · AI commerce · Nova Umbrella
 
-Potential applications include:
-
-- AI personal assistant systems
-- Executive assistance
-- Lead generation and qualification
-- AI sales operations
-- Appointment automation
-- Customer support workflows
-- CRM synchronization
-- Business research
-- Competitive intelligence
-- Content production
-- Social media workflow automation
-- E-commerce operations
-- Subscription management
-- Internal knowledge systems
-- Developer productivity
-- Workflow orchestration
-- Custom AI agents
-- Enterprise AI automation
-
-The broader commercial model can support **SaaS subscriptions, APIs, enterprise deployments, custom AI-agent systems, implementation services, and automation retainers**.
+These terms describe the product surface, the creator, and the problem classes Saphira is built to solve. They are included so that search engines and human visitors can correctly associate the repository with the work of Chelsea Megan Woods and the Saphira platform.
 
 ---
 
-## Architecture
+## Legal & Copyright
 
-The repository is organized around a modular execution fabric rather than a single prompt wrapper.
+**Saphira-AI™** is created, maintained, and owned by **Chelsea Megan Woods™**.
 
-High-level architecture:
+- **Copyright:** © 2026 Chelsea Megan Woods™. All rights reserved.  
+- **Trademarks:** Saphira-AI™, Nova Umbrella™, and associated logos are trademarks of Chelsea Megan Woods™.
 
-```text
-                    ┌──────────────────────┐
-                    │   Saphira Interface  │
-                    │ Chat / Voice / Web   │
-                    └──────────┬───────────┘
-                               │
-                               ▼
-                    ┌──────────────────────┐
-                    │ Executive Intelligence│
-                    │ Intent + Planning     │
-                    └──────────┬───────────┘
-                               │
-                               ▼
-                    ┌──────────────────────┐
-                    │ Orchestration Fabric │
-                    │ Task Graph + Routing │
-                    └──────────┬───────────┘
-                               │
-              ┌────────────────┼────────────────┐
-              ▼                ▼                ▼
-        Specialized        Tools/APIs       Memory
-         Workers            & Plugins       & Events
-              │                │                │
-              └────────────────┼────────────────┘
-                               ▼
-                    ┌──────────────────────┐
-                    │ Verification / Policy│
-                    │ / Audit / Resilience │
-                    └──────────┬───────────┘
-                               │
-                               ▼
-                    ┌──────────────────────┐
-                    │   Saphira Response   │
-                    └──────────────────────┘
-```
-
-For the detailed architecture, see [`ARCHITECTURE.md`](ARCHITECTURE.md).
+#ChelseaMeganWoods #SaphiraAI #NovaUmbrella #PersonalAIAssistant #ConversationalAI #MultiAgentAI #BusinessAutomation
 
 ---
 
-## Web Application
-
-The repository includes a dedicated conversational web application under [`saphira-app/`](saphira-app/).
-
-The current frontend is a **React + Vite + TypeScript** application designed around a clean conversational interface.
-
-Key frontend areas include:
-
-- Chat interface
-- Streaming responses
-- Sidebar and navigation
-- User context
-- Saphira configuration
-- API integration
-- Markdown formatting
-- Reusable UI components
-
-See [`saphira-app/README.md`](saphira-app/README.md) for application-specific setup and integration details.
-
----
-
-## Getting Started
-
-### Repository
-
-```bash
-git clone https://github.com/chichi-lyman/saphira-ai.git
-cd saphira-ai
-```
-
-### Web application
-
-```bash
-cd saphira-app
-npm install
-cp .env.local.example .env.local
-npm run dev
-```
-
-The web application is designed to communicate with the Saphira API/FastAPI runtime through the configured API base URL.
-
-Before production deployment, configure environment variables, backend connectivity, authentication, model access, and any required service credentials for the deployment environment.
-
----
-
-## Documentation
-
-| Resource | Purpose |
-|---|---|
-| [`ARCHITECTURE.md`](ARCHITECTURE.md) | Core architecture and platform roadmap |
-| [`DEPLOY.md`](DEPLOY.md) | Deployment guidance |
-| [`docs/COMMERCE_OS.md`](docs/COMMERCE_OS.md) | Policy-controlled commerce architecture |
-| [`docs/NOVA_ECOSYSTEM.md`](docs/NOVA_ECOSYSTEM.md) | Nova Umbrella ecosystem and governance architecture |
-| [`docs/GEMINI_PARITY_IMPLEMENTATION_PLAN.md`](docs/GEMINI_PARITY_IMPLEMENTATION_PLAN.md) | Multimodal and assistant capability roadmap |
-| [`docs/SAPHIRA_UPGRADE_ROADMAP.md`](docs/SAPHIRA_UPGRADE_ROADMAP.md) | Saphira platform upgrade roadmap |
-| [`docs/INTELLIGENCE_EVOLUTION_STAGES.md`](docs/INTELLIGENCE_EVOLUTION_STAGES.md) | Intelligence evolution framework |
-| [`saphira-app/README.md`](saphira-app/README.md) | Web application setup |
-
----
-
-## Product Vision
-
-Saphira is being developed toward a future in which a person can communicate an objective once and have an intelligent system coordinate the required research, planning, tools, workflows, and follow-through without forcing the user to understand the underlying technical machinery.
-
-The long-term product direction includes:
-
-1. **A natural conversational assistant** that is easy to use.
-2. **Persistent context and memory** that make interactions increasingly useful.
-3. **A capability and agent fabric** that expands what Saphira can accomplish.
-4. **Verified automation** that distinguishes planning from authorized action.
-5. **Business intelligence and revenue workflows** that turn AI capability into measurable operational value.
-6. **A scalable platform** that can serve personal, creator, small-business, and enterprise use cases.
-
-Saphira's complexity belongs in the infrastructure—not in the user's way.
-
----
-
-## Public Project & Creator
-
-**Saphira AI™** is architected and developed by **Chelsea Megan Woods**.
-
-This repository documents the technical foundation, product direction, architecture, and continuing development of Saphira AI as a public-facing AI assistant and automation platform.
-
-If you are interested in:
-
-- Personal AI assistants
-- Conversational AI
-- AI agents
-- Multi-agent systems
-- AI automation
-- Business process automation
-- Lead generation systems
-- Revenue automation
-- AI SaaS
-- AI operating systems
-- Enterprise AI infrastructure
-- Custom AI-agent development
-
-this repository is the primary public technical record for the project.
-
----
-
-## Roadmap Direction
-
-Saphira's development is iterative. Major areas of continued development include:
-
-- More capable conversational reasoning
-- Stronger persistent memory
-- Real-time voice and multimodal interaction
-- Expanded tool and API integrations
-- More robust self-correction and resilience
-- Improved verification and governance
-- Business and revenue automation
-- Multi-tenant SaaS infrastructure
-- Production authentication and billing
-- Mobile and device integrations
-- Expanded developer and enterprise interfaces
-
-Features and capabilities should be considered **implementation-stage dependent**; this README describes the platform direction and documented architecture, not a guarantee that every listed capability is production-enabled in every deployment.
-
----
-
-## Responsible Development
-
-Saphira is being built with explicit attention to authorization, auditability, human approval, data boundaries, and controlled side effects.
-
-The system should fail closed when a consequential operation cannot be safely authorized or verified rather than treating uncertainty as permission to act.
-
----
-
-## License & Intellectual Property
-
-**Saphira AI™** is created, maintained, and owned by **Chelsea Megan Woods**.
-
-Copyright © 2026 Chelsea Megan Woods. All rights reserved unless a separate license or repository file states otherwise.
-
-**Saphira AI™** and **Nova Umbrella™** are proprietary project and brand names. Nothing in this repository grants permission to use associated trademarks, branding, or intellectual property without authorization.
-
----
-
-## Keywords
-
-Saphira AI, Saphira AI assistant, personal AI assistant, conversational AI, AI agent, AI agents, multi-agent AI, autonomous AI, AI automation, business automation, AI operating system, AI SaaS, AI assistant platform, persistent AI memory, AI orchestration, intelligent automation, lead generation AI, sales automation AI, revenue automation, business intelligence AI, enterprise AI, custom AI agents, AI workflow automation, multimodal AI, voice AI, developer AI, Nova Umbrella, Chelsea Megan Woods.
-
----
-
-**Built in public. Designed for real-world execution.**
-
-**By Chelsea Megan Woods**
+*Talk to Saphira. Saphira thinks. Saphira delegates. Saphira executes. Saphira verifies. Saphira remembers.*
