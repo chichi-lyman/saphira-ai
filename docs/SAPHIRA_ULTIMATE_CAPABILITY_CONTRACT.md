@@ -2,6 +2,8 @@
 
 This document is the canonical capability contract for Saphira's autonomous executive-assistant architecture. Saphira remains the single conversational identity; specialized agents operate as background workers.
 
+Long-horizon intelligence progression is defined in [`docs/INTELLIGENCE_EVOLUTION_STAGES.md`](INTELLIGENCE_EVOLUTION_STAGES.md). Near-term capability work remains governed by the contracts below.
+
 ## 1. Conversational intelligence
 - Multimodal chat: text, image, audio, screen/context inputs.
 - Adaptive persona and tone engine.
@@ -114,3 +116,6 @@ Full matrix: `docs/SAPHIRA_COMPETITIVE_EDGE.md`. Capability keys: `src/core/saph
 **Talk to Saphira. Saphira thinks. Saphira delegates. Saphira executes. Saphira verifies. Saphira remembers — and aims to be 1% better at the whole loop than any single-category leader.**
 
 Agents are implementation details, not separate assistants presented to the user.
+
+## 12. Intelligence evolution alignment
+All capability work is expected to advance Saphira along the continuum defined in `docs/INTELLIGENCE_EVOLUTION_STAGES.md` while satisfying the transition triggers of the current stage before resources are committed to the next. Governance, verification, and audit remain non-negotiable at every stage.
