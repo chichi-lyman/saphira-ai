@@ -1,15 +1,17 @@
 {
   "id": "/",
   "short_name": "Saphira",
-  "name": "Saphira AI™",
-  "description": "Saphira AI personal assistant by Chelsea Megan Woods™.",
+  "name": "Saphira AI™ — Personal AI Assistant",
+  "description": "Saphira AI is a persistent multimodal personal AI assistant and multi-agent intelligence operating system by Chelsea Megan Woods. Conversational AI, business automation, lead generation, and governed execution.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#0B0813",
   "theme_color": "#0B0813",
   "orientation": "portrait-primary",
-  "categories": ["productivity", "utilities"],
+  "categories": ["productivity", "utilities", "business"],
+  "lang": "en",
+  "dir": "ltr",
   "icons": [
     {
       "src": "/icons/icon-192.png",
