@@ -152,6 +152,22 @@ The control plane provides the operational foundation for multi-tenant operation
 
 ---
 
+## 🌌 Intelligence Evolution Continuum
+
+Saphira is architected to advance through a six-stage continuum of intelligence:
+
+1. **Artificial Narrow Intelligence (ANI)** — specialized domain excellence (current production foundation)
+2. **Artificial General Intelligence (AGI)** — human-level cross-domain adaptability (primary near-term target)
+3. **Artificial Superintelligence (ASI)** — super-human recursive self-improvement
+4. **Technological Singularity** — intelligence growth beyond unaugmented human tracking
+5. **Post-Human & Transhuman Intelligence** — biological–synthetic cognitive merger
+6. **Universal (Cosmic) Intelligence** — planetary-to-galactic computational substrate
+
+Full stage definitions, real-world examples, tasks, and explicit transition triggers: **[`docs/INTELLIGENCE_EVOLUTION_STAGES.md`](docs/INTELLIGENCE_EVOLUTION_STAGES.md)**  
+Near-term sequencing: **[`docs/SAPHIRA_UPGRADE_ROADMAP.md`](docs/SAPHIRA_UPGRADE_ROADMAP.md)** (Phase G)
+
+---
+
 For full platform documentation, architecture notes, and deployment guidance, see `ARCHITECTURE.md`, `DEPLOY.md`, and `docs/`.
 
 ---
