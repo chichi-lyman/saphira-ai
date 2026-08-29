@@ -1,142 +1,48 @@
 # Saphira AI 🐉
 
-**Persistent Multimodal Intelligence Operating System**  
+**Personal AI Assistant · Multi-Agent Intelligence Operating System**  
 **Architected and Built by Chelsea Megan Woods**  
-**Ecosystem:** Nova Umbrella
+**Ecosystem:** Nova Umbrella™
 
-Saphira AI is a single conversational AI assistant backed by a persistent executive runtime. She coordinates specialized intelligence workers, memory, tools, business automation, multimodal interfaces, security controls, and permissioned device capabilities through one unified execution fabric.
+Saphira AI is a persistent, multimodal personal AI assistant and executive runtime. She understands natural-language intent, coordinates specialized intelligence workers, executes tasks within strict policy, verifies results, remembers what matters, and reports clearly — all through one unified conversational interface.
 
-> **Say what you want. Saphira understands the intent, coordinates the right intelligence, executes within policy, verifies the result, remembers what matters, and tells you what happened.**
+> **Say what you want.**  
+> Saphira understands the intent, coordinates the right intelligence, executes within policy, verifies the result, remembers what matters, and tells you what happened.
 
 ---
 
-## 🚀 Unified Saphira Platform
+## Public deployment
 
-Saphira is no longer designed as a collection of disconnected assistant versions. The repository is the **master runtime** for a modular AI ecosystem in which specialized systems become workers, adapters, or plugins behind one conversational interface.
+The canonical production web client is `saphira-app/`. It is a React + Vite PWA designed to deploy from the `main` branch. The production frontend requires a public Saphira API endpoint through `SAPHIRA_API_URL` / `VITE_SAPHIRA_API_BASE_URL` for live chat and streaming.
 
-### What is unified
+## What Saphira Is
 
-- Conversational AI and adaptive persona
-- Persistent / “God Memory” architecture
-- Executive planning and task-graph orchestration
-- Capability-based agent workforce
-- Model-routing abstraction
-- Plugin and API gateway
-- Multimodal voice, vision, and web-grounding boundaries
-- Sales / LeadOS and revenue automation
-- Research and business intelligence
-- Growth and outreach workflows
-- Commerce / Shopify workflows
-- Creator and content workflows
-- Development and repository automation
-- Security and Sentinel monitoring
-- Credential/identity-reference boundaries
-- Android/device and smart-environment capabilities
-- Enterprise multi-tenant control plane
-- Authorization, audit, and approval gates
-- Resilience, observability, and verification
-- SaaS, API, enterprise, and custom-agent commercialization surfaces
+Saphira AI is designed as a single conversational identity backed by a governed multi-agent execution fabric. Users talk to one assistant. Behind the scenes, Saphira plans, delegates, executes, verifies, and remembers.
 
-## 🧠 Canonical execution flow
+She is built for:
+
+- **Personal AI assistance** — continuous context, memory, and proactive support  
+- **Conversational AI** — natural text and voice interaction  
+- **Multi-agent orchestration** — specialized workers coordinated behind one assistant  
+- **Business automation** — lead intake, qualification, follow-up, research, and workflows  
+
+---
+
+## Production architecture
 
 ```text
-User
-  ↓
-Saphira Conversational Interface
-  ↓
-Intent + Context
-  ↓
-Executive Planner
-  ↓
-Task Graph / Orchestrator
-  ↓
-Capability Registry
-  ↓
-P0 Adapters / Specialized Workers
-  ↓
-Plugin + Tool Fabric
-  ↓
-Verification / QA
-  ↓
-Memory + Event Ledger
-  ↓
-Saphira Response
+Public Saphira Web/PWA
+        |
+        v
+Saphira API / Core Runtime
+        |
+   +----+----+----+
+   |         |    |
+  AI      Memory Tools
 ```
 
-The user does **not** need to select individual agents for routine work. Saphira decides which internal capability should handle each task.
+Provider secrets remain server-side. The browser receives only the public API base URL required to communicate with Saphira.
 
 ---
 
-# 🔒 Autonomous Commerce OS (Foundation)
-
-Policy-controlled commercial infrastructure is under `src/commerce/`.
-
-| Layer | Module |
-|-------|--------|
-| Authority policy | `src/commerce/authority.py` |
-| Hash-chained audit | `src/commerce/audit.py` |
-| Lifecycle state machine | `src/commerce/states.py` |
-| Stripe webhook verification | `src/commerce/stripe_webhooks.py` |
-
-**Invariants:** payment activation requires a signature-verified Stripe event; `DENY` / `REQUIRE_APPROVAL` never execute; the LLM does not own financial state; external communication is not autonomously enabled.
-
-Status and remaining build order: [`docs/COMMERCE_OS.md`](docs/COMMERCE_OS.md)  
-Tests: `tests/commerce/test_authority_audit_stripe.py`
-
-Tampa Bay roofing remains the first acquisition channel (`storage/tampa_roofing_approval_queue.csv`). All prospects stay `PENDING_REVIEW` / `NOT_SENT` until human approval.
-
----
-
-# 💰 Business Intelligence & Revenue Automation
-
-Saphira can coordinate workflows such as:
-
-```text
-Lead discovery
- ↓
-Enrichment
- ↓
-Qualification
- ↓
-Personalized outreach
- ↓
-Follow-up
- ↓
-CRM synchronization
- ↓
-Conversion measurement
- ↓
-Optimization
-```
-
-The same execution fabric extends into:
-
-- commerce
-- subscriptions
-- customer operations
-- content production
-- research
-- development
-- operations
-- analytics
-- workflow automation
-
-See `docs/COMMERCE_OS.md` for the policy-controlled Commerce OS foundation and the Tampa acquisition channel.
-
----
-
-# 🏢 Enterprise Control Plane
-
-The control plane provides the operational foundation for multi-tenant operation, authorization, audit, and approval gates. Consequential commercial actions pass through `CommercialAuthorityPolicy` before execution.
-
----
-
-For full platform documentation, architecture notes, and deployment guidance, see `ARCHITECTURE.md`, `DEPLOY.md`, and `docs/`.
----
-
-## ⚖️ Legal & Copyright
-
-**Saphira-AI™** is created, maintained, and owned by **Chelsea Megan Woods™ **.
-
-* **Copyright:** © 2026 Chelsea Megan Woods™ . All rights reserved.
-* **Trademarks:** Saphira-AI™, Nova Umbrella™, and associated logos are registered or common-law trademarks of Chelsea Megan Woods™ #ChelseaMeganWoods #SaphiraAI #NovaUmbrella
+© 2026 Chelsea Megan Woods™. All rights reserved.

@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "meta": {
+    "title": "Chelsea.io Landing Page Schema",
+    "author": "Chelsea Megan Woods™ #ChelseaMeganWoods",
+    "version": "1.0.0"
+  },
+  "brand": {
+    "founder": "Chelsea Megan Woods™ #ChelseaMeganWoods",
+    "product": "Saphira™",
+    "ecosystem": "Nova Umbrella™"
+  },
+  "hero": {
+    "headline": "The Policy-Gated Multimodal Executive",
+    "subheadline": "Combining high-velocity multimodal execution with deterministic governance. Saphira processes complex context, dispatches execution graphs, and operates under real-time equilibrium gates.",
+    "primaryCta": {
+      "label": "Explore Architecture",
+      "href": "/docs/NOVA_ECOSYSTEM.md"
+    },
+    "secondaryCta": {
+      "label": "Launch Assistant",
+      "href": "/app"
+    }
+  },
+  "pillars": [
+    {
+      "id": "l2-executive",
+      "title": "Executive Planning (Saphira L2)",
+      "description": "Ingests text, voice, code, and documents in one thread to synthesize actionable task graphs without direct side-effect access."
+    },
+    {
+      "id": "l1-governance",
+      "title": "Deterministic Safety (Nova L1)",
+      "description": "A non-bypassable governance substrate enforcing real-time approval gates, credential barriers, and financial risk limits."
+    },
+    {
+      "id": "l3-workers",
+      "title": "Isolated Workers (L3 Engine)",
+      "description": "Purpose-built execution agents dedicated to code compilation, repository mutation, and system integrations."
+    }
+  ],
+  "roadmap": {
+    "title": "Path to Production Parity",
+    "items": [
+      "Unified Multimodal Thread Context",
+      "Live Workspace & Repo Connectors",
+      "Bi-Directional Voice Streaming & Interruption",
+      "Transactional Multi-Turn Session Memory"
+    ]
+  }
+}

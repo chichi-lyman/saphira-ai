@@ -1,25 +1,28 @@
-# Saphira AI — Deployment Matrix
+# Saphira AI™ — Deployment Matrix
 
-**Architected by Chelsea Megan Woods**
+**Architected by Chelsea Megan Woods™**
 
 ## Canonical production topology
 
 ```text
-Vercel Production Web
+Vercel Production Web / PWA
         |
-        | SAPHIRA_API_URL
+        | SAPHIRA_API_URL (build-time)
         v
 Railway Production FastAPI
         |
-        +--> PostgreSQL
+        +--> PostgreSQL / Supabase
         +--> Redis / Celery
         +--> AI providers
         +--> Stripe / commerce
         |
         +--> Android APK (SAPHIRA_BASE_URL)
+        +--> Tauri Desktop (same API)
 ```
 
-Vercel serves the static production UI. Railway runs the FastAPI control plane. The Android app calls the same production FastAPI endpoint. Do not put provider secrets in Vercel static assets or the Android application.
+The canonical web client is `saphira-app/` (React + Vite). Vercel builds it into `saphira-app/dist`. The legacy root `public/` dashboard is no longer a production entrypoint.
+
+Provider secrets stay server-side. Never place AI-provider, database, Redis, Stripe secret, or encryption keys in Vercel browser assets or native clients.
 
 ## 1. Railway backend
 
@@ -48,10 +51,16 @@ ELEVENLABS_MODEL_ID=eleven_multilingual_v2
 SAPHIRA_TTS_PROVIDER=elevenlabs
 ```
 
-Use the public Railway service URL as the backend base URL, for example:
+Use the public Railway service URL as the backend root:
 
 ```text
 https://YOUR-RAILWAY-SERVICE.up.railway.app
+```
+
+The browser chat boundary is:
+
+```text
+https://YOUR-RAILWAY-SERVICE.up.railway.app/api/chat
 ```
 
 Verify:
@@ -63,15 +72,24 @@ curl https://YOUR-RAILWAY-SERVICE.up.railway.app/health
 
 Expected root status is `running`; `/health` must return `healthy`.
 
-## 2. Vercel production
+## 2. Vercel production web/PWA
 
-The repository deploys `public/` as a static site. Set the Vercel project environment variable:
+Vercel builds the canonical React/Vite client with:
+
+```text
+buildCommand: cd saphira-app && npm install && npm run build
+outputDirectory: saphira-app/dist
+```
+
+Set this Vercel Production environment variable:
 
 ```text
 SAPHIRA_API_URL=https://YOUR-RAILWAY-SERVICE.up.railway.app/api
 ```
 
-The Vercel build writes this value into `public/runtime-config.js`, so the browser never relies on the old Render endpoint unless the variable is omitted. The build retains a temporary Render fallback for backwards compatibility.
+`vite.config.ts` reads `SAPHIRA_API_URL` during the production build and injects only the public API base URL into the browser bundle. The frontend then calls `/chat` against that base, producing the canonical `/api/chat` boundary.
+
+Do not use the former Render endpoint. There is no Render fallback in the canonical build.
 
 Also set:
 
@@ -81,7 +99,27 @@ PRODUCTION_DOMAIN_URL=https://YOUR-VERCEL-DOMAIN.vercel.app
 
 Redeploy Production after changing variables.
 
-## 3. Android APK
+### PWA requirements
+
+The Vite client includes:
+
+- `/manifest.json`
+- standalone display mode
+- `#0B0813` theme/background
+- service worker at `/sw.js`
+- service-worker registration from `src/main.tsx`
+- offline shell caching
+- API requests explicitly excluded from service-worker caching
+
+Install the production PWA from Chrome on Pixel or Chromebook after verifying HTTPS and the manifest/service worker in DevTools.
+
+## 3. Frontend streaming
+
+The canonical client uses `useSaphiraStream` → `streamChat` → `POST /api/chat` with `stream=true`.
+
+The transport accepts SSE, JSON chunk, and raw text streaming formats and incrementally renders Saphira's response.
+
+## 4. Android APK
 
 GitHub Actions reads repository variable:
 
@@ -97,7 +135,7 @@ Artifact:
 saphira-ai-apk/app-debug.apk
 ```
 
-## 4. Stripe
+## 5. Stripe
 
 Stripe checkout is exposed at:
 
@@ -113,11 +151,11 @@ POST /api/v1/billing/webhooks
 
 Configure Stripe's webhook destination to the Railway backend and use the generated endpoint secret as `STRIPE_WEBHOOK_SECRET`.
 
-## 5. Voice
+## 6. Voice
 
 Browser voice uses the Web Speech APIs. Server TTS uses the configured provider. Android has native speech recognition and Text-to-Speech support in the companion application.
 
-## 6. Deployment acceptance test
+## 7. Deployment acceptance test
 
 A deployment is considered green only when all of these pass:
 
@@ -125,12 +163,16 @@ A deployment is considered green only when all of these pass:
 - Railway Production deployment: completed
 - `GET /` on Railway: `status=running`
 - `GET /health` on Railway: `status=healthy`
-- Vercel chat reaches `POST /api/chat` on the configured backend
-- Stripe checkout returns a hosted checkout session when billing secrets are configured
-- Stripe webhook signature verification succeeds
+- Browser client reaches `POST /api/chat` on the configured Railway backend
+- streaming response renders incrementally
+- PWA manifest is valid
+- service worker registers successfully
+- API traffic is not cached by the service worker
+- governance remains fail-closed for consequential actions
+- Stripe checkout/webhook checks pass when billing is enabled
 - Android workflow produces `app-debug.apk`
 - APK points to the Railway HTTPS backend
 
 ## Ownership
 
-© 2026 Chelsea Megan Woods. All rights reserved.
+© 2026 Chelsea Megan Woods™. All rights reserved.

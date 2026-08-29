@@ -7,6 +7,7 @@ from src.api.chat_router import router as chat_router
 from src.api.device_ws import router as device_router
 from src.api.tiktok_router import router as tiktok_router
 from src.api.platform_router import router as platform_router
+from src.api.twilio_voice_router import router as twilio_voice_router
 from src.commerce.stripe_checkout import router as checkout_router
 from core.control_plane import router as control_plane_router
 from observability.telemetry import router as telemetry_router
@@ -48,6 +49,7 @@ app.include_router(chat_router, prefix="/api")
 app.include_router(device_router, prefix="/api")
 app.include_router(tiktok_router, prefix="/api")
 app.include_router(platform_router, prefix="/api")
+app.include_router(twilio_voice_router, prefix="/api")
 app.include_router(checkout_router)
 app.include_router(control_plane_router)
 app.include_router(telemetry_router)

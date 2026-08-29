@@ -1,14 +1,16 @@
 /**
  * Saphira AI™ API Integration Client
- * Initializes the API client, attaches credentials, handles background
- * tool/workflow calls, and sends prompt requests to language model endpoints.
+ * Central browser-side transport for the Saphira Core chat boundary.
  */
 
 import { SAPHIRA_CONFIG } from '../config/saphiraConfig';
 import type { SaphiraMessage, SaphiraChatRequest, SaphiraChatResponse } from '../types/saphira';
 
-const API_BASE =
-  import.meta.env.VITE_SAPHIRA_API_BASE_URL || 'http://localhost:8000';
+// Vercel supplies SAPHIRA_API_URL at build time through vite.config.ts.
+// Keep /api as the local same-origin development default.
+const API_BASE = (
+  import.meta.env.VITE_SAPHIRA_API_BASE_URL || '/api'
+).replace(/\/$/, '');
 const API_KEY = import.meta.env.VITE_SAPHIRA_API_KEY || '';
 
 function getHeaders(): HeadersInit {
@@ -21,9 +23,6 @@ function getHeaders(): HeadersInit {
   return headers;
 }
 
-/**
- * Send a non-streaming chat request to the Saphira backend.
- */
 export async function sendChat(
   messages: SaphiraMessage[],
   options?: Partial<SaphiraChatRequest>
@@ -38,7 +37,7 @@ export async function sendChat(
     ...options,
   };
 
-  const res = await fetch(`${API_BASE}/api/chat`, {
+  const res = await fetch(`${API_BASE}/chat`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify(body),
@@ -53,8 +52,7 @@ export async function sendChat(
 }
 
 /**
- * Stream a chat response. Yields text chunks as they arrive.
- * Compatible with Server-Sent Events or chunked transfer from the backend.
+ * Stream text from /api/chat. Supports SSE and newline-delimited/raw chunks.
  */
 export async function* streamChat(
   messages: SaphiraMessage[],
@@ -70,9 +68,12 @@ export async function* streamChat(
     ...options,
   };
 
-  const res = await fetch(`${API_BASE}/api/chat`, {
+  const res = await fetch(`${API_BASE}/chat`, {
     method: 'POST',
-    headers: getHeaders(),
+    headers: {
+      ...getHeaders(),
+      Accept: 'text/event-stream, application/json, text/plain, */*',
+    },
     body: JSON.stringify(body),
   });
 
@@ -81,40 +82,54 @@ export async function* streamChat(
     throw new Error(`Saphira API error ${res.status}: ${text}`);
   }
 
-  if (!res.body) {
-    throw new Error('No response body for streaming');
-  }
+  if (!res.body) throw new Error('No response body for streaming');
 
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
+  let buffer = '';
 
   try {
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-      const chunk = decoder.decode(value, { stream: true });
-      // Support both raw text chunks and simple SSE "data: ..." lines
-      const lines = chunk.split('\n');
+      buffer += decoder.decode(value, { stream: true });
+
+      const lines = buffer.split(/\r?\n/);
+      buffer = lines.pop() ?? '';
+
       for (const line of lines) {
         const trimmed = line.trim();
         if (!trimmed) continue;
-        if (trimmed.startsWith('data:')) {
-          const data = trimmed.slice(5).trim();
-          if (data === '[DONE]') return;
-          try {
-            const parsed = JSON.parse(data);
-            const text =
-              parsed.choices?.[0]?.delta?.content ??
-              parsed.content ??
-              parsed.text ??
-              '';
-            if (text) yield text;
-          } catch {
-            if (data) yield data;
-          }
-        } else {
-          yield trimmed;
+
+        const data = trimmed.startsWith('data:')
+          ? trimmed.slice(5).trim()
+          : trimmed;
+
+        if (data === '[DONE]') return;
+
+        try {
+          const parsed = JSON.parse(data);
+          const text =
+            parsed.choices?.[0]?.delta?.content ??
+            parsed.content ??
+            parsed.text ??
+            '';
+          if (text) yield text;
+        } catch {
+          yield data;
         }
+      }
+    }
+
+    const remainder = buffer.trim();
+    if (remainder && remainder !== '[DONE]') {
+      const data = remainder.startsWith('data:') ? remainder.slice(5).trim() : remainder;
+      try {
+        const parsed = JSON.parse(data);
+        const text = parsed.choices?.[0]?.delta?.content ?? parsed.content ?? parsed.text ?? '';
+        if (text) yield text;
+      } catch {
+        yield data;
       }
     }
   } finally {
