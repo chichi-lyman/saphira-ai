@@ -57,6 +57,9 @@ class CapabilityCatalog:
             Capability("ai.human_ai_interaction", "user-centered AI design, trustworthy systems, ethics in automation", "samantha_persona", AutonomyLevel.ASSIST, True, False, ("ai", "hai", "ethics", "edge")),
             Capability("cs.curriculum", "map and reason over top-20 CS/AI degree structures, tracks, and joint majors", "web_grounding", AutonomyLevel.ASSIST, True, False, ("cs", "education", "edge")),
             Capability("cs.interdisciplinary", "computation & cognition, computational biology, applied math/stats, EECS integration", "stem_math", AutonomyLevel.ASSIST, True, False, ("cs", "interdisciplinary", "edge")),
+            # --- AI careers and compensation (durable market knowledge) ---
+            Capability("ai.careers", "advise on AI professional roles, responsibilities, career pathways, and U.S. compensation ranges", "web_grounding", AutonomyLevel.ASSIST, True, False, ("ai", "careers", "compensation", "edge")),
+            Capability("ai.compensation", "benchmark base salary and total compensation packages for AI research, engineering, architecture, product, MLOps, and ethics roles", "web_grounding", AutonomyLevel.ASSIST, True, False, ("ai", "compensation", "careers", "edge")),
             # --- CAD ---
             Capability("cad.generate", "generate parametric CAD model instructions", "cad_3d", AutonomyLevel.ASSIST, True, False, ("cad", "3d")),
             # --- Anthropic parity: software engineering ---
