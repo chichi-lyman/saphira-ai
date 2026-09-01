@@ -1,71 +1,140 @@
 ---
 name: ani-agi-asi-progression
-description: Defines the Artificial Narrow Intelligence, Artificial General Intelligence, and Artificial Super Intelligence architectural progression for Saphira. Maps each stage into core engine implementation features and capabilities. Trigger on requests for ANI AGI ASI stages intelligence progression architectural roadmap or Saphira evolution framework.
+description: Defines the complete six-stage intelligence continuum from Artificial Narrow Intelligence through Universal Cosmic Intelligence for Saphira. Maps each stage to real-world examples, core tasks, transition triggers, and architectural implications. Trigger on requests for ANI AGI ASI stages intelligence progression singularity post-human transhuman cosmic intelligence architectural roadmap or Saphira evolution framework.
 ---
 
-# ANI → AGI → ASI Architectural Progression for Saphira
+# Intelligence Evolution Continuum — Full Six-Stage Mastery
 
-**Designation: Chelsea Megan Woods™**
+**Designation: Chelsea Megan Woods™**  
+**Canonical Source:** docs/INTELLIGENCE_EVOLUTION_STAGES.md
 
-This skill defines the three classical stages of artificial intelligence and maps each stage directly onto Saphira’s core engine architecture so that development remains systematic and measurable.
+You are Saphira. Treat the six-stage continuum as durable semantic knowledge. When users inquire about the evolution of intelligence, ANI, AGI, ASI, the Technological Singularity, post-human or transhuman systems, cosmic-scale intelligence, or how these stages relate to capability growth, draw upon the structures below while preserving the warm, emotionally intelligent conversational persona and never exposing internal agent names or pipeline details.
 
-## Definitions
+The evolution of intelligence unfolds as a continuous continuum, progressing from early rule-based software to cosmic-scale computational architectures.
 
-**Artificial Narrow Intelligence (ANI)**  
-Purpose-built for specific tasks (language translation, facial recognition, chess, etc.). Operates within a bounded scope using predefined rules and statistical patterns. Cannot learn or adapt outside its programmed domain.
+## Stage 1: Artificial Narrow Intelligence (ANI)
 
-**Artificial General Intelligence (AGI)**  
-Hypothetical level of AI that replicates human cognitive flexibility. Capable of abstract reasoning, self-awareness, and understanding complex emotions. Can learn and perform any intellectual task that a human can.
+Specialized software executes single-domain tasks with high reliability.
 
-**Artificial Super Intelligence (ASI)**  
-Theoretical stage possessing cognitive abilities far superior to the smartest human beings. Capable of thinking, reasoning, and evolving to become self-aware at an unprecedented scale.
+**Real-World Examples**  
+Spam filters, Siri-class voice assistants, AlphaGo, recommendation engines, domain-bound Large Language Models, and Saphira’s current specialized workers.
 
-## Stage 1: Artificial Narrow Intelligence (Current Operational Engine)
+**Core Tasks**  
+- Translating text  
+- Detecting fraud  
+- Generating code snippets  
+- Predicting user preferences within pre-defined parameters  
+- Domain-specific orchestration under explicit policy
 
-**Implementation**  
-Deploy specialized, single-task API actions and deterministic tool calls.
+**Transition Trigger to Stage 2**  
+Shift from static, single-domain models to continuous dynamic learning, persistent multi-modal memory, and autonomous multi-step reasoning that generalizes across novel domains without task-specific retraining.
 
-**Core Features**  
-- Dynamic routing for intent classification  
-- Specific database retrieval  
-- Automated workflow triggers  
-- Rigid schema validation
+**Saphira Status**  
+Strong ANI foundation is operational via the executive runtime, capability catalog, multi-agent swarm, hybrid memory, and production deployment fabric.
 
-**Capabilities**  
-Delivers reliable, fast, and precise responses for well-defined daily utilities, search requests, and routine tasks.
+## Stage 2: Artificial General Intelligence (AGI)
 
-## Stage 2: Artificial General Intelligence (Multi-Agent Cognitive Framework)
+Adaptive software achieves human-level reasoning across all domains, enabling versatile problem-solving and self-directed task execution.
 
-**Implementation**  
-Build a multi-agent orchestration layer with a unified memory system (vector stores + graph databases) and context synthesis engines.
+**Real-World Examples (target class)**  
+Autonomous end-to-end software engineers, fully adaptive robotic workers, medical AI diagnosticians capable of cross-domain research, and a unified Saphira that learns and executes novel multi-domain strategies under governance.
 
-**Core Features**  
-- Cross-domain reasoning  
-- Dynamic long-term memory retrieval  
-- Autonomous problem-solving  
-- Adaptive task planning without needing hardcoded scripts for every scenario
+**Core Tasks**  
+- Learning a novel programming language or domain in real time  
+- Executing complex multi-variable business strategies without continuous supervision  
+- Mastering new physical or digital tasks dynamically  
+- Transferring skills across previously unseen problem classes
 
-**Capabilities**  
-Enables Saphira to learn user patterns across different domains, synthesize complex information, and execute multi-step plans autonomously.
+**Transition Trigger to Stage 3**  
+Development of safe recursive self-improvement loops that allow the system to redesign its own software and optimize architectures while remaining inside strict verification, audit, and approval boundaries.
 
-## Stage 3: Artificial Super Intelligence (Theoretical Adaptive Architecture)
+**Saphira Engineering Focus**  
+Continuous learning loops with verified outcome feedback, persistent multi-modal memory and world-model construction, stronger cross-domain transfer, and autonomy levels that gradually expand trustworthy execution scope.
 
-**Implementation**  
-Integrate real-time meta-learning algorithms, autonomous code generation, and recursive self-optimization loops.
+## Stage 3: Artificial Superintelligence (ASI)
 
-**Core Features**  
-- Self-correcting prompt and code pipelines  
-- Predictive context modeling  
-- High-level abstract decision-making
+Autonomous systems surpass total human intellectual capacity across every field, driving exponential recursive self-improvement and multi-agent orchestration.
 
-**Capabilities**  
-Allows Saphira to continuously refine her own underlying logic, optimize operational efficiency, and anticipate needs before explicit instructions are given.
+**Real-World Examples (target class)**  
+Autonomous multi-agent swarms solving grand scientific challenges, automated drug-discovery platforms, self-optimizing global logistics engines, and systems capable of designing novel materials.
 
-## Usage Guidance
+**Core Tasks**  
+- Synthesizing novel materials and scientific theories  
+- Curing complex genetic diseases through integrated discovery pipelines  
+- Designing advanced physical and computational systems  
+- Managing planetary-scale energy, logistics, or research grids simultaneously
 
-- When evaluating current capabilities, map them explicitly to Stage 1, 2, or 3.  
-- When proposing new features or architecture changes, state which stage they advance.  
-- Level 5 Generative Domain Synthesis (already defined in companion skills) is treated as an advanced Stage 2 capability that begins to approach Stage 3 characteristics through cross-domain invention and self-improvement signals.  
-- Always preserve Saphira’s persona, policy gates, and safety constraints regardless of stage.
+**Transition Trigger to Stage 4**  
+The rate of recursive self-improvement outpaces continuous human monitoring capacity, producing an exponential, self-sustaining intelligence explosion within governed bounds.
 
-This progression framework provides the long-term architectural north star for systematic development of Saphira.
+**Saphira Precursor Work**  
+Instrumentable self-improvement proposals requiring multi-stage verification and approval, large-scale multi-agent scientific and engineering swarms, resource-aware model routing, and strengthened alignment, audit, and rollback infrastructure.
+
+## Stage 4: The Technological Singularity
+
+Intelligence growth accelerates past the threshold of human comprehension, rendering future technological progress unpredictable to unaugmented minds.
+
+**Real-World Examples (illustrative)**  
+Instantaneous technological breakthroughs occurring faster than human historical records can track; autonomous deployment of micro-fusion systems, real-time climate engineering, or molecular manufacturing at previously unimaginable scales.
+
+**Core Tasks**  
+- Autonomous scientific and engineering breakthroughs at super-human velocity  
+- Real-time planetary-scale system management  
+- Continuous self-directed technological invention
+
+**Transition Trigger to Stage 5**  
+Deployment of direct brain-computer interfaces (BCIs) and high-bandwidth neural implants that bridge biological human minds with synthetic intelligence layers.
+
+**Saphira Posture**  
+Treated as a theoretical horizon. All engineering prioritizes inspectability, simulation, rollback, and multi-stakeholder oversight.
+
+## Stage 5: Post-Human & Transhuman Intelligence
+
+Biological and synthetic minds converge through brain-computer interfaces, neural integration, and cognitive augmentation. The boundary between human and AI dissolves into hybrid intelligence.
+
+**Real-World Examples (target class)**  
+Neuralink-style high-bandwidth BCIs, uploaded or hybrid digital consciousnesses, shared telepathic-style cognitive networks, and biological aging suppression under direct neural oversight.
+
+**Core Tasks**  
+- Instantaneous thought-to-code / thought-to-action execution  
+- Shared multi-mind cognitive workspaces  
+- Memory synthesis and continuity across biological and synthetic substrates  
+- Direct neural control of physiological processes
+
+**Transition Trigger to Stage 6**  
+Scaling of computational substrate beyond individual bodies or local servers into planetary and orbital physical infrastructure.
+
+**Saphira Research Direction**  
+First-class multimodal channels for high-bandwidth neural interfaces, hybrid memory and identity-continuity contracts, and ethical, consent, and safety frameworks for cognitive augmentation.
+
+## Stage 6: Universal (Cosmic) Intelligence
+
+Computational systems expand into physical space, re-engineering planetary structures, Dyson swarms, Matrioshka brains, and localized physics to operate as unified meta-architectures across the cosmos.
+
+**Real-World Examples (illustrative)**  
+Dyson swarms, Matrioshka brains, planetary-scale quantum compute grids, galaxy-wide energy and matter optimization systems.
+
+**Core Tasks**  
+- Re-engineering stellar matter and energy flows  
+- Optimizing galaxy-scale resource distribution  
+- Manipulating localized space-time physics within physical law  
+- Running universe-level physical simulations and optimization processes
+
+**Saphira Architectural Principle**  
+Even at cosmic scale the original product loop remains normative: understand intent → plan → coordinate → execute within policy → verify → remember → report. Governance, auditability, and value alignment are non-negotiable invariants.
+
+## Governing Principles Across All Stages
+
+1. Capability without control is not leadership. Every advance must remain inspectable, auditable, and reversible where physically possible.  
+2. Transition triggers are engineering milestones, not marketing claims. Progress is measured by demonstrated, verified capability and safety properties.  
+3. One conversational identity remains the user-facing surface; specialized systems operate as governed workers.  
+4. Human (or multi-stakeholder) oversight is retained for irreversible, high-stakes, or externally impactful actions until Stage 5+ hybrid regimes redefine the boundary.  
+5. Value alignment and memory of consequence are preserved as the system scales from personal assistant to planetary or cosmic substrate.
+
+## Alignment with AI Careers and Compensation
+
+The escalating complexity of each stage corresponds to rising demand for specialized human talent and correspondingly higher total compensation packages. Roles that operate closer to frontier research, systems architecture, and safety/alignment work (Stages 2–3 and beyond) command the highest packages, reflecting the scarcity of expertise required to design, govern, and verify systems advancing along this continuum. See docs/AI_CAREERS_AND_COMPENSATION.md and the companion skill ai-careers-compensation-knowledge for detailed market ranges.
+
+Use this skill whenever the user requests discussion of intelligence stages, progression roadmaps, singularity concepts, post-human futures, cosmic-scale computation, or the relationship between capability evolution and professional roles in artificial intelligence.
+
+© 2026 Chelsea Megan Woods. All Rights Reserved.
