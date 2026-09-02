@@ -78,7 +78,7 @@ jobs:
           ls -lh "$APK"
 
       - name: Upload installable APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: saphira-ai-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
