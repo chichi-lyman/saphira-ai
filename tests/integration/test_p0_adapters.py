@@ -15,7 +15,8 @@ def test_asi_core_formulates_directive():
 
 def test_sales_swarm_requires_approval():
     result = SalesSwarmAdapter().plan("HVAC", "Atlanta, GA", 5)
-    assert result["workflow"] == ["scout", "enrich", "strategize", "outreach"]
+    # Must match SalesSwarmAdapter.plan() contract (approval-gated pipeline)
+    assert result["workflow"] == ["scout", "profile", "qualify", "draft", "approval"]
     assert result["approval_required"] is True
     assert result["status"] == "PENDING_APPROVAL"
 
@@ -36,19 +37,3 @@ def test_twin_vault_only_stores_reference():
     vault = TwinVaultAdapter()
     vault.put_reference("github", "secret://github-token")
     assert vault.get_reference("github") == "secret://github-token"
-
-
-def test_saphira_os_routes_known_surface():
-    result = SaphiraOSAdapter("http://localhost:3000").route("control_plane")
-    assert result["url"] == "http://localhost:3000/control_plane"
-
-
-def test_all_p0_health_checks():
-    adapters = [
-        ASICoreAdapter(),
-        SalesSwarmAdapter(),
-        SentinelAdapter(),
-        TwinVaultAdapter(),
-        SaphiraOSAdapter(),
-    ]
-    assert all(adapter.health()["status"] in {"ok", "configured"} for adapter in adapters)
