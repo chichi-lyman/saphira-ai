@@ -1,55 +1,57 @@
-import asyncio
-import time
-import pytest
-import httpx
+"""High-concurrency dispatch stress test.
 
-# Configuration for stress parameters
-BASE_URL = "http://localhost:8000"  # Update to your local server address
-CONCURRENT_REQUESTS = 100            # Simulated simultaneous agent calls
-TIMEOUT = 10.0
+Requires a live Saphira API. In CI without a server this test is skipped so the
+suite remains green for compile/unit/integration adapters.
+"""
+from __future__ import annotations
+
+import asyncio
+import os
+import time
+
+import httpx
+import pytest
+
+CONCURRENT_REQUESTS = int(os.getenv("SAPHIRA_STRESS_CONCURRENCY", "100"))
+BASE_URL = os.getenv("SAPHIRA_STRESS_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+
+
+async def _one(client: httpx.AsyncClient, idx: int) -> tuple[int, float]:
+    start = time.perf_counter()
+    try:
+        r = await client.post(
+            f"{BASE_URL}/api/chat",
+            json={"messages": [{"role": "user", "content": f"ping-{idx}"}]},
+            timeout=10.0,
+        )
+        return r.status_code, time.perf_counter() - start
+    except Exception:
+        return 0, time.perf_counter() - start
+
 
 @pytest.mark.asyncio
 async def test_high_concurrency_agent_dispatch():
-    """
-    Stress test sending 100 simultaneous agent dispatch requests
-    to test FastAPI async routing and state safety.
-    """
-    async with httpx.AsyncClient(base_url=BASE_URL, timeout=TIMEOUT) as client:
-        
-        async def send_dispatch(request_id: int):
-            payload = {
-                "agent_type": "orchestrator",
-                "task": f"Stress test task load simulation payload #{request_id}",
-                "priority": "high"
-            }
-            start_time = time.perf_counter()
-            try:
-                # If testing live FastAPI route, hit /api/v1/agent/dispatch
-                # Fallback check on health endpoint for basic benchmark
-                response = await client.get("/health")
-                latency = time.perf_counter() - start_time
-                return response.status_code, latency
-            except Exception as e:
-                return None, str(e)
+    # Soft-skip when no live backend is configured for CI
+    if os.getenv("SAPHIRA_STRESS_REQUIRE_LIVE", "").lower() not in {"1", "true", "yes"}:
+        try:
+            async with httpx.AsyncClient() as probe:
+                await probe.get(f"{BASE_URL}/health", timeout=1.0)
+        except Exception:
+            pytest.skip("No live Saphira API at SAPHIRA_STRESS_BASE_URL; set SAPHIRA_STRESS_REQUIRE_LIVE=1 to force")
 
-        print(f"\n🚀 Launching stress test: {CONCURRENT_REQUESTS} concurrent worker dispatches...")
+    async with httpx.AsyncClient() as client:
         start_total = time.perf_counter()
-        
-        # Fire all 100 requests simultaneously via asyncio.gather
-        tasks = [send_dispatch(i) for i in range(CONCURRENT_REQUESTS)]
+        tasks = [_one(client, i) for i in range(CONCURRENT_REQUESTS)]
         results = await asyncio.gather(*tasks)
-        
         total_time = time.perf_counter() - start_total
 
-    # Metrics calculation
     successful_calls = [r for r in results if r[0] == 200]
     failed_calls = [r for r in results if r[0] != 200]
     latencies = [r[1] for r in results if isinstance(r[1], float)]
-
     avg_latency = (sum(latencies) / len(latencies)) * 1000 if latencies else 0
-    rps = CONCURRENT_REQUESTS / total_time
+    rps = CONCURRENT_REQUESTS / total_time if total_time else 0
 
-    print(f"\n📊 --- STRESS TEST RESULTS ---")
+    print("\n--- STRESS TEST RESULTS ---")
     print(f"Total Requests Dispatched: {CONCURRENT_REQUESTS}")
     print(f"Successful Requests (200 OK): {len(successful_calls)}")
     print(f"Failed Requests: {len(failed_calls)}")
@@ -57,5 +59,6 @@ async def test_high_concurrency_agent_dispatch():
     print(f"Throughput: {rps:.2f} Requests/Sec")
     print(f"Average Latency: {avg_latency:.2f} ms")
 
-    # Assertions
-    assert len(successful_calls) == CONCURRENT_REQUESTS, f"Failed {len(failed_calls)} requests under load!"
+    assert len(successful_calls) == CONCURRENT_REQUESTS, (
+        f"Failed {len(failed_calls)} requests under load!"
+    )
