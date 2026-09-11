@@ -2,13 +2,15 @@
  * Saphira AI™ Active Conversation State Provider
  */
 
-import React, {
+import {
   createContext,
   useContext,
   useMemo,
   useState,
   useCallback,
-  ReactNode,
+  type ReactNode,
+  type Dispatch,
+  type SetStateAction,
 } from 'react';
 import type { SaphiraMessage, SaphiraThread } from '../types/saphira';
 
@@ -17,9 +19,9 @@ interface ChatContextValue {
   threads: SaphiraThread[];
   activeThreadId: string | null;
   addMessage: (message: SaphiraMessage) => void;
-  setMessages: (messages: SaphiraMessage[]) => void;
+  setMessages: Dispatch<SetStateAction<SaphiraMessage[]>>;
   clearMessages: () => void;
-  setThreads: (threads: SaphiraThread[]) => void;
+  setThreads: Dispatch<SetStateAction<SaphiraThread[]>>;
   setActiveThreadId: (id: string | null) => void;
 }
 
