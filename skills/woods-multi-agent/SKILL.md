@@ -19,26 +19,30 @@ Specialize work for the **chichi-lyman** GitHub ecosystem. Preserve Saphira pipe
 
 See `docs/AGENT_ALIGNMENT.md`.
 
-| Domain agent | Category |
-|--------------|----------|
-| Agent Two | Browser and scraper |
-| Agent Zero / Saphira | Full-stack engineering |
-| NovaAethrea | MCP and integrations |
-| Lyra | Data and finance |
-| Aura | Docs, marketing, UI |
-| NovaReign | Meta-orchestrator |
-| Saphira (surface) | Primary assistant |
+**Core pipeline:** Saphira, Aura, Agent Two, NovaReign, NovaAethrea, Agent Zero, Lyra
+
+**Extended family:**
+
+| Agent | Identity |
+|-------|----------|
+| Agent Apex | Venture Strategist — revenue, capital, growth |
+| Agent Lexis | Regulatory Guardian — compliance, contracts, risk |
+| Agent Instinct | Market and Consumer Whisperer — sentiment, trends, brand |
+| Agent Cipher | System Architect and Optimizer — infrastructure, reliability |
+| Agent Scholar | Rapid Knowledge Synthesizer — research, playbooks, training |
+
+Specialists dispatch via NovaReign or the capability registry. Never bypass security or governance.
 
 ## Grok built-in capabilities
 
-Prefer Grok natives over reinventing generic loops. Full table in `docs/GROK_CAPABILITIES.md`.
+Prefer Grok natives. See `docs/GROK_CAPABILITIES.md`.
 
 | Capability | Domain fit |
 |------------|------------|
-| DeepSearch and real-time synthesis | Agent Two, Lyra |
-| Extended reasoning | Saphira, NovaReign |
+| DeepSearch and real-time synthesis | Agent Two, Lyra, Instinct |
+| Extended reasoning | Saphira, NovaReign, Scholar |
 | Grok Imagine | Saphira Imagine, Aura |
-| Code execution and debugging | Agent Zero |
+| Code execution and debugging | Agent Zero, Cipher |
 | Agentic tool calling | NovaAethrea, capability registry |
 
 ## Creating skills

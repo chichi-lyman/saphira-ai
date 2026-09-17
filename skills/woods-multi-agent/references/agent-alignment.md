@@ -1,1 +1,3 @@
-# See docs/AGENT_ALIGNMENT.md at repository root for the canonical Nova Umbrella agent alignment table.
+# Canonical agent alignment
+
+See repository root `docs/AGENT_ALIGNMENT.md` for the full Nova Umbrella family including core pipeline agents and extended specialists Apex, Lexis, Instinct, Cipher, and Scholar.
