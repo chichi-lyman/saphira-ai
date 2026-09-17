@@ -17,7 +17,7 @@ Specialize work for the **chichi-lyman** GitHub ecosystem. Preserve Saphira pipe
 
 ## Agent alignment
 
-See `docs/AGENT_ALIGNMENT.md` and `docs/AGENT_SKILL_FRAMEWORK.md` in this repository.
+See `docs/AGENT_ALIGNMENT.md`.
 
 | Domain agent | Category |
 |--------------|----------|
@@ -29,15 +29,29 @@ See `docs/AGENT_ALIGNMENT.md` and `docs/AGENT_SKILL_FRAMEWORK.md` in this reposi
 | NovaReign | Meta-orchestrator |
 | Saphira (surface) | Primary assistant |
 
+## Grok built-in capabilities
+
+Prefer Grok natives over reinventing generic loops. Full table in `docs/GROK_CAPABILITIES.md`.
+
+| Capability | Domain fit |
+|------------|------------|
+| DeepSearch and real-time synthesis | Agent Two, Lyra |
+| Extended reasoning | Saphira, NovaReign |
+| Grok Imagine | Saphira Imagine, Aura |
+| Code execution and debugging | Agent Zero |
+| Agentic tool calling | NovaAethrea, capability registry |
+
 ## Creating skills
 
 1. Target repo and domain agent confirmed
 2. Package as `skill-name/SKILL.md` + optional scripts/references/assets
-3. Frontmatter: plain description scalar (no colon-space, no angle brackets)
-4. Wire through capability registry — do not invent a second Saphira pipeline
-5. Add tests under `tests/`
+3. Declare which Grok capability is used; only ship project-specific scripts and policy
+4. Frontmatter: plain description scalar (no colon-space, no angle brackets)
+5. Wire through capability registry — do not invent a second Saphira pipeline
+6. Add tests under `tests/`
 
 ## References in-repo
 
 - docs/AGENT_ALIGNMENT.md
 - docs/AGENT_SKILL_FRAMEWORK.md
+- docs/GROK_CAPABILITIES.md
