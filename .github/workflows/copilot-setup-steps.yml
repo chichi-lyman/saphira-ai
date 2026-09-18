@@ -1,10 +1,9 @@
 name: Copilot Setup Steps (Disabled)
 
-# This file previously contained a malformed partial step that caused
-# repeated workflow failures. It is kept as a valid no-op so that any
-# remaining references do not break the Actions UI.
-#
-# Real setup lives in the other CI workflows (saphira-ci.yml, etc.).
+# Previously this file contained a malformed YAML fragment (a single step without
+# top-level name/on/jobs) that caused every push to report Failure in Actions.
+# It is now a valid no-op workflow so the UI no longer shows errors.
+# Real CI lives in saphira-ci.yml, saphira-core-ci.yml, and related files.
 
 on:
   workflow_dispatch:
@@ -13,5 +12,7 @@ jobs:
   noop:
     runs-on: ubuntu-latest
     steps:
-      - name: No-op
-        run: echo "copilot-setup-steps workflow is intentionally disabled. See other CI workflows."
+      - name: No-op (intentionally disabled)
+        run: |
+          echo "This workflow is intentionally disabled."
+          echo "See .github/workflows/saphira-ci.yml and related files for active CI."
