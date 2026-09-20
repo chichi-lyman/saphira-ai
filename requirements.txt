@@ -1,35 +1,60 @@
+# Saphira AI — production / runtime dependencies
+# © 2026 Chelsea Megan Woods
+
+# --- API & data models ---
 fastapi>=0.110.0
 uvicorn[standard]>=0.28.0
-python-dotenv==1.0.1
 pydantic>=2.6.0
-httpx>=0.27.0
-sqlalchemy==2.0.23
-asyncpg==0.29.0
-alembic==1.12.1
-psycopg2-binary==2.9.9
+pydantic-settings>=2.1.0
+python-multipart>=0.0.6
+email-validator>=2.1.0
+orjson>=3.9.10
+slowapi>=0.1.9
+
+# --- Agent orchestration frameworks ---
+langgraph>=0.2.0
+langchain-core>=0.3.0
+langchain-openai>=0.2.0
+crewai>=0.80.0
+
+# --- Database & memory (NovaAethrea) ---
+sqlalchemy[asyncio]>=2.0.23
+asyncpg>=0.29.0
+alembic>=1.12.1
+psycopg2-binary>=2.9.9
+sqlmodel>=0.0.14
+aiosqlite>=0.19.0
+
+# --- Cache / workers ---
 redis>=5.0.3
 celery>=5.3.6
-aioredis==2.0.1
-aiosqlite==0.19.0
-python-multipart==0.0.6
-email-validator==2.1.0
-passlib[bcrypt]==1.7.4
-python-jose[cryptography]==3.3.0
-pydantic-settings==2.1.0
-sqlmodel==0.0.14
-pytest==7.4.3
-pytest-asyncio==0.21.1
-gunicorn==21.2.0
-orjson==3.9.10
-slowapi==0.1.9
-PyGithub>=2.0.0
+aioredis>=2.0.1
+
+# --- LLM & external SDKs ---
+openai>=1.14.0
+anthropic>=0.34.0
+google-genai>=1.0.0
+httpx>=0.27.0
+
+# --- Auth & security ---
+passlib[bcrypt]>=1.7.4
+python-jose[cryptography]>=3.3.0
 cryptography>=42.0.0
-prometheus-client>=0.20.0
+
+# --- Commerce & integrations ---
 stripe>=11.0.0
+PyGithub>=2.0.0
+# Meta Graph API (Facebook/Instagram) via facebook-business when needed
+facebook-business>=19.0.0
+
+# --- Voice / media ---
 sounddevice>=0.4.6
 faster-whisper>=1.0.0
 numpy>=1.24.0
-google-genai>=1.0.0
-openai>=1.14.0
 aiofiles>=23.2.1
 beautifulsoup4>=4.12.3
+
+# --- Ops ---
+python-dotenv>=1.0.1
+gunicorn>=21.2.0
+prometheus-client>=0.20.0

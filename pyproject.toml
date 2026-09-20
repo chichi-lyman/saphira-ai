@@ -1,0 +1,44 @@
+[project]
+name = "saphira-ai"
+version = "0.1.0"
+description = "Saphira AI — Persistent Multimodal Intelligence Operating System by Chelsea Megan Woods"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Proprietary — © 2026 Chelsea Megan Woods" }
+authors = [{ name = "Chelsea Megan Woods" }]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+exclude = ["android", "flutter_project", "web", "public"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["."]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+norecursedirs = ["tests/tests", ".*", "build", "dist"]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
+[tool.bandit]
+exclude_dirs = ["tests", "android", "flutter_project"]
+skips = ["B101"]
