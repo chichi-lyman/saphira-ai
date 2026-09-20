@@ -2,41 +2,29 @@
 
 © 2026 Chelsea Megan Woods
 
-## Strategy (female empowerment — no toxic engagement farming)
+## Content policy (owner)
 
-**Pillars:** healthy boundaries · toxic relationship dynamics · confidence & resilience · positive energy · constructive jealousy · toxic family & boundaries
+**Allowed:** raw emotion, rage, jealousy, toxic-energy themes, hard confrontation of real dynamics, strong engagement hooks rooted in lived experience.
 
-**Forbidden:** rage-bait, jealousy clickbait, shame hooks, fake followers, engagement pods.
+**Creative preference:** start real/raw when needed; turn toward agency, boundaries, or a positive outcome when it fits.
 
-**Follower growth:** organic consistency, SEO/ASO-aware profiles and captions, genuine engagement. Analyze with platform analytics; adjust with Lyra summaries.
+**Still out of scope:** purchased followers, bot farms, fake engagement pods, content that promotes self-harm or violence.
+
+## Pillars
+
+Healthy boundaries · toxic dynamics · confidence & resilience · positive energy · jealousy (raw + constructive) · toxic family · female rage / real talk
 
 ## Tools
 
-| Step | Tool | Secret / config |
-|------|------|-----------------|
-| 1. Content | ChatGPT via OpenAI | `OPENAI_API_KEY` |
-| 2. Schedule | FeedHive | `FEEDHIVE_TRIGGER_URL` |
-| 3. Schedule | Publer (Business API) | `PUBLER_API_TOKEN` |
-| 4. Publish policy | Instinct + Apex | `ALLOW` (owner) |
+| Step | Tool | Secret |
+|------|------|--------|
+| Content | OpenAI / ChatGPT | `OPENAI_API_KEY` |
+| Schedule | FeedHive | `FEEDHIVE_TRIGGER_URL` |
+| Schedule | Publer | `PUBLER_API_TOKEN` |
+| Publish policy | Instinct + Apex | `ALLOW` |
 
 ## Pipeline
 
-```text
-pillar / topic
-  → openai_content.brainstorm / write_copy
-  → feedhive.schedule_post and/or publer.schedule_post
-  → analytics review (manual or Lyra)
-```
+`src/growth/pipeline.py` → `run_content_cycle(...)`
 
-Python entry: `src/growth/pipeline.py` → `run_content_cycle(...)`
-
-## Funnels & monetization
-
-Apex may propose offers and funnels under ALLOW. Keep landing pages honest; pair content CTAs with real resources (guides, email, community) — not rage-driven urgency.
-
-## SEO / ASO
-
-- Clear niche keywords in bio and captions (boundaries, self-trust, empowerment).
-- Consistent series titles.
-- Alt text and on-screen text for accessibility and ranking signals.
-- Avoid keyword spam and misleading hooks.
+Intensity can be passed through as `raw` / `rage` in connector calls.

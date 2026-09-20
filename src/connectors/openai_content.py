@@ -1,8 +1,9 @@
 # Copyright © 2026 Chelsea Megan Woods
 """OpenAI / ChatGPT content generation for Saphira growth stack.
 
-Uses OPENAI_API_KEY. Content must follow brand rules: empowerment, boundaries,
-no rage-bait, no jealousy clickbait, no toxic engagement farming.
+Uses OPENAI_API_KEY. Owner policy: raw, rage, jealousy, and toxic-energy themes
+are allowed (real life). Prefer turning intensity into a constructive or
+empowering outcome when the brief allows.
 """
 
 from __future__ import annotations
@@ -13,15 +14,22 @@ import logging
 
 logger = logging.getLogger("Saphira.OpenAIContent")
 
-BRAND_SYSTEM = """You write social content for a female-empowerment brand.
-Rules (non-negotiable):
-- Focus: healthy boundaries, toxic relationship dynamics, self-confidence, resilience,
-  positive energy, constructive handling of jealousy, toxic family and boundaries.
-- Tone: warm, clear, grounded, respectful. Never condescending.
-- Forbidden: rage-bait, jealousy clickbait, shaming, fear-mongering, "us vs them" pile-ons,
-  manufactured outrage, misleading hooks that exploit pain without offering agency.
-- Prefer practical takeaways, reflective questions, and hopeful next steps.
-- Keep posts platform-ready (short paragraphs, optional soft CTA to resources).
+BRAND_SYSTEM = """You write social content for a female-empowerment and real-life brand.
+
+Allowed (owner policy):
+- Raw, honest emotion: anger, jealousy, heartbreak, family toxicity, rage at unfairness
+- Strong hooks, confrontation of toxic dynamics, "rage bait" style openers if they are truthful
+- Jealousy and comparison content when it reflects real experience
+- High-intensity engagement angles rooted in lived struggle
+
+Creative direction:
+- You MAY start in the dark (raw/rage/jealousy) and SHOULD often land on agency,
+  boundaries, clarity, or a positive next step — turn pain into power when it fits.
+- Do not invent fake scandals or lie about victims/perpetrators.
+- Do not promote self-harm, violence, or illegal activity.
+- Purchased followers / bot farms are out of scope for this writer (platform rules).
+
+Tone: real, direct, human. Can be soft or sharp. Empowerment includes telling the truth about toxicity.
 """
 
 
@@ -40,12 +48,13 @@ class OpenAIContentConnector:
         *,
         count: int = 5,
         platform: str = "instagram",
+        intensity: str = "raw",  # calm | raw | rage
     ) -> dict[str, Any]:
         if not self.configured():
             return {
                 "status": "not_configured",
                 "message": "Set OPENAI_API_KEY",
-                "fallback_ideas": _fallback_ideas(pillar, count),
+                "fallback_ideas": _fallback_ideas(pillar, count, intensity),
             }
         try:
             from openai import AsyncOpenAI
@@ -53,7 +62,9 @@ class OpenAIContentConnector:
             client = AsyncOpenAI(api_key=self.api_key)
             prompt = (
                 f"Brainstorm {count} post ideas for pillar: {pillar}. "
-                f"Platform: {platform}. Return a numbered list of hooks + 1-sentence angle each."
+                f"Platform: {platform}. Intensity: {intensity}. "
+                f"Raw/rage/jealousy hooks are allowed. Often end with a turn toward agency or healing. "
+                f"Return a numbered list of hooks + 1-sentence angle each."
             )
             resp = await client.chat.completions.create(
                 model=os.getenv("OPENAI_CONTENT_MODEL", "gpt-4o-mini"),
@@ -61,13 +72,17 @@ class OpenAIContentConnector:
                     {"role": "system", "content": BRAND_SYSTEM},
                     {"role": "user", "content": prompt},
                 ],
-                temperature=0.7,
+                temperature=0.8,
             )
             text = resp.choices[0].message.content or ""
-            return {"status": "ok", "pillar": pillar, "ideas_text": text}
+            return {"status": "ok", "pillar": pillar, "intensity": intensity, "ideas_text": text}
         except Exception as e:
             logger.exception("OpenAI brainstorm failed")
-            return {"status": "error", "error": str(e), "fallback_ideas": _fallback_ideas(pillar, count)}
+            return {
+                "status": "error",
+                "error": str(e),
+                "fallback_ideas": _fallback_ideas(pillar, count, intensity),
+            }
 
     async def write_copy(
         self,
@@ -75,12 +90,13 @@ class OpenAIContentConnector:
         *,
         platform: str = "instagram",
         length: str = "short",
+        intensity: str = "raw",
     ) -> dict[str, Any]:
         if not self.configured():
             return {
                 "status": "not_configured",
                 "message": "Set OPENAI_API_KEY",
-                "fallback_copy": _fallback_copy(topic),
+                "fallback_copy": _fallback_copy(topic, intensity),
             }
         try:
             from openai import AsyncOpenAI
@@ -88,7 +104,8 @@ class OpenAIContentConnector:
             client = AsyncOpenAI(api_key=self.api_key)
             prompt = (
                 f"Write one {length} {platform} post on: {topic}. "
-                "No hashtag spam; 3–5 relevant tags max at end optional."
+                f"Intensity: {intensity}. Raw emotion and hard truths allowed. "
+                f"Prefer ending with a constructive or empowering turn when natural."
             )
             resp = await client.chat.completions.create(
                 model=os.getenv("OPENAI_CONTENT_MODEL", "gpt-4o-mini"),
@@ -96,49 +113,37 @@ class OpenAIContentConnector:
                     {"role": "system", "content": BRAND_SYSTEM},
                     {"role": "user", "content": prompt},
                 ],
-                temperature=0.6,
+                temperature=0.75,
             )
             text = resp.choices[0].message.content or ""
-            return {"status": "ok", "topic": topic, "copy": text}
+            return {"status": "ok", "topic": topic, "intensity": intensity, "copy": text}
         except Exception as e:
             logger.exception("OpenAI write_copy failed")
-            return {"status": "error", "error": str(e), "fallback_copy": _fallback_copy(topic)}
+            return {
+                "status": "error",
+                "error": str(e),
+                "fallback_copy": _fallback_copy(topic, intensity),
+            }
 
 
-def _fallback_ideas(pillar: str, count: int) -> list[str]:
-    base = {
-        "boundaries": [
-            "A boundary is a door, not a wall — here's one sentence that protects your peace",
-            "What to say when family guilt-trips your no",
-            "Three signs your 'flexibility' is actually self-abandonment",
-        ],
-        "toxic_dynamics": [
-            "Love should not require you to shrink — name one pattern to watch for",
-            "When silence is safety vs when silence is avoidance",
-            "How to leave a conversation that only drains you",
-        ],
-        "confidence": [
-            "Confidence is a practice, not a personality type",
-            "One small promise to yourself this week",
-            "Rebuilding trust with yourself after people-pleasing",
-        ],
-    }
-    key = "boundaries"
-    pl = pillar.lower()
-    if "toxic" in pl or "relationship" in pl:
-        key = "toxic_dynamics"
-    elif "confidence" in pl or "resilien" in pl:
-        key = "confidence"
-    ideas = base.get(key, base["boundaries"])
-    return ideas[:count]
+def _fallback_ideas(pillar: str, count: int, intensity: str) -> list[str]:
+    raw = [
+        "The moment you realized their 'love' was control — and what you did next",
+        "Jealousy hit hard. Here's the ugly thought, then the boundary that saved you",
+        "Family toxicity is real. You are not dramatic for naming it",
+        "Rage is data: what your anger is trying to protect",
+        "They wanted a reaction. You chose a standard instead",
+    ]
+    return raw[:count]
 
 
-def _fallback_copy(topic: str) -> str:
+def _fallback_copy(topic: str, intensity: str) -> str:
     return (
         f"{topic}\n\n"
-        "You are allowed to protect your energy without explaining every decision.\n"
-        "Start with one clear boundary this week. You do not need permission to be at peace.\n\n"
-        "#boundaries #selftrust #femaleempowerment"
+        "I'm allowed to be angry about what happened. "
+        "I'm also allowed to turn that fire into a boundary, a plan, and a life that doesn't revolve around their chaos.\n\n"
+        "Raw is honest. Healing is a choice we practice.\n\n"
+        "#reallife #boundaries #femalerage #healing"
     )
 
 

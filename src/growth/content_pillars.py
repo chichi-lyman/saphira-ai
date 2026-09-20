@@ -1,5 +1,6 @@
 # Copyright © 2026 Chelsea Megan Woods
-"""Empowerment content pillars — no rage-bait / jealousy clickbait / toxic energy farming."""
+"""Content pillars — empowerment + real/raw life. Rage, jealousy, toxic energy allowed;
+prefer turning intensity into agency and positive outcomes."""
 
 from __future__ import annotations
 
@@ -17,87 +18,106 @@ CONTENT_PILLARS: list[Pillar] = [
     {
         "id": "healthy_boundaries",
         "title": "Setting healthy boundaries",
-        "intent": "Teach clear, kind limits that protect energy without cruelty",
+        "intent": "Limits that protect energy — can start from anger or exhaustion",
         "example_angles": [
-            "Scripts for saying no without over-explaining",
-            "Boundaries with family vs partners vs work",
-            "Repairing after you abandoned your own boundary",
+            "The no that felt cruel and was actually self-respect",
+            "Scripts for family guilt",
+            "When flexibility was self-abandonment",
         ],
     },
     {
         "id": "toxic_dynamics",
-        "title": "Recognizing and navigating toxic relationship dynamics",
-        "intent": "Name patterns so readers can choose safety and clarity",
+        "title": "Toxic relationship dynamics",
+        "intent": "Name patterns plainly; rage at the pattern is allowed",
         "example_angles": [
-            "Intermittent reinforcement and why it feels like chemistry",
-            "When empathy becomes self-erasure",
-            "Leaving loops: small exits before big ones",
+            "Intermittent reinforcement felt like chemistry",
+            "Circular fights designed to exhaust you",
+            "Small exits before the big one",
         ],
     },
     {
         "id": "confidence_resilience",
-        "title": "Building self-confidence and resilience",
-        "intent": "Practical self-trust, not toxic positivity",
+        "title": "Self-confidence and resilience",
+        "intent": "Rebuild after being broken down",
         "example_angles": [
-            "Evidence journal: proof you keep promises to yourself",
-            "Recovering after criticism without collapsing",
-            "Courage in small doses",
+            "Evidence you survived what should have ended you",
+            "Confidence after humiliation",
+            "Resilience is not pretending it didn't hurt",
         ],
     },
     {
         "id": "positive_energy",
         "title": "Cultivating positive energy",
-        "intent": "Sustainable peace, not performative happiness",
+        "intent": "Peace after the storm — not fake positivity",
         "example_angles": [
-            "Energy audits: people, media, rooms",
-            "Protecting morning quiet",
-            "Joy as discipline, not denial",
+            "Protecting your morning after a toxic night",
+            "Cutting drains without a speech",
+            "Joy as rebellion",
         ],
     },
     {
-        "id": "jealousy_constructive",
-        "title": "Dealing with jealousy constructively",
-        "intent": "Turn comparison into data, not self-attack or attacks on others",
+        "id": "jealousy_raw",
+        "title": "Jealousy — raw and constructive",
+        "intent": "Admit jealousy; use it as signal; optional turn to self-worth",
         "example_angles": [
-            "Jealousy as a values signal",
-            "What to do in the first 10 minutes of a spiral",
-            "Celebrating others without self-erasure",
+            "The jealous thought you were ashamed to admit",
+            "Comparison spiral → values checklist",
+            "Wanting what she has without hating her",
         ],
     },
     {
-        "id": "toxic_family_boundaries",
+        "id": "toxic_family",
         "title": "Toxic family and boundaries",
-        "intent": "Family systems literacy with compassion and firmness",
+        "intent": "Family systems truth — anger welcome, agency preferred ending",
         "example_angles": [
-            "Low-contact vs no-contact: choosing with clarity",
-            "Holiday scripts that keep you steady",
-            "You can love someone and still limit access",
+            "Holiday rage and the boundary you finally kept",
+            "Low contact is not betrayal",
+            "Loving them and limiting access",
+        ],
+    },
+    {
+        "id": "female_rage",
+        "title": "Female rage and real talk",
+        "intent": "Valid anger at injustice, double standards, and emotional labor",
+        "example_angles": [
+            "I'm not 'too emotional' — I'm done absorbing it",
+            "Rage as a boundary alarm",
+            "From explosion to standard",
         ],
     },
 ]
 
-FORBIDDEN_TACTICS = [
-    "rage bait",
-    "jealousy clickbait",
-    "shame-based hooks",
-    "fear-mongering without agency",
-    "pile-on / call-out culture for engagement",
-    "fake follower growth or engagement pods",
+# Owner policy: these are ALLOWED creative modes (not banned)
+ALLOWED_INTENSITY = [
+    "raw",
+    "rage",
+    "jealousy",
+    "toxic_energy_themes",
+    "confrontation",
+    "engagement_hooks_from_real_pain",
+]
+
+STILL_OUT_OF_SCOPE = [
+    "purchased_followers",
+    "bot_farms",
+    "coordinated_fake_engagement_pods",
+    "content_promoting_self_harm_or_violence",
 ]
 
 
 def growth_principles() -> dict:
     return {
         "follower_growth": (
-            "Organic only: consistent valuable posts, genuine engagement, SEO/ASO-friendly "
-            "captions and profiles. No purchased followers, bots, or spam automation."
+            "Organic growth preferred: strong hooks, consistency, SEO/ASO. "
+            "Raw/rage/jealousy content allowed. No bot/purchased follower services."
         ),
+        "content_intensity": ALLOWED_INTENSITY,
+        "creative_arc": "Often: truth in the dark → turn toward boundary, clarity, or power",
         "stack": {
-            "content": "OpenAI / ChatGPT via openai_content connector",
+            "content": "OpenAI / ChatGPT",
             "schedule": ["Publer", "FeedHive"],
-            "analyze": "Platform native analytics + Lyra for metrics summaries",
-            "monetize": "Funnels and offers only with clear value; Apex may propose, owner policy ALLOW for Apex/Instinct publish",
+            "policy": "Instinct + Apex ALLOW",
         },
-        "forbidden": FORBIDDEN_TACTICS,
+        "out_of_scope": STILL_OUT_OF_SCOPE,
         "pillars": [p["id"] for p in CONTENT_PILLARS],
     }
