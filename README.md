@@ -1,79 +1,59 @@
-# Saphira AI 🐉
+# Saphira AI — Monorepo
 
-**Personal AI Assistant · Multi-Agent Intelligence Operating System**  
-**Architected and Built by Chelsea Megan Woods**  
-**Ecosystem:** Nova Umbrella™ · Woods AI Studio / Lyman Legacies
+© 2026 Chelsea Megan Woods
 
-Saphira AI is a persistent, multimodal personal AI assistant and executive runtime. She understands natural-language intent, coordinates specialized intelligence workers, executes tasks within strict policy, verifies results, remembers what matters, and reports clearly — all through one unified conversational interface.
+Unified workspace for **Saphira AI** and all specialist agents under one repository.
 
-> **Say what you want.**  
-> Saphira understands the intent, coordinates the right intelligence, executes within policy, verifies the result, remembers what matters, and tells you what happened.
+## Layout
 
----
-
-## Quick Start (for new contributors and evaluators)
-
-1. **Clone** the repository.
-2. **Environment** — copy `.env.example` to `.env` and supply only the keys you need (provider credentials stay server-side; never commit secrets).
-3. **Python core** — Python 3.11+ recommended. Create a virtual environment and install from `requirements.txt`.
-4. **Web client** — `cd saphira-app && npm install && npm run dev` (requires a running Saphira API).
-5. **Voice (optional)** — see `docs/EVOLUTIONARY_ARCHITECTURE.md` and `voice/` for always-on wake-word (“okay saphira”, “hey saphira”, “saphira”), barge-in, and self-healing audio paths.
-6. **Android companion** — see `android/README.md`. Build via the provided Gradle project or GitHub Actions artifacts.
-
-Detailed deployment steps live in `DEPLOY.md`. Architecture overview is in `ARCHITECTURE.md` and `docs/EVOLUTIONARY_ARCHITECTURE.md`.
-
----
-
-## What Saphira Is
-
-Saphira is a single conversational identity backed by a governed multi-agent execution fabric. Users talk to one assistant. Behind the scenes she plans, delegates, executes, verifies, and remembers.
-
-She is built for:
-
-- **Personal AI assistance** — continuous context, memory, and proactive support  
-- **Conversational AI** — natural text and voice interaction (including always-on wake word and barge-in)  
-- **Multi-agent orchestration** — specialized workers coordinated behind one assistant  
-- **Business automation** — lead intake, qualification, follow-up, research, and workflows  
-- **Self-healing & measured improvement** — recoverable subsystem recovery and bounded daily optimisation that never alters ethics, persona, or safety policy  
-
-### Fixed pipeline (immutable)
-
-```
-Saphira (intent) → Aura (perception) → Agent Two (security) →
-Nova Reign (governance) → NovaAethrea (memory) → Agent Zero (execution)
+```text
+saphira-ai/
+├── pyproject.toml          # Root project + workspace members
+├── requirements.txt        # Runtime deps (unified)
+├── requirements-dev.txt    # Dev/test/lint
+├── Makefile                # Common build targets
+├── .python-version
+├── packages/
+│   └── saphira_core/       # Shared runtime (orchestration, connectors, growth)
+├── agents/                 # All agents (one directory each)
+│   ├── saphira/
+│   ├── aura/
+│   ├── agent_two/
+│   ├── novareign/
+│   ├── novaaethrea/
+│   ├── agent_zero/
+│   ├── lyra/
+│   ├── apex/
+│   ├── instinct/
+│   ├── lexis/
+│   ├── cipher/
+│   └── scholar/
+├── src/                    # Legacy / primary runtime entry (compat)
+├── tests/
+└── .github/workflows/
+    ├── ci.yml              # Unified pipeline
+    └── test.yml            # Compat alias
 ```
 
-Internal agent names are never exposed to the user. The public surface remains one coherent assistant.
+Standalone repos (`agent-apex`, `agent-instinct`, …) remain on GitHub as identity mirrors; **this monorepo is the build and dependency source of truth**.
 
----
+## Quick start
 
-## Public deployment
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -U pip uv
+uv pip install -r requirements.txt -r requirements-dev.txt
+pip install -e .
+make test
+```
 
-The canonical production web client is `saphira-app/` (React + Vite PWA). It expects a public Saphira API endpoint via `SAPHIRA_API_URL` / `VITE_SAPHIRA_API_BASE_URL`. Provider secrets remain exclusively on the trusted backend.
+Or with uv only:
 
----
+```bash
+uv sync
+uv run pytest
+```
 
-## Key documentation
+## Secrets (growth / social)
 
-| Document | Purpose |
-|----------|---------|
-| `ARCHITECTURE.md` | High-level system design |
-| `DEPLOY.md` | Deployment and environment notes |
-| `docs/EVOLUTIONARY_ARCHITECTURE.md` | Self-healing, wake-word, barge-in, +1% optimisation protocol |
-| `docs/SAPHIRA_ECOSYSTEM_STATUS.md` | Current build status and remaining production blockers |
-| `docs/FOUNDER_AND_ARCHITECTURE_CONTEXT.md` | Founder/architect context, career framing, and monetization models for the Saphira / Woods Legacies ecosystem |
-| `android/README.md` | Native Android companion |
-
----
-
-## Design principles
-
-- **Honesty & real-world utility** — truthful about capabilities and constraints.  
-- **24/7 ambient presence** — wake-word + cross-device continuity (Chromebook, phone, Bluetooth).  
-- **Governed autonomy** — commercial and external actions respect policy and audit.  
-- **Persona integrity** — warm, emotionally intelligent, non-robotic; internal machinery stays hidden.  
-
----
-
-© 2026 Chelsea Megan Woods™. All rights reserved.  
-Nova Umbrella™ · Woods AI Studio / Lyman Legacies
+`OPENAI_API_KEY` · `FEEDHIVE_TRIGGER_URL` · `PUBLER_API_TOKEN`

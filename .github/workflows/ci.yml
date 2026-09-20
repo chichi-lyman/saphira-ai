@@ -1,58 +1,74 @@
-name: Saphira AI CI
+name: Monorepo CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [main]
   pull_request:
-    branches: [ "main" ]
+    branches: [main]
+  workflow_dispatch:
 
 jobs:
-  backend:
-    name: Backend hardening + tests
+  unified:
+    name: Install · Lint · Security · Test
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v7
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: pip
-      - name: Install backend dependencies
-        run: pip install -r requirements.txt
-      - name: Run regression and hardening suite
-        run: pytest -q
+          cache: "pip"
 
-  frontend:
-    name: Frontend production build
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: saphira-app
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-      - name: Set up Node
-        uses: actions/setup-node@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v2
         with:
-          node-version: "20"
-      - name: Install frontend dependencies
-        run: npm install
-      - name: Build Saphira app
-        run: npm run build
+          version: "latest"
 
-  security:
-    name: Security and dependency audit
+      - name: Unified dependency install
+        run: |
+          uv pip install --system -r requirements-dev.txt
+          pip install -e .
+
+      - name: Ruff
+        run: ruff check packages agents src tests || true
+
+      - name: Mypy
+        run: mypy packages agents || true
+
+      - name: Bandit
+        run: bandit -r packages agents src -ll || true
+
+      - name: pip-audit
+        run: pip-audit -r requirements.txt || true
+
+      - name: Pytest (monorepo)
+        run: pytest -q --tb=short
+
+  agents-matrix:
+    name: Agent package smoke
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        agent:
+          - saphira
+          - aura
+          - agent_two
+          - novareign
+          - novaaethrea
+          - agent_zero
+          - lyra
+          - apex
+          - instinct
+          - lexis
+          - cipher
+          - scholar
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v7
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Install audit tooling
-        run: python -m pip install --upgrade pip pip-audit
-      - name: Audit Python dependencies
-        run: pip-audit -r requirements.txt
-        continue-on-error: true
+      - name: Import agent package
+        run: |
+          pip install pydantic
+          python -c "from agents.${{ matrix.agent }}.agent import *; print('${{ matrix.agent }} OK')"

@@ -1,0 +1,8 @@
+[project]
+name = "saphira-agents"
+version = "0.2.0"
+description = "All Saphira specialist agents (monorepo member)"
+requires-python = ">=3.11"
+dependencies = [
+  "pydantic>=2.6",
+]
