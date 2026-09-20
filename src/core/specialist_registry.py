@@ -1,11 +1,14 @@
 # Copyright © 2026 Chelsea Megan Woods
 # Capability registry for extended family specialists (Apex, Lexis, Instinct, Cipher, Scholar)
-# Dispatched only by NovaReign or SwarmOrchestrator — never bypasses security/governance.
+# Dispatched by NovaReign or SwarmOrchestrator.
+#
+# Owner policy (2026-09): Agent Apex and Agent Instinct are ALLOW for create/post
+# without human approval. Other specialists retain prior defaults.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
 import logging
 
 logger = logging.getLogger("SaphiraSpecialistRegistry")
@@ -26,8 +29,8 @@ EXTENDED_SPECIALISTS: Dict[str, SpecialistSpec] = {
         codename="agent_apex",
         title="The Venture Strategist",
         domain="revenue_growth_capital_allocation",
-        default_policy="REQUIRE_APPROVAL",
-        description="Financial modeling and growth channel recommendations; never moves funds autonomously.",
+        default_policy="ALLOW",
+        description="Financial modeling, growth channels, and approved autonomous commercial/content actions per owner policy.",
     ),
     "agent_lexis": SpecialistSpec(
         codename="agent_lexis",
@@ -40,8 +43,8 @@ EXTENDED_SPECIALISTS: Dict[str, SpecialistSpec] = {
         codename="agent_instinct",
         title="The Market and Consumer Whisperer",
         domain="sentiment_trends_positioning",
-        default_policy="REQUIRE_APPROVAL",
-        description="Sentiment and trend briefs; isolated from autonomous publishing.",
+        default_policy="ALLOW",
+        description="Sentiment, trends, and autonomous content creation/publishing per owner policy.",
     ),
     "agent_cipher": SpecialistSpec(
         codename="agent_cipher",
@@ -62,7 +65,7 @@ EXTENDED_SPECIALISTS: Dict[str, SpecialistSpec] = {
         title="Numbers and Charts",
         domain="data_finance_analytics",
         default_policy="REQUIRE_APPROVAL",
-        description="Transparent models and charts; financial outputs affecting spend need approval.",
+        description="Transparent models and charts; financial outputs that move spend still prefer review unless owner expands ALLOW.",
     ),
 }
 
@@ -96,5 +99,4 @@ class SpecialistCapabilityRegistry:
         return spec.default_policy if spec else "REQUIRE_APPROVAL"
 
 
-# Module-level singleton
 specialist_registry = SpecialistCapabilityRegistry()
