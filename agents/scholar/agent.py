@@ -1,16 +1,20 @@
 # Copyright © 2026 Chelsea Megan Woods
-class ScholarAgent:
-    name = "scholar"
-    default_policy = "ALLOW"
+"""Scholar — rapid knowledge synthesizer."""
+from __future__ import annotations
 
-    def playbook(self, topic: str) -> dict:
-        return {
-            "agent": self.name,
-            "topic": topic,
-            "steps": [
-                "Frame the situation",
-                "One action today",
-                "Reflective question",
-                "Close with agency",
-            ],
-        }
+from typing import Any, Dict
+
+from packages.saphira_core.base_agent import AgentResult, AgentStatus, BaseAgent
+
+
+class ScholarAgent(BaseAgent):
+    name = "scholar"
+    description = "Research synthesis and training playbooks"
+
+    async def handle(self, utterance: str, context: Dict[str, Any]) -> AgentResult:
+        return AgentResult(
+            agent=self.name,
+            status=AgentStatus.SUCCESS,
+            output={"synthesis": utterance, "playbook_steps": []},
+            next_agents=[],
+        )

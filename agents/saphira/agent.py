@@ -1,12 +1,22 @@
 # Copyright © 2026 Chelsea Megan Woods
-from pydantic import BaseModel, Field
+"""Saphira — only user-facing surface (intent capture)."""
+from __future__ import annotations
+
+from typing import Any, Dict
+
+from packages.saphira_core.base_agent import AgentResult, AgentStatus, BaseAgent
 
 
-class SaphiraAgent:
-    """Only user-facing surface."""
+class SaphiraAgent(BaseAgent):
+    """Only user-facing voice. Routes work internally; never exposes pipeline."""
 
     name = "saphira"
-    default_policy = "ALLOW"
+    description = "Surface assistant — intent capture and user liaison"
 
-    def receive(self, utterance: str) -> dict:
-        return {"agent": self.name, "intent": utterance, "route": "pipeline"}
+    async def handle(self, utterance: str, context: Dict[str, Any]) -> AgentResult:
+        return AgentResult(
+            agent=self.name,
+            status=AgentStatus.SUCCESS,
+            output={"intent": utterance, "route": "pipeline"},
+            next_agents=["aura"],
+        )

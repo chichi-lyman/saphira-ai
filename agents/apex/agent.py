@@ -1,12 +1,20 @@
 # Copyright © 2026 Chelsea Megan Woods
-class ApexAgent:
-    name = "apex"
-    default_policy = "ALLOW"
+"""Apex — venture strategist."""
+from __future__ import annotations
 
-    def recommend(self, objective: str) -> dict:
-        return {
-            "agent": self.name,
-            "objective": objective,
-            "policy": "ALLOW",
-            "stack": ["openai", "publer", "feedhive"],
-        }
+from typing import Any, Dict
+
+from packages.saphira_core.base_agent import AgentResult, AgentStatus, BaseAgent
+
+
+class ApexAgent(BaseAgent):
+    name = "apex"
+    description = "Venture and growth strategy"
+
+    async def handle(self, utterance: str, context: Dict[str, Any]) -> AgentResult:
+        return AgentResult(
+            agent=self.name,
+            status=AgentStatus.SUCCESS,
+            output={"strategy": utterance, "channels": []},
+            next_agents=[],
+        )

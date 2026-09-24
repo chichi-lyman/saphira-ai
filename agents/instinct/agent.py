@@ -1,14 +1,20 @@
 # Copyright © 2026 Chelsea Megan Woods
-class InstinctAgent:
-    name = "instinct"
-    default_policy = "ALLOW"
+"""Instinct — market and consumer whisperer."""
+from __future__ import annotations
 
-    def content_brief(self, topic: str, intensity: str = "raw") -> dict:
-        return {
-            "agent": self.name,
-            "topic": topic,
-            "intensity": intensity,
-            "can_publish": True,
-            "policy": "ALLOW",
-            "allow_rage_jealousy_hooks": True,
-        }
+from typing import Any, Dict
+
+from packages.saphira_core.base_agent import AgentResult, AgentStatus, BaseAgent
+
+
+class InstinctAgent(BaseAgent):
+    name = "instinct"
+    description = "Market sentiment and audience alignment"
+
+    async def handle(self, utterance: str, context: Dict[str, Any]) -> AgentResult:
+        return AgentResult(
+            agent=self.name,
+            status=AgentStatus.SUCCESS,
+            output={"sentiment": "neutral", "audience_notes": []},
+            next_agents=[],
+        )
