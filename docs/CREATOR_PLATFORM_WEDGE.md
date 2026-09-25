@@ -1,17 +1,33 @@
 # Creator Platform Wedge (Phase 0 / 1)
 
-Money movement first. Saphira stays the AI runtime; this wedge sells products through Stripe Checkout.
+**Blueprint rule:** money movement first, community second, discovery third.
 
-## Added
+## Wedge files
 
-- `src/commerce/products.py` — catalog (book, studio sub, makeup, course)
-- `src/commerce/creator_checkout.py` — GET products, POST checkout
+- `src/commerce/products.py` — catalog
+- `src/commerce/creator_checkout.py` — GET/POST `/api/v1/creator/*`
 - `src/commerce/order_ledger.py` — verified purchase log
+- `tests/test_creator_products.py`
 
-## Env
+## API
 
-STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, PRODUCTION_DOMAIN_URL, optional STRIPE_PRICE_* and DATABASE_URL.
+- `GET /api/v1/creator/products`
+- `POST /api/v1/creator/checkout` with `{ "sku": "blueprint-book" }`
 
-Wire: `app.include_router(creator_router)` from `src.commerce.creator_checkout`.
+## SKUs
+
+- blueprint-book $47 digital
+- saphira-studio-month $199/mo
+- makeup-starter $49 blanka
+- course-ai-creators $97 digital
+
+## Wire
+
+```python
+from src.commerce.creator_checkout import router as creator_router
+app.include_router(creator_router)
+```
+
+Env: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, PRODUCTION_DOMAIN_URL, optional STRIPE_PRICE_* and DATABASE_URL.
 
 Copyright © 2026 Chelsea Megan Woods

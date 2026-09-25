@@ -16,9 +16,9 @@ class Product:
     description: str
     amount_cents: int
     currency: str = "usd"
-    mode: str = "payment"  # payment | subscription
+    mode: str = "payment"
     stripe_price_id_env: str | None = None
-    fulfillment: str = "digital"  # digital | blanka | manual
+    fulfillment: str = "digital"
 
     def public_dict(self) -> dict[str, Any]:
         return {
@@ -33,7 +33,6 @@ class Product:
         }
 
 
-# Dogfood catalog — expand via env or DB later; keep code as source of truth for Phase 0/1
 PRODUCTS: dict[str, Product] = {
     "blueprint-book": Product(
         sku="blueprint-book",

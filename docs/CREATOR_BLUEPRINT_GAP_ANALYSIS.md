@@ -1,31 +1,13 @@
 # Creator platform blueprint vs Saphira AI
 
-Mapped against the build blueprint (money → community → discovery).
+Money first. Saphira is a strong agent runtime; full two-sided creator platform is not viable solo with no budget. Dogfood Stripe on Chelsea products first.
 
-## Already strong
-
-- AI/ML services and multi-agent runtime (core differentiator)
-- Content distribution connectors (FeedHive / Publer where configured)
-- Engineering foundation (monorepo, CI, tests)
-- Governed commerce kernel (policy, audit, Stripe verify)
-- Freemium / pricing thinking in pitch materials
-
-## Gaps ranked
-
-| Gap | Severity | Wedge response |
-|-----|----------|----------------|
-| Payments / payouts / fee engine | Critical | Stripe Checkout + webhook + order ledger (single merchant dogfood) |
-| Multi-tenant served product | Critical | Thin creator API only; full studio UI still out of scope |
-| User auth (creator/audience) | Critical | Use Stripe customer email + existing tenant ids; full auth later |
-| Postgres content/audience store | High | Optional DATABASE_URL for orders/tenants |
-| Subscriptions, tips, PPV, products | High | Catalog + checkout for book/course/sub/kit |
+| Gap | Severity | Response |
+|-----|----------|----------|
+| Payments | Critical | Creator checkout + existing webhooks |
+| Multi-tenant UI | Critical | Thin API only for now |
+| Auth | Critical | Stripe customer + tenant ids |
 | Community | Medium | Phase 2 |
-| Media pipeline | Medium | Outsource |
-| Mobile | Later | — |
+| Connect payouts | Later | After dogfood works |
 
-## Strategic choice
-
-Do **not** build a full two-sided creator network solo with no budget.  
-Do **dogfood** commerce on Chelsea’s own funnel until payouts are boring and reliable. Then open Connect.
-
-See [CREATOR_PLATFORM_WEDGE.md](./CREATOR_PLATFORM_WEDGE.md).
+See CREATOR_PLATFORM_WEDGE.md.
