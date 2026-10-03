@@ -22,6 +22,7 @@ Saphira exposes external systems as capability-scoped plugins behind the executi
 |---|---|---|---|
 | Zapier / Make.com | automation / workflow | connect to 5,000+ apps for background workflows (CRM, content, ops) | side-effecting actions require approval |
 | Twilio | communications / sms / voice | SMS alerts, voice-to-text, multi-channel messaging | send and call require approval |
+| WhatsApp Cloud | communications / messaging | 24/7 AI replies, freemium gate, Stripe upsell CTAs | send requires approval |
 | Stripe | billing / payments | subscriptions, checkout links, micro-transactions | financial actions require approval |
 | Social & Content Transmutation | social / content | ingest video/links, transcripts, auto captions and summaries | publish actions require approval |
 
@@ -55,6 +56,8 @@ Each plugin should provide:
 The reference registry is implemented in `src/integrations/plugin_registry.py`.
 
 Connector stubs for Google Workspace, Microsoft 365, Zapier, Twilio, Document Intelligence, Code Interpreter, Image Generation, and Social Content live under `src/connectors/`.
+
+WhatsApp freemium gate and tier definitions: `src/monetization/whatsapp_paywall.py` (message limits + upgrade CTA only; outbound send remains policy-gated).
 
 ## Security rules
 
