@@ -1,29 +1,29 @@
 -- Saphira AI persistent semantic memory and agent task ledger.
--- Apply after confirming the target PostgreSQL instance supports pgvector.
--- Embeddings must be produced by a model configured to return exactly 1536 dimensions.
+-- Embeddings use 1536 dimensions (OpenAI text-embedding-3-small default).
+-- Tables remain server-managed; browser clients must never receive the memory service key.
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE EXTENSION IF NOT EXISTS vector;
 
-CREATE TABLE IF NOT EXISTS saphira_memory (
+CREATE TABLE IF NOT EXISTS public.saphira_memory (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    owner_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     content TEXT NOT NULL,
     embedding vector(1536),
     metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_saphira_memory_created_at
-    ON saphira_memory (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_saphira_memory_owner_created
+    ON public.saphira_memory (owner_id, created_at DESC);
 
--- Add the vector index only after enough rows exist to justify its maintenance cost.
--- HNSW supports cosine-distance queries via the <=> operator.
 CREATE INDEX IF NOT EXISTS idx_saphira_memory_embedding_hnsw
-    ON saphira_memory USING hnsw (embedding vector_cosine_ops)
+    ON public.saphira_memory USING hnsw (embedding vector_cosine_ops)
     WHERE embedding IS NOT NULL;
 
-CREATE TABLE IF NOT EXISTS saphira_task_ledger (
+CREATE TABLE IF NOT EXISTS public.saphira_task_ledger (
     task_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    owner_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     agent_name VARCHAR(50) NOT NULL,
     status VARCHAR(20) NOT NULL,
     payload JSONB NOT NULL DEFAULT '{}'::jsonb,
@@ -31,13 +31,13 @@ CREATE TABLE IF NOT EXISTS saphira_task_ledger (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_saphira_task_ledger_status_updated
-    ON saphira_task_ledger (status, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_saphira_task_ledger_owner_status_updated
+    ON public.saphira_task_ledger (owner_id, status, updated_at DESC);
 
 CREATE INDEX IF NOT EXISTS idx_saphira_task_ledger_agent_updated
-    ON saphira_task_ledger (agent_name, updated_at DESC);
+    ON public.saphira_task_ledger (agent_name, updated_at DESC);
 
-CREATE OR REPLACE FUNCTION saphira_set_task_ledger_updated_at()
+CREATE OR REPLACE FUNCTION public.saphira_set_task_ledger_updated_at()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 AS $$
@@ -47,12 +47,18 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS trg_saphira_task_ledger_updated_at ON saphira_task_ledger;
+DROP TRIGGER IF EXISTS trg_saphira_task_ledger_updated_at ON public.saphira_task_ledger;
 CREATE TRIGGER trg_saphira_task_ledger_updated_at
-BEFORE UPDATE ON saphira_task_ledger
+BEFORE UPDATE ON public.saphira_task_ledger
 FOR EACH ROW
-EXECUTE FUNCTION saphira_set_task_ledger_updated_at();
+EXECUTE FUNCTION public.saphira_set_task_ledger_updated_at();
 
--- Production deployment note:
--- Apply tenant ownership and Row Level Security policies before exposing these
--- tables to client roles. Keep database credentials and service-role keys server-side.
+-- Defense in depth. No client-role policies are created; access is server-only.
+ALTER TABLE public.saphira_memory ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.saphira_task_ledger ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.saphira_memory FROM anon, authenticated;
+REVOKE ALL ON TABLE public.saphira_task_ledger FROM anon, authenticated;
+REVOKE ALL ON FUNCTION public.saphira_set_task_ledger_updated_at() FROM PUBLIC, anon, authenticated;
+
+-- Production API uses a server-side database connection. Do not expose the
+-- DATABASE_URL or SAPHIRA_MEMORY_API_KEY to the browser.
