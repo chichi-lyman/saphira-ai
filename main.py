@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import logging
 
 from src.api.chat_router import router as chat_router
+from src.api.memory_router import router as memory_router
 from src.api.device_ws import router as device_router
 from src.api.tiktok_router import router as tiktok_router
 from src.api.platform_router import router as platform_router
@@ -42,11 +43,13 @@ app.add_middleware(
         "X-Tenant-ID",
         "X-Agent-DID",
         "X-Saphira-Automation-Key",
+        "X-Saphira-Memory-Key",
     ],
 )
 app.add_middleware(AuditEventMiddleware)
 
 app.include_router(chat_router, prefix="/api")
+app.include_router(memory_router, prefix="/api")
 app.include_router(device_router, prefix="/api")
 app.include_router(tiktok_router, prefix="/api")
 app.include_router(platform_router, prefix="/api")
