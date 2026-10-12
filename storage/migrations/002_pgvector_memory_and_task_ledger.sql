@@ -3,13 +3,14 @@
 -- Tables remain server-managed; browser clients must never receive the memory service key.
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
-CREATE EXTENSION IF NOT EXISTS vector;
+CREATE SCHEMA IF NOT EXISTS extensions;
+CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA extensions;
 
 CREATE TABLE IF NOT EXISTS public.saphira_memory (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     owner_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     content TEXT NOT NULL,
-    embedding vector(1536),
+    embedding extensions.vector(1536),
     metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -18,7 +19,7 @@ CREATE INDEX IF NOT EXISTS idx_saphira_memory_owner_created
     ON public.saphira_memory (owner_id, created_at DESC);
 
 CREATE INDEX IF NOT EXISTS idx_saphira_memory_embedding_hnsw
-    ON public.saphira_memory USING hnsw (embedding vector_cosine_ops)
+    ON public.saphira_memory USING hnsw (embedding extensions.vector_cosine_ops)
     WHERE embedding IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS public.saphira_task_ledger (
