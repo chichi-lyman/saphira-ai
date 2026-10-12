@@ -9,10 +9,10 @@ import hmac
 import json
 import os
 from functools import lru_cache
-from typing import Any, Literal
+from typing import Any
 from uuid import UUID
 
-from fastapi import APIRouter, Header, HTTPException, Query, status
+from fastapi import APIRouter, Header, HTTPException, status
 from openai import AsyncOpenAI
 from pydantic import BaseModel, Field
 
