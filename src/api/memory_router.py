@@ -106,7 +106,7 @@ async def create_memory(
         rows = await run_statement(
             """
             INSERT INTO public.saphira_memory (owner_id, content, embedding, metadata)
-            VALUES (CAST(:owner_id AS uuid), :content, CAST(:embedding AS vector), CAST(:metadata AS jsonb))
+            VALUES (CAST(:owner_id AS uuid), :content, CAST(:embedding AS extensions.vector), CAST(:metadata AS jsonb))
             RETURNING id, owner_id, content, metadata, created_at
             """,
             {
@@ -134,10 +134,10 @@ async def search_memory(
         rows = await run_statement(
             """
             SELECT id, owner_id, content, metadata, created_at,
-                   1 - (embedding <=> CAST(:embedding AS vector)) AS similarity
+                   1 - (embedding <=> CAST(:embedding AS extensions.vector)) AS similarity
             FROM public.saphira_memory
             WHERE owner_id = CAST(:owner_id AS uuid) AND embedding IS NOT NULL
-            ORDER BY embedding <=> CAST(:embedding AS vector)
+            ORDER BY embedding <=> CAST(:embedding AS extensions.vector)
             LIMIT :limit
             """,
             {
