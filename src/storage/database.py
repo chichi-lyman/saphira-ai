@@ -5,6 +5,7 @@ import os
 from functools import lru_cache
 from typing import Any
 
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 
@@ -45,7 +46,7 @@ async def database_ready() -> bool:
 async def run_statement(statement: str, parameters: dict[str, Any]) -> list[dict[str, Any]]:
     factory = get_session_factory()
     async with factory() as session:
-        result = await session.execute(__import__("sqlalchemy").text(statement), parameters)
+        result = await session.execute(text(statement), parameters)
         rows = [dict(row) for row in result.mappings().all()]
         await session.commit()
         return rows
