@@ -1,1 +1,3 @@
-PLACEHOLDER_BINARY_NOT_SUPPORTED_IN_TEXT_PUSH
+This path previously held a text placeholder. The presentation binary is not stored as plain text in git.
+
+See docs/PROVIDER_REGISTRY_PRESENTATION.md for the full slide outline.
