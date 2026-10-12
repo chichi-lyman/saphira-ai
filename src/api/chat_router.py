@@ -5,23 +5,21 @@
 
 from __future__ import annotations
 
-import asyncio
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
-from src.agents.core_agents import SaphiraCore
 from src.core.orchestrator import SaphiraOrchestrator
 from src.core.saphira_persona import SAMANTHA_PERSONA_PROMPT
 from src.core.saphira_translator import public_reply
 from src.avatar.grok_avatar_service import avatar_service
 from src.memory.persistent_store import persistent_memory
-from src.connectors.gemini import GeminiConnector
+from src.providers import get_provider_registry
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 _orchestrator = SaphiraOrchestrator()
-_gemini = GeminiConnector()
+_registry = get_provider_registry()
 
 
 class ChatRequest(BaseModel):
@@ -48,8 +46,7 @@ def _natural_prompt(
     status = task_result.get("status", "success")
 
     history_text = "\n".join(
-        f"{item.get('role', 'user').upper()}: {item.get('text', '')}"
-        for item in history
+        f"{item.get('role', 'user').upper()}: {item.get('text', '')}" for item in history
     ) or "No earlier messages in this session."
 
     return f"""{SAMANTHA_PERSONA_PROMPT}
@@ -82,12 +79,10 @@ async def _generate_natural_reply(
     task_result: Dict[str, Any],
     history: list[dict[str, str]],
 ) -> Optional[str]:
-    if not _gemini.api_key:
-        return None
     prompt = _natural_prompt(user_message, task_result, history)
-    result = await asyncio.to_thread(_gemini.generate, prompt)
-    if result.get("status") == "success" and result.get("text"):
-        return str(result["text"]).strip()
+    result = await _registry.generate_natural_reply(prompt)
+    if result.status == "success" and result.text:
+        return result.text.strip()
     return None
 
 
