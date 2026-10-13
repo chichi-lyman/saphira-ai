@@ -1,18 +1,14 @@
 // Copyright (c) 2026 Chelsea Megan Woods. All Rights Reserved.
 // Owner & Creator: Chelsea Megan Woods | Woods AI Studio / Nova Umbrella
+//
+// Dart bridge for com.saphira.ai.SaphiraAccessibilityService
+// Channel: com.saphira.ai/accessibility
 
 import 'package:flutter/services.dart';
 
-/// Dart-side bridge to [SaphiraAccessibilityService] via MethodChannel.
-///
-/// Channel: `ai.saphira/accessibility`
-///
-/// All mutation methods require a prior [authorize] call whose token was
-/// issued by the Saphira backend autonomy / policy layer.
 class SaphiraAccessibilityBridge {
-  static const _channel = MethodChannel('ai.saphira/accessibility');
+  static const _channel = MethodChannel('com.saphira.ai/accessibility');
 
-  /// Returns true when the user has enabled the accessibility service.
   Future<bool> isAvailable() async {
     try {
       return await _channel.invokeMethod<bool>('isAvailable') ?? false;
@@ -34,37 +30,19 @@ class SaphiraAccessibilityBridge {
     await _channel.invokeMethod('revokeAuth');
   }
 
-  /// JSON string of the current window hierarchy (requires auth).
-  Future<String> dumpUiTree() async {
-    return await _channel.invokeMethod<String>('dumpUiTree') ?? '{}';
+  Future<bool> clickElementByText(String text) async {
+    return await _channel.invokeMethod<bool>('clickElementByText', {'text': text}) ?? false;
   }
 
-  Future<bool> clickByText(String text) async {
-    return await _channel.invokeMethod<bool>('clickByText', {'text': text}) ?? false;
+  Future<bool> injectText(String text) async {
+    return await _channel.invokeMethod<bool>('injectText', {'text': text}) ?? false;
   }
 
-  Future<bool> clickByViewId(String viewId) async {
-    return await _channel.invokeMethod<bool>('clickByViewId', {'viewId': viewId}) ?? false;
+  Future<bool> tapAt(double x, double y) async {
+    return await _channel.invokeMethod<bool>('tapAt', {'x': x, 'y': y}) ?? false;
   }
 
-  Future<bool> clickAt(double x, double y) async {
-    return await _channel.invokeMethod<bool>('clickAt', {'x': x, 'y': y}) ?? false;
-  }
-
-  /// direction: "up" | "down" | "forward" | "backward"
-  Future<bool> scroll(String direction) async {
-    return await _channel.invokeMethod<bool>('scroll', {'direction': direction}) ?? false;
-  }
-
-  Future<bool> setText(String viewId, String text) async {
-    return await _channel.invokeMethod<bool>('setText', {
-          'viewId': viewId,
-          'text': text,
-        }) ??
-        false;
-  }
-
-  /// name: HOME | BACK | RECENTS | NOTIFICATIONS | QUICK_SETTINGS
+  /// name: HOME | BACK | RECENTS | NOTIFICATIONS
   Future<bool> globalAction(String name) async {
     return await _channel.invokeMethod<bool>('globalAction', {'name': name}) ?? false;
   }
