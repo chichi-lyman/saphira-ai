@@ -1,12 +1,15 @@
 // Copyright (c) 2026 Chelsea Megan Woods. All Rights Reserved.
 // Owner: Chelsea Megan Woods | Woods AI Studio / Lyman Legacies
 //
-// Host activity for Flutter. Handles assistant-invoked intents and
-// registers MethodChannels for accessibility + assistant overlay.
+// Host activity for Flutter. Handles assistant-invoked intents,
+// accessibility MethodChannel, and foreground-service start/stop.
 
 package com.saphira.ai
 
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import android.util.Log
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -26,7 +29,7 @@ class MainActivity : FlutterActivity() {
         )
         handleAssistantIntent(intent)
 
-        // Accessibility bridge channel
+        // Accessibility bridge
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
             A11Y_CHANNEL
@@ -72,6 +75,51 @@ class MainActivity : FlutterActivity() {
                 result.error("ERROR", e.message, null)
             }
         }
+
+        // Foreground service + overlay permission channel
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            SERVICE_CHANNEL
+        ).setMethodCallHandler { call, result ->
+            try {
+                when (call.method) {
+                    "startForegroundService" -> {
+                        SaphiraForegroundService.start(this)
+                        result.success(true)
+                    }
+                    "stopForegroundService" -> {
+                        SaphiraForegroundService.stop(this)
+                        result.success(true)
+                    }
+                    "requestOverlayPermission" -> {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                            !Settings.canDrawOverlays(this)
+                        ) {
+                            val intent = Intent(
+                                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                Uri.parse("package:$packageName")
+                            )
+                            startActivity(intent)
+                            result.success(false) // user must grant manually
+                        } else {
+                            result.success(true)
+                        }
+                    }
+                    "canDrawOverlays" -> {
+                        val ok = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            Settings.canDrawOverlays(this)
+                        } else {
+                            true
+                        }
+                        result.success(ok)
+                    }
+                    else -> result.notImplemented()
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Service method ${call.method} failed", e)
+                result.error("ERROR", e.message, null)
+            }
+        }
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -101,5 +149,6 @@ class MainActivity : FlutterActivity() {
         private const val TAG = "SaphiraMain"
         const val ASSISTANT_CHANNEL = "com.saphira.ai/assistant"
         const val A11Y_CHANNEL = "com.saphira.ai/accessibility"
+        const val SERVICE_CHANNEL = "com.saphira.ai/service"
     }
 }

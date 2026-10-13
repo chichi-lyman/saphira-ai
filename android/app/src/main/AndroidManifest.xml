@@ -1,9 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- System Permissions for Saphira Background Engine -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
 
@@ -12,6 +15,7 @@
         android:label="Saphira AI"
         android:supportsRtl="true"
         android:theme="@style/Theme.Saphira">
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -44,12 +48,19 @@
                 android:resource="@xml/voice_interaction_service" />
         </service>
 
+        <!-- Package-relative FG service (ai.saphira.mobile) -->
         <service
             android:name=".SaphiraForegroundService"
             android:exported="false"
             android:foregroundServiceType="microphone" />
 
-        <!-- Existing package-relative accessibility service (ai.saphira.mobile) -->
+        <!-- Flutter-facing FG service (com.saphira.ai) -->
+        <service
+            android:name="com.saphira.ai.SaphiraForegroundService"
+            android:foregroundServiceType="microphone"
+            android:exported="false" />
+
+        <!-- Package-relative accessibility (ai.saphira.mobile) -->
         <service
             android:name=".SaphiraAccessibilityService"
             android:exported="false"
@@ -62,7 +73,7 @@
                 android:resource="@xml/saphira_accessibility_config" />
         </service>
 
-        <!-- Flutter-facing accessibility service (com.saphira.ai) -->
+        <!-- Flutter-facing accessibility (com.saphira.ai) -->
         <service
             android:name="com.saphira.ai.SaphiraAccessibilityService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
