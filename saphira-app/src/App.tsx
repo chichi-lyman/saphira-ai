@@ -45,7 +45,7 @@ const App: React.FC = () => {
         URL.revokeObjectURL(audioUrlRef.current);
         audioUrlRef.current = null;
       }
-      const response = await fetch(`${(import.meta.env.VITE_SAPHIRA_API_BASE_URL || '/api').replace(/\\/$/, '')}/tts`, {
+      const response = await fetch(`${(import.meta.env.VITE_SAPHIRA_API_BASE_URL || '/api').replace(/\/+$/, '')}/tts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: cleanText, style: 'assist' }),
