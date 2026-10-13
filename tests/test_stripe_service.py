@@ -56,7 +56,7 @@ def test_checkout_uses_idempotency_and_user_metadata(monkeypatch: pytest.MonkeyP
         idempotency_key="checkout-user-1",
     )
     assert result == {"id": "cs_test_123", "url": "https://checkout.stripe.com/test"}
-    assert calls["idempotency_key"] == "checkout-user-1"
+    assert calls["options"] == {"idempotency_key": "checkout-user-1"}
     assert calls["metadata"] == {"saphira_user_id": "user-1"}
     assert calls["mode"] == "subscription"
 
