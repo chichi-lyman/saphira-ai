@@ -1,8 +1,6 @@
 """Runtime connector catalog and fail-closed configuration checks.
 
-This catalog makes integrations discoverable without pretending that a catalog
-entry is a live adapter. Actual provider operations must be implemented by a
-typed adapter and explicitly enabled after authentication and smoke tests.
+Catalog entries describe readiness; they do not claim a provider is live.
 """
 from __future__ import annotations
 
@@ -20,8 +18,6 @@ class ConnectorSpec:
     side_effects: bool = True
 
 
-# Kept in Python so runtime validation does not depend on a YAML parser.
-# Credentials are referenced by name only and are never read into this catalog.
 CONNECTORS: tuple[ConnectorSpec, ...] = (
     ConnectorSpec("openai", "model_provider", ("OPENAI_API_KEY",), ("chat", "structured_output", "embeddings", "speech"), False),
     ConnectorSpec("google_gemini", "model_provider", ("GEMINI_API_KEY",), ("chat", "multimodal", "embeddings"), False),
@@ -35,6 +31,7 @@ CONNECTORS: tuple[ConnectorSpec, ...] = (
     ConnectorSpec("notion", "knowledge", ("NOTION_API_KEY",), ("search_pages", "read_pages", "create_page")),
     ConnectorSpec("asana", "project_management", ("ASANA_ACCESS_TOKEN",), ("task_read", "task_create", "task_update")),
     ConnectorSpec("stripe", "payments", ("STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"), ("subscription_read", "checkout_session_create", "webhook_verify")),
+    ConnectorSpec("celery", "task_queue", ("CELERY_BROKER_URL",), ("async_task_dispatch", "retry", "scheduled_task"), False),
     ConnectorSpec("shopify", "commerce", ("SHOPIFY_STORE_DOMAIN", "SHOPIFY_ACCESS_TOKEN"), ("products_read", "orders_read", "draft_order_create")),
     ConnectorSpec("zapier", "workflow_automation", ("ZAPIER_MCP_OR_WEBHOOK_CREDENTIALS",), ("approved_workflow_trigger",)),
     ConnectorSpec("twilio", "communications", ("TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN"), ("sms_draft", "voice_call")),
