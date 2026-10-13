@@ -4,7 +4,7 @@ from src.integrations.connector_catalog import CONNECTORS, connector_readiness, 
 
 def test_catalog_contains_expected_integrations() -> None:
     names = {item.name for item in CONNECTORS}
-    assert {"openai", "google_gemini", "xai", "github", "supabase", "notion", "stripe", "zapier", "twilio", "canva", "figma", "mcp_servers"} <= names
+    assert {"openai", "google_gemini", "xai", "github", "supabase", "notion", "stripe", "celery", "zapier", "twilio", "canva", "figma", "mcp_servers"} <= names
     assert len(names) == len(CONNECTORS)
 
 
