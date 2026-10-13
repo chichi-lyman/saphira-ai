@@ -9,7 +9,6 @@ defaults:
   external_calls_enabled: false
   side_effects_require_approval: true
 connectors:
-  # Model and reasoning providers
   - id: openai
     category: model_provider
     adapter: existing_provider_registry
@@ -22,10 +21,8 @@ connectors:
     capabilities: [chat, multimodal, embeddings]
   - id: xai
     category: model_provider
-    adapter: existing_provider_registry
     auth_env: XAI_API_KEY
     capabilities: [chat]
-  # Engineering and operations
   - id: github
     category: developer_tools
     auth_env: GITHUB_TOKEN
@@ -35,108 +32,92 @@ connectors:
     category: deployment
     auth_env: VERCEL_TOKEN
     capabilities: [deployment_status, logs_read]
-    side_effects_require_approval: true
   - id: supabase
     category: data_platform
     auth_env: SUPABASE_URL,SUPABASE_SERVICE_ROLE_KEY
     capabilities: [database_read, migrations, vector_search]
-    side_effects_require_approval: true
   - id: replit
     category: development
     auth_env: REPLIT_API_TOKEN
     capabilities: [project_management]
-    side_effects_require_approval: true
-  # Productivity and knowledge
   - id: google_workspace
     category: productivity
     auth_env: GOOGLE_OAUTH_CLIENT_ID,GOOGLE_OAUTH_CLIENT_SECRET
     capabilities: [gmail_draft, calendar_read, calendar_write, drive_search]
     scopes_must_be_minimal: true
-    side_effects_require_approval: true
   - id: microsoft_365
     category: productivity
     auth_env: MICROSOFT_CLIENT_ID,MICROSOFT_CLIENT_SECRET
     capabilities: [outlook_draft, calendar_read, calendar_write, onedrive_search]
     scopes_must_be_minimal: true
-    side_effects_require_approval: true
   - id: notion
     category: knowledge
     auth_env: NOTION_API_KEY
     capabilities: [search_pages, read_pages, create_page]
-    side_effects_require_approval: true
   - id: asana
     category: project_management
     auth_env: ASANA_ACCESS_TOKEN
     capabilities: [task_read, task_create, task_update]
-    side_effects_require_approval: true
-  # Revenue and commerce
   - id: stripe
     category: payments
+    adapter: src.integrations.stripe_service
     auth_env: STRIPE_SECRET_KEY,STRIPE_WEBHOOK_SECRET
     capabilities: [subscription_read, checkout_session_create, webhook_verify]
     restrictions: [never_expose_secret_keys, idempotency_required, audit_all_mutations]
+    side_effects_require_approval: true
+  - id: celery
+    category: task_queue
+    adapter: src.integrations.celery_app
+    auth_env: CELERY_BROKER_URL
+    capabilities: [async_task_dispatch, retry, scheduled_task]
     side_effects_require_approval: true
   - id: shopify
     category: commerce
     auth_env: SHOPIFY_STORE_DOMAIN,SHOPIFY_ACCESS_TOKEN
     capabilities: [products_read, orders_read, draft_order_create]
-    side_effects_require_approval: true
-  # Workflow and communications
   - id: zapier
     category: workflow_automation
     auth_env: ZAPIER_MCP_OR_WEBHOOK_CREDENTIALS
     capabilities: [approved_workflow_trigger]
-    side_effects_require_approval: true
   - id: twilio
     category: communications
     auth_env: TWILIO_ACCOUNT_SID,TWILIO_AUTH_TOKEN
     capabilities: [sms_draft, voice_call]
     restrictions: [consent_required, rate_limits_required, opt_out_enforced]
-    side_effects_require_approval: true
   - id: resend
     category: communications
     auth_env: RESEND_API_KEY
     capabilities: [email_draft, approved_email_send]
     restrictions: [consent_required, suppression_list_enforced]
-    side_effects_require_approval: true
   - id: telegram
     category: notifications
-    auth_env: TELEGRAM_BOT_TOKEN
+    auth_env: TELEGRAM_BOT_TOKEN,TELEGRAM_CHAT_ID
     capabilities: [approved_notification]
-    side_effects_require_approval: true
-  # Creative and media tools
   - id: canva
     category: creative
     auth_env: CANVA_ACCESS_TOKEN
     capabilities: [design_search, design_export]
-    side_effects_require_approval: true
   - id: figma
     category: creative
     auth_env: FIGMA_ACCESS_TOKEN
     capabilities: [file_read, design_context]
-    side_effects_require_approval: true
   - id: heygen
     category: media_generation
     auth_env: HEYGEN_API_KEY
     capabilities: [avatar_video_generation]
-    side_effects_require_approval: true
   - id: veed
     category: media_generation
     auth_env: VEED_API_KEY
     capabilities: [video_generation]
-    side_effects_require_approval: true
   - id: ai_voice_generator
     category: media_generation
     auth_env: AI_VOICE_GENERATOR_CREDENTIALS
     capabilities: [text_to_speech]
-    side_effects_require_approval: true
-  # Browser / protocol interoperability
   - id: mcp_servers
     category: tool_protocol
     auth_env: MCP_SERVER_CONFIG
     capabilities: [discover_tools, invoke_allowlisted_tools]
     restrictions: [explicit_server_allowlist, schema_validation, timeouts, audit_all_calls]
-    side_effects_require_approval: true
   - id: web_research
     category: research
     auth_env: WEB_SEARCH_API_KEY
