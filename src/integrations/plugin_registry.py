@@ -252,3 +252,33 @@ def default_plugin_manifests() -> tuple[PluginManifest, ...]:
             metadata={"category": "extended_workflow"},
         ),
     )
+
+
+def register_connector_catalog(registry: PluginRegistry) -> None:
+    """Register catalog entries as disabled manifests; adapters must be supplied separately.
+
+    This intentionally does not auto-enable services or fabricate working adapters.
+    Existing manifests win so legacy plugin names and metadata remain stable.
+    """
+    from src.integrations.connector_catalog import CONNECTORS
+
+    existing = {manifest.name for manifest in registry.list()}
+    for spec in CONNECTORS:
+        if spec.name in existing:
+            continue
+        registry.register(
+            PluginManifest(
+                name=spec.name,
+                version="1.0",
+                description=f"{spec.category} connector catalog entry",
+                capabilities=spec.capabilities,
+                requires_approval=spec.side_effects,
+                side_effects=spec.side_effects,
+                enabled=False,
+                metadata={
+                    "category": spec.category,
+                    "required_env": spec.required_env,
+                    "status": "catalog_only",
+                },
+            )
+        )
