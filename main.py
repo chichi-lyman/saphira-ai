@@ -8,6 +8,7 @@ from src.api.chat_router import router as chat_router
 from src.api.device_ws import router as device_router
 from src.api.tiktok_router import router as tiktok_router
 from src.api.platform_router import router as platform_router
+from src.api.tts_router import router as tts_router
 from src.api.twilio_voice_router import router as twilio_voice_router
 from src.commerce.stripe_checkout import router as checkout_router
 from src.commerce.billing_router import router as billing_router
@@ -50,6 +51,7 @@ app.include_router(chat_router, prefix="/api")
 app.include_router(device_router, prefix="/api")
 app.include_router(tiktok_router, prefix="/api")
 app.include_router(platform_router, prefix="/api")
+app.include_router(tts_router, prefix="/api")
 app.include_router(twilio_voice_router, prefix="/api")
 app.include_router(checkout_router)
 app.include_router(billing_router)
