@@ -1,46 +1,51 @@
 // Copyright (c) 2026 Chelsea Megan Woods. All Rights Reserved.
 // Owner & Creator: Chelsea Megan Woods | Woods AI Studio / Nova Umbrella
 //
-// Dart bridge for SaphiraForegroundService + SYSTEM_ALERT_WINDOW permission.
-// Channel: com.saphira.ai/service
+// Dart controller for SaphiraForegroundService.
+// Channel: com.saphira.ai/background_service
 
 import 'package:flutter/services.dart';
 
 class SaphiraForegroundServiceBridge {
-  static const _channel = MethodChannel('com.saphira.ai/service');
+  static const MethodChannel _channel =
+      MethodChannel('com.saphira.ai/background_service');
 
-  /// Start the sticky foreground service (persistent notification + mic type).
-  Future<bool> start() async {
+  /// Starts the Saphira Foreground Service to hold persistent WebSockets and audio.
+  static Future<bool> startService() async {
     try {
-      return await _channel.invokeMethod<bool>('startForegroundService') ?? false;
+      final bool success = await _channel.invokeMethod('startService');
+      return success;
     } on PlatformException catch (e) {
-      print('startForegroundService failed: ${e.message}');
+      print('[Saphira Engine Error] Failed to start foreground service: ${e.message}');
       return false;
     }
   }
 
-  /// Stop the foreground service.
-  Future<bool> stop() async {
+  /// Stops the active foreground service.
+  static Future<bool> stopService() async {
     try {
-      return await _channel.invokeMethod<bool>('stopForegroundService') ?? false;
+      final bool success = await _channel.invokeMethod('stopService');
+      return success;
     } on PlatformException catch (e) {
-      print('stopForegroundService failed: ${e.message}');
+      print('[Saphira Engine Error] Failed to stop foreground service: ${e.message}');
       return false;
     }
   }
 
-  /// Opens system settings for "Display over other apps" if not already granted.
-  /// Returns true if permission is already held.
-  Future<bool> requestOverlayPermission() async {
+  /// Prompts system settings to grant SYSTEM_ALERT_WINDOW (floating overlay) permission.
+  static Future<bool> requestOverlayPermission() async {
     try {
-      return await _channel.invokeMethod<bool>('requestOverlayPermission') ?? false;
-    } on PlatformException {
+      final bool hasPermission =
+          await _channel.invokeMethod('requestOverlayPermission');
+      return hasPermission;
+    } on PlatformException catch (e) {
+      print('[Saphira Engine Error] Overlay permission request failed: ${e.message}');
       return false;
     }
   }
 
-  /// Check whether SYSTEM_ALERT_WINDOW is currently granted.
-  Future<bool> canDrawOverlays() async {
+  /// Returns whether the overlay permission is currently granted.
+  static Future<bool> canDrawOverlays() async {
     try {
       return await _channel.invokeMethod<bool>('canDrawOverlays') ?? false;
     } on PlatformException {

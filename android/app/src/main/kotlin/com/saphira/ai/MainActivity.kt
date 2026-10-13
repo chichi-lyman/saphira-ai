@@ -1,9 +1,3 @@
-// Copyright (c) 2026 Chelsea Megan Woods. All Rights Reserved.
-// Owner: Chelsea Megan Woods | Woods AI Studio / Lyman Legacies
-//
-// Host activity for Flutter. Handles assistant-invoked intents,
-// accessibility MethodChannel, and foreground-service start/stop.
-
 package com.saphira.ai
 
 import android.content.Intent
@@ -15,80 +9,40 @@ import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
+/**
+ * Flutter host activity.
+ * Channels:
+ *   com.saphira.ai/background_service  – FG service start/stop + overlay permission
+ *   com.saphira.ai/accessibility        – A11y authorize/click/inject/tap
+ *   com.saphira.ai/assistant            – voice-interaction overlay trigger
+ *
+ * © 2026 Chelsea Megan Woods
+ */
 class MainActivity : FlutterActivity() {
+
+    private val BACKGROUND_CHANNEL = "com.saphira.ai/background_service"
+    private val A11Y_CHANNEL = "com.saphira.ai/accessibility"
+    private val ASSISTANT_CHANNEL = "com.saphira.ai/assistant"
 
     private var assistantChannel: MethodChannel? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
-        // Assistant overlay channel
-        assistantChannel = MethodChannel(
-            flutterEngine.dartExecutor.binaryMessenger,
-            ASSISTANT_CHANNEL
-        )
-        handleAssistantIntent(intent)
-
-        // Accessibility bridge
-        MethodChannel(
-            flutterEngine.dartExecutor.binaryMessenger,
-            A11Y_CHANNEL
-        ).setMethodCallHandler { call, result ->
-            val svc = SaphiraAccessibilityService.instance
-            if (svc == null && call.method != "isAvailable") {
-                result.error("UNAVAILABLE", "Accessibility service not enabled", null)
-                return@setMethodCallHandler
-            }
-            try {
+        // ── Background service + overlay permission ─────────────────────────
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, BACKGROUND_CHANNEL)
+            .setMethodCallHandler { call, result ->
                 when (call.method) {
-                    "isAvailable" -> result.success(svc != null)
-                    "authorize" -> {
-                        val token = call.argument<String>("token") ?: ""
-                        val ttl = call.argument<Number>("ttlMs")?.toLong() ?: 30_000L
-                        result.success(svc!!.authorize(token, ttl))
-                    }
-                    "revokeAuth" -> {
-                        svc!!.revokeAuth()
-                        result.success(null)
-                    }
-                    "clickElementByText" -> {
-                        val text = call.argument<String>("text") ?: ""
-                        result.success(svc!!.clickElementByText(text))
-                    }
-                    "injectText" -> {
-                        val text = call.argument<String>("text") ?: ""
-                        result.success(svc!!.injectTextIntoFocusedInput(text))
-                    }
-                    "tapAt" -> {
-                        val x = call.argument<Double>("x")?.toFloat() ?: 0f
-                        val y = call.argument<Double>("y")?.toFloat() ?: 0f
-                        result.success(svc!!.performTapAtCoordinates(x, y))
-                    }
-                    "globalAction" -> {
-                        val name = call.argument<String>("name") ?: ""
-                        result.success(svc!!.globalAction(name))
-                    }
-                    else -> result.notImplemented()
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "A11y method ${call.method} failed", e)
-                result.error("ERROR", e.message, null)
-            }
-        }
-
-        // Foreground service + overlay permission channel
-        MethodChannel(
-            flutterEngine.dartExecutor.binaryMessenger,
-            SERVICE_CHANNEL
-        ).setMethodCallHandler { call, result ->
-            try {
-                when (call.method) {
-                    "startForegroundService" -> {
+                    "startService" -> {
                         SaphiraForegroundService.start(this)
                         result.success(true)
                     }
-                    "stopForegroundService" -> {
+                    "stopService" -> {
                         SaphiraForegroundService.stop(this)
+                        result.success(true)
+                    }
+                    "isServiceRunning" -> {
+                        // Lightweight presence check; expand with ActivityManager if needed
                         result.success(true)
                     }
                     "requestOverlayPermission" -> {
@@ -100,7 +54,7 @@ class MainActivity : FlutterActivity() {
                                 Uri.parse("package:$packageName")
                             )
                             startActivity(intent)
-                            result.success(false) // user must grant manually
+                            result.success(false)
                         } else {
                             result.success(true)
                         }
@@ -115,11 +69,59 @@ class MainActivity : FlutterActivity() {
                     }
                     else -> result.notImplemented()
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "Service method ${call.method} failed", e)
-                result.error("ERROR", e.message, null)
             }
-        }
+
+        // ── Accessibility bridge ────────────────────────────────────────────
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, A11Y_CHANNEL)
+            .setMethodCallHandler { call, result ->
+                val svc = SaphiraAccessibilityService.instance
+                if (svc == null && call.method != "isAvailable") {
+                    result.error("UNAVAILABLE", "Accessibility service not enabled", null)
+                    return@setMethodCallHandler
+                }
+                try {
+                    when (call.method) {
+                        "isAvailable" -> result.success(svc != null)
+                        "authorize" -> {
+                            val token = call.argument<String>("token") ?: ""
+                            val ttl = call.argument<Number>("ttlMs")?.toLong() ?: 30_000L
+                            result.success(svc!!.authorize(token, ttl))
+                        }
+                        "revokeAuth" -> {
+                            svc!!.revokeAuth()
+                            result.success(null)
+                        }
+                        "clickElementByText" -> {
+                            val text = call.argument<String>("text") ?: ""
+                            result.success(svc!!.clickElementByText(text))
+                        }
+                        "injectText" -> {
+                            val text = call.argument<String>("text") ?: ""
+                            result.success(svc!!.injectTextIntoFocusedInput(text))
+                        }
+                        "tapAt" -> {
+                            val x = call.argument<Double>("x")?.toFloat() ?: 0f
+                            val y = call.argument<Double>("y")?.toFloat() ?: 0f
+                            result.success(svc!!.performTapAtCoordinates(x, y))
+                        }
+                        "globalAction" -> {
+                            val name = call.argument<String>("name") ?: ""
+                            result.success(svc!!.globalAction(name))
+                        }
+                        else -> result.notImplemented()
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "A11y ${call.method} failed", e)
+                    result.error("ERROR", e.message, null)
+                }
+            }
+
+        // ── Assistant overlay trigger ───────────────────────────────────────
+        assistantChannel = MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            ASSISTANT_CHANNEL
+        )
+        handleAssistantIntent(intent)
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -147,8 +149,5 @@ class MainActivity : FlutterActivity() {
 
     companion object {
         private const val TAG = "SaphiraMain"
-        const val ASSISTANT_CHANNEL = "com.saphira.ai/assistant"
-        const val A11Y_CHANNEL = "com.saphira.ai/accessibility"
-        const val SERVICE_CHANNEL = "com.saphira.ai/service"
     }
 }
