@@ -56,7 +56,7 @@ def create_subscription_checkout(
         client_reference_id=user_id.strip(),
         metadata={"saphira_user_id": user_id.strip()},
         subscription_data={"metadata": {"saphira_user_id": user_id.strip()}},
-        idempotency_key=idempotency_key.strip(),
+        options={"idempotency_key": idempotency_key.strip()},
     )
     return {"id": str(session.id), "url": str(session.url)}
 
