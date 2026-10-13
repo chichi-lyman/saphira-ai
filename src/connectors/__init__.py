@@ -17,6 +17,7 @@ from .document_intelligence import DocumentIntelligenceConnector
 from .code_interpreter import CodeInterpreterConnector
 from .image_generation import ImageGenerationConnector
 from .social_content import SocialContentConnector
+from .saphira_mcp_client import SaphiraMCPManager, mcp_manager, router as mcp_router
 
 __all__ = [
     "FacebookConnector",
@@ -36,4 +37,7 @@ __all__ = [
     "CodeInterpreterConnector",
     "ImageGenerationConnector",
     "SocialContentConnector",
+    "SaphiraMCPManager",
+    "mcp_manager",
+    "mcp_router",
 ]

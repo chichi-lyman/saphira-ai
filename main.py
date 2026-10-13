@@ -15,6 +15,7 @@ from core.control_plane import router as control_plane_router
 from observability.telemetry import router as telemetry_router
 from core.audit_middleware import AuditEventMiddleware
 from src.config.settings import validate_environment
+from src.connectors.saphira_mcp_client import router as mcp_router, mcp_manager
 
 load_dotenv()
 load_dotenv(".env.local", override=False)
@@ -51,6 +52,7 @@ app.include_router(device_router, prefix="/api")
 app.include_router(tiktok_router, prefix="/api")
 app.include_router(platform_router, prefix="/api")
 app.include_router(twilio_voice_router, prefix="/api")
+app.include_router(mcp_router, prefix="/api")
 app.include_router(checkout_router)
 app.include_router(billing_router)
 app.include_router(control_plane_router)
@@ -67,6 +69,20 @@ async def verify_sentinel_token(api_key: str = Depends(api_key_header)):
     return api_key
 
 
+@app.on_event("startup")
+async def startup_mcp() -> None:
+    """Bootstrap optional MCP servers from environment variables."""
+    try:
+        await mcp_manager.bootstrap_default_servers()
+    except Exception as exc:
+        logger.warning("[Saphira MCP] bootstrap deferred: %s", exc)
+
+
+@app.on_event("shutdown")
+async def shutdown_mcp() -> None:
+    await mcp_manager.shutdown()
+
+
 @app.get("/")
 async def root():
     return {
@@ -76,6 +92,7 @@ async def root():
         "role": "conversational-ai-assistant",
         "architecture": "autonomous-agent-operating-platform",
         "platform_layer": "enabled",
+        "mcp_gateway": "enabled",
         "environment": settings.environment,
     }
 
@@ -87,6 +104,7 @@ async def health():
         "service": "saphira-ai",
         "version": "17.1.0",
         "config": settings.validation_report(),
+        "mcp_servers": list(mcp_manager.sessions.keys()),
     }
 
 

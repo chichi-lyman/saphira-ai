@@ -11,3 +11,4 @@ sqlalchemy>=2.0
 asyncpg>=0.29
 langgraph>=0.2
 langchain-core>=0.2
+mcp>=1.0
