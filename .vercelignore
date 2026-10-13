@@ -11,7 +11,7 @@ poetry.lock
 uv.lock
 
 # Backend/runtime source is not part of the Vercel client bundle.
-src/
+/src/
 agents/
 memory/
 governance/
