@@ -14,6 +14,7 @@ const ChatInput: React.FC = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { messages, addMessage, setMessages } = useChat();
   const { user } = useUser();
+  const displayName = user?.name ?? 'Guest';
   const { isStreaming, startStream, streamedContent } = useSaphiraStream();
 
   // When streaming updates, keep the last model message in sync
@@ -86,7 +87,7 @@ const ChatInput: React.FC = () => {
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={onKeyDown}
-        placeholder={user.name !== 'Guest' ? `Message Saphira, ${user.name}…` : 'Message Saphira…'}
+        placeholder={displayName !== 'Guest' ? `Message Saphira, ${displayName}…` : 'Message Saphira…'}
         rows={1}
         disabled={isStreaming}
         aria-label="Chat message input"

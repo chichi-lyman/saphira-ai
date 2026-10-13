@@ -16,17 +16,19 @@ TTS_PROVIDER = os.getenv("SAPHIRA_TTS_PROVIDER", "elevenlabs")
 
 STYLE_PROMPTS = {
     "assist": (
-        "Speak as Saphira with Chelsea Megan Woods' natural voice character: "
-        "warm, clear, confident, friendly. Slightly conversational. "
-        "Not robotic. Not overly formal."
+        "Original feminine voice direction for Saphira: low-register, smoky, "
+        "slightly husky and velvety, calm confidence, intimate conversational "
+        "pacing, crisp articulation, subtle warmth, and natural breath. "
+        "Do not imitate or claim to be any real actor or public figure."
     ),
     "social": (
-        "High-energy, clear, smiling delivery like a short social clip. "
-        "Short sentences. Direct call to action. Still authentic to Chelsea Megan Woods."
+        "Keep Saphira's original low, smoky, confident feminine voice; add "
+        "brighter energy, a slightly quicker pace, clear emphasis, and concise "
+        "social-video delivery. Do not imitate a real person."
     ),
     "confirm_l1": (
-        "Calm, clear, serious enough for a security or payment confirmation. "
-        "No hype. Ask the user to confirm explicitly."
+        "Use Saphira's original low, clear feminine voice at a measured pace. "
+        "Neutral, reassuring, and precise. No hype. Ask the user to confirm explicitly."
     ),
 }
 
@@ -52,9 +54,9 @@ def elevenlabs_payload(text: str, style: str = "assist") -> Optional[Dict[str, A
         "text": text,
         "model_id": os.getenv("ELEVENLABS_MODEL_ID", "eleven_multilingual_v2"),
         "voice_settings": {
-            "stability": 0.45 if style == "social" else 0.55,
+            "stability": 0.38 if style == "social" else (0.62 if style == "confirm_l1" else 0.48),
             "similarity_boost": 0.85,
-            "style": 0.35 if style == "social" else 0.2,
+            "style": 0.45 if style == "social" else (0.15 if style == "confirm_l1" else 0.32),
             "use_speaker_boost": True,
         },
     }

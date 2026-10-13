@@ -4,7 +4,11 @@
 
 Saphira’s **spoken voice** is modeled on Chelsea Megan Woods’ natural delivery (reference: on-camera product/social clips — clear, energetic, friendly, direct).
 
-## Target character (from your video delivery)
+## Target character
+
+Saphira should use an **original licensed ElevenLabs voice** with a low-to-mid feminine register, smoky/husky texture, velvety resonance, confident intimacy, natural breath, and crisp American-English articulation. This is a broad sound direction, not a copy of Megan Fox, Scarlett Johansson, or any other identifiable person's voice. Choose a voice from the ElevenLabs Voice Library that you have permission to use, or use Chelsea's own authorized voice clone.
+
+## Target character (delivery)
 
 - Bright, confident, smile-in-the-voice
 - Fast but clear social energy when promoting; softer when assisting one-on-one
@@ -13,10 +17,10 @@ Saphira’s **spoken voice** is modeled on Chelsea Megan Woods’ natural delive
 
 ## How to install the real voice (ElevenLabs)
 
-1. Create an **Instant Voice Clone** or Professional clone in ElevenLabs using **your own** clean recordings (30s–few min of neutral speech works best; avoid heavy music under the take).
-2. Name the voice: `Saphira / Chelsea Megan Woods`
-3. Copy the **Voice ID**
-4. Put in app / backend env:
+1. In ElevenLabs, open Voice Library and select a voice you are authorized to use that matches the original smoky, low-register feminine direction above. Alternatively, create an Instant Voice Clone or Professional clone from **your own** clean recordings.
+2. Name it `Saphira — Original Voice`.
+3. Copy the selected voice's **Voice ID**.
+4. Set these variables on the Saphira Core backend (Railway), not in Vercel's public frontend environment:
 
 ```
 ELEVENLABS_API_KEY=...
