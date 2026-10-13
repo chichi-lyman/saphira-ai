@@ -27,7 +27,55 @@ const App: React.FC = () => {
   const [listening, setListening] = useState(false);
   const [work, setWork] = useState<WorkItem[]>(initialWork);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioUrlRef = useRef<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  const speak = async (text: string) => {
+    const cleanText = text.trim();
+    if (!cleanText) return;
+    setVoiceError(null);
+    try {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      if (audioUrlRef.current) {
+        URL.revokeObjectURL(audioUrlRef.current);
+        audioUrlRef.current = null;
+      }
+      const response = await fetch(`${(import.meta.env.VITE_SAPHIRA_API_BASE_URL || '/api').replace(/\\/$/, '')}/tts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: cleanText, style: 'assist' }),
+      });
+      if (!response.ok) {
+        const detail = await response.text();
+        throw new Error(response.status === 503
+          ? 'ElevenLabs is not configured on Saphira Core yet. Add ELEVENLABS_API_KEY and ELEVENLABS_VOICE_ID to the backend environment.'
+          : `Voice service returned ${response.status}: ${detail.slice(0, 180)}`);
+      }
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      audioUrlRef.current = audioUrl;
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+      audio.onended = () => {
+        URL.revokeObjectURL(audioUrl);
+        if (audioUrlRef.current === audioUrl) audioUrlRef.current = null;
+        if (audioRef.current === audio) audioRef.current = null;
+      };
+      await audio.play();
+    } catch (error) {
+      setVoiceError(error instanceof Error ? error.message : 'Unable to play Saphira voice.');
+    }
+  };
+
+  useEffect(() => () => {
+    audioRef.current?.pause();
+    if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
+  }, []);
 
   const busy = isStreaming;
   const visibleMessages = useMemo(() => messages.filter((m) => m.role !== 'system'), [messages]);
@@ -46,7 +94,10 @@ const App: React.FC = () => {
 
     try {
       const reply = await startStream(requestMessages);
-      if (reply.trim()) addMessage(makeMessage('model', reply));
+      if (reply.trim()) {
+        addMessage(makeMessage('model', reply));
+        if (voiceEnabled) void speak(reply);
+      }
     } catch {
       addMessage(makeMessage('model', 'I hit a connection problem reaching Saphira Core. Please try again.'));
     }
@@ -100,6 +151,7 @@ const App: React.FC = () => {
                   <article key={message.id} className={`message ${message.role === 'user' ? 'message-user' : 'message-saphira'}`}>
                     {message.role !== 'user' && <span className="message-label">Saphira</span>}
                     <p>{message.content}</p>
+                    {message.role !== 'user' && <button type="button" className="primary-small" onClick={() => void speak(message.content)} aria-label="Play Saphira response">▶ Listen</button>}
                   </article>
                 ))}
                 {streamedContent && (
@@ -158,6 +210,8 @@ const App: React.FC = () => {
             <div className="section-heading"><div><span className="eyebrow">CONFIGURATION</span><h1>Settings</h1></div></div>
             <div className="settings-list">
               <label><span><strong>Voice responses</strong><small>Allow Saphira to speak responses when voice mode is active.</small></span><input type="checkbox" checked={voiceEnabled} onChange={(e) => setVoiceEnabled(e.target.checked)} /></label>
+              <div><strong>Voice style</strong><small>Original feminine voice direction: low-register, smoky, husky, velvety, confident, intimate, and clearly articulated. Uses the ElevenLabs voice selected by your backend Voice ID; it does not copy a specific actor.</small></div>
+              {voiceError && <div role="status"><strong>Voice setup</strong><small>{voiceError}</small></div>}
               <div><strong>Personality</strong><small>Warm, direct, intelligent, conversational.</small></div>
               <div><strong>Memory</strong><small>Saphira uses the connected memory layer when available.</small></div>
               <div><strong>Privacy & permissions</strong><small>Consequential tools remain behind explicit governance controls.</small></div>
