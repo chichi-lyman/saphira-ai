@@ -24,6 +24,9 @@ import kotlin.concurrent.thread
  * Start from Flutter via MethodChannel or from MainActivity on launch:
  *   SaphiraForegroundService.start(context)
  *
+ * HUD visibility is toggled via ACTION_SHOW_HUD / ACTION_HIDE_HUD and
+ * broadcast on ACTION_HUD_STATE for overlay hosts.
+ *
  * © 2026 Chelsea Megan Woods / Woods AI Studio / Nova Umbrella
  */
 class SaphiraForegroundService : Service() {
@@ -33,6 +36,10 @@ class SaphiraForegroundService : Service() {
         private const val CHANNEL_ID = "SaphiraBackgroundEngine"
         private const val NOTIFICATION_ID = 8801
         private const val WAKE_THRESHOLD = 0.75f
+
+        const val ACTION_SHOW_HUD = "com.saphira.ai.ACTION_SHOW_HUD"
+        const val ACTION_HIDE_HUD = "com.saphira.ai.ACTION_HIDE_HUD"
+        const val ACTION_HUD_STATE = "com.saphira.ai.HUD_STATE_CHANGED"
 
         fun start(context: Context) {
             val intent = Intent(context, SaphiraForegroundService::class.java)
@@ -55,6 +62,7 @@ class SaphiraForegroundService : Service() {
     private var audioRecord: AudioRecord? = null
     private var isRecordLoopRunning = false
     private lateinit var wakeWordEngine: SaphiraWakeWordEngine
+    @Volatile private var hudVisible: Boolean = false
 
     override fun onCreate() {
         super.onCreate()
@@ -77,8 +85,22 @@ class SaphiraForegroundService : Service() {
         startForeground(NOTIFICATION_ID, notification)
         Log.i(TAG, "Foreground started (START_STICKY)")
 
+        when (intent?.action) {
+            ACTION_SHOW_HUD -> setHudVisible(true)
+            ACTION_HIDE_HUD -> setHudVisible(false)
+        }
         startLocalWakeWordListener()
         return START_STICKY
+    }
+
+    private fun setHudVisible(visible: Boolean) {
+        hudVisible = visible
+        Log.i(TAG, "HUD visibility -> $visible")
+        val broadcast = Intent(ACTION_HUD_STATE).apply {
+            putExtra("visible", visible)
+            setPackage(packageName)
+        }
+        sendBroadcast(broadcast)
     }
 
     @SuppressLint("MissingPermission")
@@ -118,36 +140,37 @@ class SaphiraForegroundService : Service() {
         Log.i(TAG, "Wake word triggered confidence=$confidence")
         val intent = Intent("com.saphira.ai.WAKEWORD_TRIGGERED").apply {
             putExtra("confidence", confidence)
+            setPackage(packageName)
         }
         sendBroadcast(intent)
     }
 
-    override fun onBind(intent: Intent?): IBinder? = null
-
     override fun onDestroy() {
         isRecordLoopRunning = false
-        audioRecord?.stop()
-        audioRecord?.release()
-        audioRecord = null
-        if (::wakeWordEngine.isInitialized) {
-            wakeWordEngine.close()
+        try {
+            audioRecord?.stop()
+            audioRecord?.release()
+        } catch (_: Exception) {
         }
+        audioRecord = null
         Log.i(TAG, "onDestroy")
         super.onDestroy()
     }
+
+    override fun onBind(intent: Intent?): IBinder? = null
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "Saphira Agent Service",
+                "Saphira Background Engine",
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = "Keeps Saphira voice and tool engine running in the background"
+                description = "Keeps Saphira wake-word and policy monitoring alive"
                 setShowBadge(false)
             }
-            val manager = getSystemService(NotificationManager::class.java)
-            manager?.createNotificationChannel(channel)
+            val nm = getSystemService(NotificationManager::class.java)
+            nm.createNotificationChannel(channel)
         }
     }
 }

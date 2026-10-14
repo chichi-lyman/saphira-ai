@@ -17,6 +17,7 @@ import io.flutter.plugin.common.MethodChannel
  * Flutter host activity.
  * Channels:
  *   com.saphira.ai/background_service  – FG service start/stop + overlay permission
+ *   com.saphira.ai/overlay_hud         – floating HUD visibility + SYSTEM_ALERT_WINDOW
  *   com.saphira.ai/accessibility        – A11y authorize/click/inject/tap
  *   com.saphira.ai/assistant            – voice-interaction overlay trigger
  *   com.saphira.ai/wakeword_events      – on-device wake-word EventChannel stream
@@ -26,6 +27,7 @@ import io.flutter.plugin.common.MethodChannel
 class MainActivity : FlutterActivity() {
 
     private val BACKGROUND_CHANNEL = "com.saphira.ai/background_service"
+    private val OVERLAY_CHANNEL = "com.saphira.ai/overlay_hud"
     private val A11Y_CHANNEL = "com.saphira.ai/accessibility"
     private val ASSISTANT_CHANNEL = "com.saphira.ai/assistant"
     private val WAKEWORD_EVENT_CHANNEL = "com.saphira.ai/wakeword_events"
@@ -49,7 +51,6 @@ class MainActivity : FlutterActivity() {
                         result.success(true)
                     }
                     "isServiceRunning" -> {
-                        // Lightweight presence check; expand with ActivityManager if needed
                         result.success(true)
                     }
                     "requestOverlayPermission" -> {
@@ -73,6 +74,53 @@ class MainActivity : FlutterActivity() {
                             true
                         }
                         result.success(ok)
+                    }
+                    else -> result.notImplemented()
+                }
+            }
+
+        // ── Floating HUD overlay (SYSTEM_ALERT_WINDOW) ──────────────────────
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, OVERLAY_CHANNEL)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "checkOverlayPermission" -> {
+                        val hasPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            Settings.canDrawOverlays(this)
+                        } else {
+                            true
+                        }
+                        result.success(hasPermission)
+                    }
+                    "requestOverlayPermission" -> {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                            !Settings.canDrawOverlays(this)
+                        ) {
+                            val intent = Intent(
+                                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                Uri.parse("package:$packageName")
+                            )
+                            startActivity(intent)
+                            result.success(false)
+                        } else {
+                            result.success(true)
+                        }
+                    }
+                    "toggleHUDVisibility" -> {
+                        val visible = call.argument<Boolean>("visible") ?: false
+                        val intent = Intent(this, SaphiraForegroundService::class.java).apply {
+                            action = if (visible) {
+                                SaphiraForegroundService.ACTION_SHOW_HUD
+                            } else {
+                                SaphiraForegroundService.ACTION_HIDE_HUD
+                            }
+                        }
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            startForegroundService(intent)
+                        } else {
+                            @Suppress("DEPRECATION")
+                            startService(intent)
+                        }
+                        result.success(true)
                     }
                     else -> result.notImplemented()
                 }
@@ -164,7 +212,6 @@ class MainActivity : FlutterActivity() {
                             try {
                                 unregisterReceiver(it)
                             } catch (_: Exception) {
-                                // already unregistered
                             }
                             wakeWordReceiver = null
                         }
@@ -185,7 +232,6 @@ class MainActivity : FlutterActivity() {
             try {
                 unregisterReceiver(it)
             } catch (_: Exception) {
-                // already unregistered
             }
             wakeWordReceiver = null
         }
