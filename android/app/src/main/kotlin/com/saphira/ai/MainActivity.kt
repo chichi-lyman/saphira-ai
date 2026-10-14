@@ -1,12 +1,16 @@
 package com.saphira.ai
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import android.util.Log
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 
 /**
@@ -15,16 +19,19 @@ import io.flutter.plugin.common.MethodChannel
  *   com.saphira.ai/background_service  – FG service start/stop + overlay permission
  *   com.saphira.ai/accessibility        – A11y authorize/click/inject/tap
  *   com.saphira.ai/assistant            – voice-interaction overlay trigger
+ *   com.saphira.ai/wakeword_events      – on-device wake-word EventChannel stream
  *
- * © 2026 Chelsea Megan Woods
+ * © 2026 Chelsea Megan Woods / Woods AI Studio / Nova Umbrella
  */
 class MainActivity : FlutterActivity() {
 
     private val BACKGROUND_CHANNEL = "com.saphira.ai/background_service"
     private val A11Y_CHANNEL = "com.saphira.ai/accessibility"
     private val ASSISTANT_CHANNEL = "com.saphira.ai/assistant"
+    private val WAKEWORD_EVENT_CHANNEL = "com.saphira.ai/wakeword_events"
 
     private var assistantChannel: MethodChannel? = null
+    private var wakeWordReceiver: BroadcastReceiver? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -122,12 +129,67 @@ class MainActivity : FlutterActivity() {
             ASSISTANT_CHANNEL
         )
         handleAssistantIntent(intent)
+
+        // ── EventChannel for local wake-word trigger broadcasts ─────────────
+        EventChannel(flutterEngine.dartExecutor.binaryMessenger, WAKEWORD_EVENT_CHANNEL)
+            .setStreamHandler(
+                object : EventChannel.StreamHandler {
+                    override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
+                        wakeWordReceiver = object : BroadcastReceiver() {
+                            override fun onReceive(context: Context?, intent: Intent?) {
+                                if (intent?.action == "com.saphira.ai.WAKEWORD_TRIGGERED") {
+                                    val confidence = intent.getFloatExtra("confidence", 0.0f)
+                                    val payload = mapOf("confidence" to confidence.toDouble())
+                                    events?.success(payload)
+                                }
+                            }
+                        }
+
+                        val filter = IntentFilter("com.saphira.ai.WAKEWORD_TRIGGERED")
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            registerReceiver(
+                                wakeWordReceiver,
+                                filter,
+                                Context.RECEIVER_NOT_EXPORTED
+                            )
+                        } else {
+                            @Suppress("UnspecifiedRegisterReceiverFlag")
+                            registerReceiver(wakeWordReceiver, filter)
+                        }
+                        Log.i(TAG, "Wake-word EventChannel listener registered")
+                    }
+
+                    override fun onCancel(arguments: Any?) {
+                        wakeWordReceiver?.let {
+                            try {
+                                unregisterReceiver(it)
+                            } catch (_: Exception) {
+                                // already unregistered
+                            }
+                            wakeWordReceiver = null
+                        }
+                        Log.i(TAG, "Wake-word EventChannel listener cancelled")
+                    }
+                }
+            )
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
         handleAssistantIntent(intent)
+    }
+
+    override fun onDestroy() {
+        wakeWordReceiver?.let {
+            try {
+                unregisterReceiver(it)
+            } catch (_: Exception) {
+                // already unregistered
+            }
+            wakeWordReceiver = null
+        }
+        super.onDestroy()
     }
 
     private fun handleAssistantIntent(intent: Intent?) {
