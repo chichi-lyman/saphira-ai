@@ -1,18 +1,11 @@
-"""
-Saphira AI - Nova Umbrella FastAPI WebSocket Dispatcher
-© 2026 Chelsea Megan Woods / Woods AI Studio / Lyman Legacies / Nova Umbrella
+# Copyright (c) 2026 Chelsea Megan Woods / Woods AI Studio / Lyman Legacies / Nova Umbrella
+# All rights reserved.
 
-Handles real-time connections from the Android Flutter app, parses intent
-payloads, and dispatches events across the Nova Umbrella multi-agent pipeline:
-Saphira → Aura → Agent Two → NovaReign → NovaAethrea → Agent Zero.
-"""
-
-import asyncio
 import json
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, status
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
 
 logging.basicConfig(level=logging.INFO)
@@ -24,9 +17,13 @@ logger = logging.getLogger("SaphiraDispatcher")
 
 
 class ClientEvent(BaseModel):
-    event_type: str = Field(..., description="E.g., 'user_voice_chunk', 'text_intent', 'a11y_screen_state'")
+    event_type: str = Field(
+        ..., description="E.g., 'user_voice_chunk', 'text_intent', 'a11y_screen_state'"
+    )
     session_id: str
-    target_agent: Optional[str] = Field(default="saphira", description="Target agent key or 'auto'")
+    target_agent: Optional[str] = Field(
+        default="saphira", description="Target agent key or 'auto'"
+    )
     payload: Dict[str, Any] = Field(default_factory=dict)
     timestamp: str
 
@@ -80,37 +77,39 @@ class NovaAgentRegistry:
 
 class AgentExecutionEngine:
     """
-    Simulates or invokes downstream agent execution pipelines via Redis Pub/Sub,
-    HTTP, or direct async Python modules.
+    Executes downstream agent execution pipelines via Redis Pub/Sub or direct async hooks.
     """
 
     @staticmethod
     async def dispatch_to_agent(agent_key: str, event: ClientEvent) -> AgentResponse:
-        logger.info(f"[Nova Pipeline] Routing event '{event.event_type}' to agent: {agent_key}")
+        logger.info(
+            f"[Nova Pipeline] Routing event '{event.event_type}' to agent: {agent_key}"
+        )
 
-        # Example execution hooks per sub-agent
         if agent_key == "novareign":
-            # Handles accessibility / UI actions back to Android client
             action_payload = event.payload.get("action", {})
             return AgentResponse(
                 source_agent="novareign",
                 event_type="execute_a11y_command",
-                payload={"command": action_payload.get("command"), "target": action_payload.get("target")},
+                payload={
+                    "command": action_payload.get("command"),
+                    "target": action_payload.get("target"),
+                },
                 requires_client_action=True,
             )
         elif agent_key == "aura":
-            # Processes audio streams or returns speech synthesis metadata
             return AgentResponse(
                 source_agent="aura",
                 event_type="audio_processed",
                 payload={"status": "received", "sample_rate": 16000},
             )
         else:
-            # Default Saphira conversational / orchestrator return
             return AgentResponse(
                 source_agent="saphira",
                 event_type="text_response",
-                payload={"text": f"Saphira received intent via {agent_key}: {event.payload.get('content', '')}"},
+                payload={
+                    "text": f"Saphira received intent via {agent_key}: {event.payload.get('content', '')}"
+                },
             )
 
 
@@ -120,54 +119,50 @@ class AgentExecutionEngine:
 
 
 class ConnectionManager:
-    def __init__(self):
+    def __init__(self) -> None:
         self.active_connections: Dict[str, WebSocket] = {}
 
-    async def connect(self, session_id: str, websocket: WebSocket):
+    async def connect(self, session_id: str, websocket: WebSocket) -> None:
         await websocket.accept()
         self.active_connections[session_id] = websocket
         logger.info(f"[Dispatcher] Client connected: {session_id}")
 
-    def disconnect(self, session_id: str):
+    def disconnect(self, session_id: str) -> None:
         if session_id in self.active_connections:
             del self.active_connections[session_id]
             logger.info(f"[Dispatcher] Client disconnected: {session_id}")
 
-    async def send_response(self, session_id: str, response: AgentResponse):
+    async def send_response(self, session_id: str, response: AgentResponse) -> None:
         if session_id in self.active_connections:
             websocket = self.active_connections[session_id]
             await websocket.send_text(response.model_dump_json())
 
 
-# -----------------------------------------------------------------------------
-# FastAPI App Definition
-# -----------------------------------------------------------------------------
-
-app = FastAPI(title="Saphira AI - Nova Umbrella Dispatcher", version="2.0.0")
 manager = ConnectionManager()
 
+# -----------------------------------------------------------------------------
+# FastAPI Router Definition
+# -----------------------------------------------------------------------------
 
-@app.websocket("/v1/saphira/stream")
-async def websocket_dispatcher_endpoint(websocket: WebSocket):
+router = APIRouter(prefix="/v1/saphira", tags=["Saphira WebSocket Dispatcher"])
+
+
+@router.websocket("/stream")
+async def websocket_dispatcher_endpoint(websocket: WebSocket) -> None:
     session_id = websocket.query_params.get("session_id", "default_android_client")
     await manager.connect(session_id, websocket)
 
     try:
         while True:
-            # Read incoming JSON or binary frames from Android app
             raw_data = await websocket.receive_text()
             data_dict = json.loads(raw_data)
 
-            # Validate payload schema
             client_event = ClientEvent(**data_dict)
-
-            # Route to correct Nova Umbrella sub-agent
             target_agent = NovaAgentRegistry.resolve_target_agent(client_event)
+            agent_response = await AgentExecutionEngine.dispatch_to_agent(
+                target_agent, client_event
+            )
 
-            # Execute sub-agent logic
-            agent_response = await AgentExecutionEngine.dispatch_to_agent(target_agent, client_event)
-
-            # Stream result back to Android app
             await manager.send_response(session_id, agent_response)
 
     except WebSocketDisconnect:

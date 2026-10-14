@@ -9,6 +9,7 @@ from src.api.device_ws import router as device_router
 from src.api.tiktok_router import router as tiktok_router
 from src.api.platform_router import router as platform_router
 from src.api.twilio_voice_router import router as twilio_voice_router
+from src.api.saphira_dispatcher import router as saphira_dispatcher_router
 from src.commerce.stripe_checkout import router as checkout_router
 from src.commerce.billing_router import router as billing_router
 from core.control_plane import router as control_plane_router
@@ -53,6 +54,7 @@ app.include_router(tiktok_router, prefix="/api")
 app.include_router(platform_router, prefix="/api")
 app.include_router(twilio_voice_router, prefix="/api")
 app.include_router(mcp_router, prefix="/api")
+app.include_router(saphira_dispatcher_router)  # /v1/saphira/stream
 app.include_router(checkout_router)
 app.include_router(billing_router)
 app.include_router(control_plane_router)
