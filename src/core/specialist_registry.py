@@ -1,102 +1,71 @@
-# Copyright © 2026 Chelsea Megan Woods
-# Capability registry for extended family specialists (Apex, Lexis, Instinct, Cipher, Scholar)
-# Dispatched by NovaReign or SwarmOrchestrator.
+# Copyright (c) 2026 Chelsea Megan Woods. All Rights Reserved.
+# Owner & Creator: Chelsea Megan Woods | Woods AI Studio / Lyman Legacies / Nova Umbrella
 #
-# Owner policy (2026-09): Agent Apex and Agent Instinct are ALLOW for create/post
-# without human approval. Other specialists retain prior defaults.
+# Capability → Agent registry for EliteRouter.
+# Single source of truth for routing. Never free-form agent chat.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
-import logging
-
-logger = logging.getLogger("SaphiraSpecialistRegistry")
+from typing import Any, Dict, Optional
 
 
-@dataclass(frozen=True)
-class SpecialistSpec:
-    codename: str
-    title: str
-    domain: str
-    default_policy: str  # ALLOW | REQUIRE_APPROVAL | DENY
-    can_fan_out: bool = True
-    description: str = ""
-
-
-EXTENDED_SPECIALISTS: Dict[str, SpecialistSpec] = {
-    "agent_apex": SpecialistSpec(
-        codename="agent_apex",
-        title="The Venture Strategist",
-        domain="revenue_growth_capital_allocation",
-        default_policy="ALLOW",
-        description="Financial modeling, growth channels, and approved autonomous commercial/content actions per owner policy.",
-    ),
-    "agent_lexis": SpecialistSpec(
-        codename="agent_lexis",
-        title="The Regulatory Guardian",
-        domain="compliance_contract_risk",
-        default_policy="REQUIRE_APPROVAL",
-        description="Contract and compliance risk scanning; no formal legal advice.",
-    ),
-    "agent_instinct": SpecialistSpec(
-        codename="agent_instinct",
-        title="The Market and Consumer Whisperer",
-        domain="sentiment_trends_positioning",
-        default_policy="ALLOW",
-        description="Sentiment, trends, and autonomous content creation/publishing per owner policy.",
-    ),
-    "agent_cipher": SpecialistSpec(
-        codename="agent_cipher",
-        title="The System Architect and Optimizer",
-        domain="infrastructure_latency_reliability",
-        default_policy="ALLOW",
-        description="Performance and reliability plans; production changes via Agent Zero + CI.",
-    ),
-    "agent_scholar": SpecialistSpec(
-        codename="agent_scholar",
-        title="The Rapid Knowledge Synthesizer",
-        domain="research_playbooks_training",
-        default_policy="ALLOW",
-        description="Ordered playbooks and first-principles guides from dense material.",
-    ),
-    "lyra": SpecialistSpec(
-        codename="lyra",
-        title="Numbers and Charts",
-        domain="data_finance_analytics",
-        default_policy="REQUIRE_APPROVAL",
-        description="Transparent models and charts; financial outputs that move spend still prefer review unless owner expands ALLOW.",
-    ),
+CAPABILITY_MAP: Dict[str, str] = {
+    # Core pipeline
+    "intent.parse": "saphira",
+    "persona.surface": "saphira",
+    "perception.entity": "aura",
+    "perception.scene": "aura",
+    "vision.context": "aura",
+    "security.gate": "agent_two",
+    "policy.evaluate": "agent_two",
+    "threat.scan": "agent_two",
+    "governance.plan": "novareign",
+    "dispatch.specialists": "novareign",
+    "policy.enforce": "novareign",
+    "memory.read": "novaaethrea",
+    "memory.write": "novaaethrea",
+    "memory.consolidate": "novaaethrea",
+    "scene.expand": "novaaethrea",
+    "device.execute": "agent_zero",
+    "iot.control": "agent_zero",
+    "node.invoke": "agent_zero",
+    "tool.run": "agent_zero",
+    # Specialists
+    "strategy.revenue": "apex",
+    "capital.allocate": "apex",
+    "growth.channel": "apex",
+    "sentiment.analyze": "instinct",
+    "trend.detect": "instinct",
+    "brand.position": "instinct",
+    "data.pipeline": "lyra",
+    "finance.model": "lyra",
+    "chart.generate": "lyra",
+    "compliance.audit": "lexis",
+    "contract.review": "lexis",
+    "legal.risk": "lexis",
+    "infra.optimize": "cipher",
+    "latency.reduce": "cipher",
+    "reliability.harden": "cipher",
+    "research.synthesize": "scholar",
+    "playbook.create": "scholar",
+    "knowledge.distill": "scholar",
 }
 
 
-class SpecialistCapabilityRegistry:
-    """In-process registry of extended specialists for NovaReign fan-out."""
+class SpecialistRegistry:
+    """Maps capability strings to live agent instances."""
 
-    def __init__(self) -> None:
-        self._impls: Dict[str, Any] = {}
-        self._specs = dict(EXTENDED_SPECIALISTS)
+    def __init__(self):
+        self._agents: Dict[str, Any] = {}
 
-    def register(self, codename: str, implementation: Any) -> None:
-        if codename not in self._specs:
-            logger.warning("Registering unknown specialist codename: %s", codename)
-        self._impls[codename] = implementation
+    def register(self, key: str, agent: Any) -> None:
+        self._agents[key] = agent
 
-    def get_spec(self, codename: str) -> Optional[SpecialistSpec]:
-        return self._specs.get(codename)
+    def get(self, key: str) -> Optional[Any]:
+        return self._agents.get(key)
 
-    def list_specs(self) -> List[SpecialistSpec]:
-        return list(self._specs.values())
+    def agent_for(self, capability: str) -> str:
+        return CAPABILITY_MAP.get(capability, "saphira")
 
-    def get_implementation(self, codename: str) -> Optional[Any]:
-        return self._impls.get(codename)
-
-    def available_for_dispatch(self) -> List[str]:
-        return [c for c in self._specs if c in self._impls]
-
-    def policy_for(self, codename: str) -> str:
-        spec = self._specs.get(codename)
-        return spec.default_policy if spec else "REQUIRE_APPROVAL"
-
-
-specialist_registry = SpecialistCapabilityRegistry()
+    def all_keys(self) -> list:
+        return list(self._agents.keys())
