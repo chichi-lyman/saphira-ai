@@ -11,6 +11,7 @@ from src.api.platform_router import router as platform_router
 from src.api.twilio_voice_router import router as twilio_voice_router
 from src.api.saphira_dispatcher import router as saphira_dispatcher_router
 from src.api.excellence_router import router as excellence_router
+from src.api.autonomy_router import router as autonomy_router
 from src.commerce.stripe_checkout import router as checkout_router
 from src.commerce.billing_router import router as billing_router
 from core.control_plane import router as control_plane_router
@@ -28,7 +29,7 @@ settings = validate_environment(strict=False)
 app = FastAPI(
     title="Saphira AI Enterprise",
     description="Conversational executive assistant with governed autonomous agents and enterprise control plane.",
-    version="17.2.0",
+    version="17.3.0",
 )
 
 app.add_middleware(
@@ -57,6 +58,7 @@ app.include_router(twilio_voice_router, prefix="/api")
 app.include_router(mcp_router, prefix="/api")
 app.include_router(saphira_dispatcher_router)  # /v1/saphira/stream
 app.include_router(excellence_router)  # /v1/router/execute
+app.include_router(autonomy_router)  # /v1/autonomy/repair
 app.include_router(checkout_router)
 app.include_router(billing_router)
 app.include_router(control_plane_router)
@@ -92,12 +94,15 @@ async def root():
     return {
         "name": "Saphira AI",
         "status": "running",
-        "version": "17.2.0",
+        "version": "17.3.0",
         "role": "conversational-ai-assistant",
         "architecture": "autonomous-agent-operating-platform",
         "platform_layer": "enabled",
         "mcp_gateway": "enabled",
         "excellence_router": "enabled",
+        "autonomy_self_repair": "enabled",
+        "tier": "S",
+        "rank_target": 4,
         "environment": settings.environment,
     }
 
@@ -107,10 +112,11 @@ async def health():
     return {
         "status": "healthy",
         "service": "saphira-ai",
-        "version": "17.2.0",
+        "version": "17.3.0",
         "config": settings.validation_report(),
         "mcp_servers": list(mcp_manager.sessions.keys()),
         "excellence": "/v1/router/health",
+        "autonomy": "/v1/autonomy/scoreboard",
     }
 
 
