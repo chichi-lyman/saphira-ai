@@ -12,3 +12,9 @@ asyncpg>=0.29
 langgraph>=0.2
 langchain-core>=0.2
 mcp>=1.0
+
+# Optional integrations (imported by connectors / workers / commerce)
+redis>=5.0
+celery>=5.3
+stripe>=8.0
+google-genai>=0.8
