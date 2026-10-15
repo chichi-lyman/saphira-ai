@@ -18,6 +18,9 @@ from .code_interpreter import CodeInterpreterConnector
 from .image_generation import ImageGenerationConnector
 from .social_content import SocialContentConnector
 from .saphira_mcp_client import SaphiraMCPManager, mcp_manager, router as mcp_router
+from .firecrawl import FirecrawlConnector
+from .tavily import TavilyConnector
+from .browserbase import BrowserbaseConnector
 
 __all__ = [
     "FacebookConnector",
@@ -40,4 +43,7 @@ __all__ = [
     "SaphiraMCPManager",
     "mcp_manager",
     "mcp_router",
+    "FirecrawlConnector",
+    "TavilyConnector",
+    "BrowserbaseConnector",
 ]
