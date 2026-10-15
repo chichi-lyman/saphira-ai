@@ -11,7 +11,7 @@ const Header: React.FC = () => {
     <header className="saphira-header">
       <h1>Saphira AI™</h1>
       <div style={{ fontSize: '0.9rem', color: 'var(--saphira-muted)' }}>
-        {user.name}
+        {user?.name ?? 'Guest'}
       </div>
     </header>
   );
