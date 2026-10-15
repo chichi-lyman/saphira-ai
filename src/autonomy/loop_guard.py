@@ -20,6 +20,8 @@ class LoopVerdict:
     reason: str
     fingerprint: str
     prior_count: int
+    session_id: str = ""
+    suggested_retry_after_sec: Optional[float] = None
 
 
 class LoopGuard:
@@ -27,12 +29,18 @@ class LoopGuard:
 
     Blocks when the same (session, agent, intent fingerprint) repeats
     beyond max_repeats within window_sec.
+
+    Storage keys are ``{session_id}:{fingerprint}`` so ``reset_session``
+    can clear one session without wiping the whole process map.
     """
 
-    def __init__(self, *,
-                 max_repeats: int = 2,
-                 window_sec: float = 30.0,
-                 max_entries: int = 10_000) -> None:
+    def __init__(
+        self,
+        *,
+        max_repeats: int = 2,
+        window_sec: float = 30.0,
+        max_entries: int = 10_000,
+    ) -> None:
         self.max_repeats = max_repeats
         self.window_sec = window_sec
         self.max_entries = max_entries
@@ -44,6 +52,9 @@ class LoopGuard:
         raw = f"{session_id}|{agent}|{intent.strip().lower()}"
         return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:24]
 
+    def _storage_key(self, session_id: str, fp: str) -> str:
+        return f"{session_id}:{fp}"
+
     def check(
         self,
         *,
@@ -53,22 +64,26 @@ class LoopGuard:
         record: bool = True,
     ) -> LoopVerdict:
         fp = self.fingerprint(session_id, agent, intent)
+        key = self._storage_key(session_id, fp)
         now = time.time()
         with self._lock:
-            times = [t for t in self._hits.get(fp, []) if now - t <= self.window_sec]
+            times = [t for t in self._hits.get(key, []) if now - t <= self.window_sec]
             count = len(times)
             if count >= self.max_repeats:
+                oldest = min(times) if times else now
+                retry_after = max(0.0, self.window_sec - (now - oldest))
                 return LoopVerdict(
                     allowed=False,
                     reason=f"loop_blocked: {count} repeats in {self.window_sec}s",
                     fingerprint=fp,
                     prior_count=count,
+                    session_id=session_id,
+                    suggested_retry_after_sec=round(retry_after, 2),
                 )
             if record:
                 times.append(now)
-                self._hits[fp] = times
+                self._hits[key] = times
                 if len(self._hits) > self.max_entries:
-                    # drop oldest keys
                     for k in list(self._hits.keys())[: len(self._hits) - self.max_entries]:
                         self._hits.pop(k, None)
             return LoopVerdict(
@@ -76,19 +91,26 @@ class LoopGuard:
                 reason="ok",
                 fingerprint=fp,
                 prior_count=count,
+                session_id=session_id,
+                suggested_retry_after_sec=None,
             )
 
     def reset_session(self, session_id: str) -> int:
-        """Clear fingerprints for a session prefix (best-effort)."""
+        """Clear only fingerprints belonging to this session."""
+        prefix = f"{session_id}:"
         removed = 0
         with self._lock:
             for k in list(self._hits.keys()):
-                # fingerprints are hashed; full clear is safer on explicit reset
-                pass
-            # Explicit API: clear all (sessions are short-lived)
-            removed = len(self._hits)
-            self._hits.clear()
+                if k.startswith(prefix):
+                    self._hits.pop(k, None)
+                    removed += 1
         return removed
+
+    def reset_all(self) -> int:
+        with self._lock:
+            n = len(self._hits)
+            self._hits.clear()
+            return n
 
 
 global_loop_guard = LoopGuard()

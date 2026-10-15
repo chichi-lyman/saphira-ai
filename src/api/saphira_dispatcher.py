@@ -4,7 +4,7 @@
 """Saphira WebSocket dispatcher with excellence-aware routing.
 
 User-facing voice remains Saphira only. Internal agents receive capability-aware
-routes from ExcellenceRouter before execution.
+routes from ExcellenceRouter before execution. LoopGuard blocks identical cycles.
 """
 
 from __future__ import annotations
@@ -24,6 +24,7 @@ from src.excellence.telemetry import excellence_telemetry
 from src.latency.router import LatencyRouter
 from src.privacy.filter import PrivacyFilter
 from src.memory.ledger import dual_memory
+from src.autonomy.loop_guard import global_loop_guard
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("SaphiraDispatcher")
@@ -50,7 +51,6 @@ class AgentResponse(BaseModel):
     event_type: str
     payload: Dict[str, Any]
     requires_client_action: bool = False
-    # Internal routing metadata (clients may ignore; never rename surface agent)
     excellence: Optional[Dict[str, Any]] = None
 
 
@@ -68,7 +68,6 @@ class NovaAgentRegistry:
         "cipher": "Security & Audit Ledger (privacy_ledger)",
     }
 
-    # Map excellence pillars → preferred internal agent when target is auto
     PILLAR_AGENT = {
         "latency": "aura",
         "edge": "agent_zero",
@@ -104,11 +103,16 @@ class NovaAgentRegistry:
         if "tool" in event_type or "web" in event_type:
             return "agent_two"
 
-        # Excellence-aware auto route: first non-latency/privacy pillar wins
         if excellence_routes:
             for route in excellence_routes:
-                pillar = getattr(route, "pillar_id", None) or route.get("pillar_id")  # type: ignore
-                if pillar in cls.PILLAR_AGENT and pillar not in ("latency", "privacy", "overall"):
+                pillar = getattr(route, "pillar_id", None) or (
+                    route.get("pillar_id") if isinstance(route, dict) else None
+                )
+                if pillar in cls.PILLAR_AGENT and pillar not in (
+                    "latency",
+                    "privacy",
+                    "overall",
+                ):
                     return cls.PILLAR_AGENT[pillar]
 
         return "saphira"
@@ -199,11 +203,7 @@ class AgentExecutionEngine:
             return AgentResponse(
                 source_agent="scholar",
                 event_type="reasoning_plan",
-                payload={
-                    "status": "queued",
-                    "task": content,
-                    "mode": "multi_step",
-                },
+                payload={"status": "queued", "task": content, "mode": "multi_step"},
                 excellence=excellence_meta,
             )
 
@@ -235,7 +235,6 @@ class AgentExecutionEngine:
                 excellence=excellence_meta,
             )
 
-        # Default / saphira surface response — never expose internal codenames in text
         content = event.payload.get("content", "")
         return AgentResponse(
             source_agent="saphira",
@@ -262,6 +261,7 @@ class ConnectionManager:
     def disconnect(self, session_id: str) -> None:
         if session_id in self.active_connections:
             del self.active_connections[session_id]
+            global_loop_guard.reset_session(session_id)
             logger.info("[Dispatcher] Client disconnected: %s", session_id)
 
     async def send_response(self, session_id: str, response: AgentResponse) -> None:
@@ -295,13 +295,11 @@ async def websocket_dispatcher_endpoint(websocket: WebSocket):
             data_dict = json.loads(raw_data)
             client_event = ClientEvent(**data_dict)
 
-            # Privacy sanitize utterance
             utterance = _utterance_from_event(client_event)
             sanitized = _privacy.sanitize_text(utterance)
             if sanitized.redacted and "content" in client_event.payload:
                 client_event.payload["content"] = sanitized.text
 
-            # Excellence routing BEFORE agent dispatch / event bus
             excellence_routes = route_excellence(sanitized.text)
             latency = _latency.decide(
                 task=sanitized.text,
@@ -321,6 +319,45 @@ async def websocket_dispatcher_endpoint(websocket: WebSocket):
                 client_event, excellence_routes
             )
 
+            # LoopGuard before dispatch — identical cycles are blocked
+            loop_verdict = global_loop_guard.check(
+                session_id=client_event.session_id or session_id,
+                agent=target_agent,
+                intent=sanitized.text or client_event.event_type,
+                record=True,
+            )
+            if not loop_verdict.allowed:
+                blocked = AgentResponse(
+                    source_agent="saphira",
+                    event_type="text_response",
+                    payload={
+                        "text": (
+                            "I'm already working on that. "
+                            "Want me to try a different approach?"
+                        ),
+                        "loop_blocked": True,
+                        "retry_after_sec": loop_verdict.suggested_retry_after_sec,
+                    },
+                    excellence={
+                        "loop": {
+                            "allowed": False,
+                            "reason": loop_verdict.reason,
+                            "fingerprint": loop_verdict.fingerprint,
+                            "retry_after_sec": loop_verdict.suggested_retry_after_sec,
+                        },
+                        "surface_agent": "Saphira",
+                        "internal_agent": target_agent,
+                    },
+                )
+                excellence_telemetry.record_dispatch(
+                    agent=target_agent,
+                    latency_path="loop_blocked",
+                    elapsed_ms=int((time.perf_counter() - t0) * 1000),
+                    pillars=["loop_prevention"],
+                )
+                await manager.send_response(session_id, blocked)
+                continue
+
             excellence_meta = {
                 "routes": [
                     {
@@ -336,6 +373,11 @@ async def websocket_dispatcher_endpoint(websocket: WebSocket):
                 "privacy_redacted": sanitized.redacted,
                 "internal_agent": target_agent,
                 "surface_agent": "Saphira",
+                "loop": {
+                    "allowed": True,
+                    "fingerprint": loop_verdict.fingerprint,
+                    "prior_count": loop_verdict.prior_count,
+                },
             }
 
             agent_response = await AgentExecutionEngine.dispatch_to_agent(
