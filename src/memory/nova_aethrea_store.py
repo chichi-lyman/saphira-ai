@@ -1,190 +1,88 @@
-# Copyright (c) 2026 Chelsea Megan Woods. All Rights Reserved.
-# Owner & Creator: Chelsea Megan Woods | Woods AI Studio / Lyman Legacies / Nova Umbrella
-#
-# NovaAethreaMemoryStore — elite hybrid memory (vector + graph + episodic)
-# Absolute permanent recall with tenant isolation and policy gates.
+# © 2026 Chelsea Megan Woods
+# Lean NovaAethreaMemoryStore — in-memory hybrid, O(1) hot path, bounded recall.
 
 from __future__ import annotations
-
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional
 import hashlib
 import json
-import logging
-from datetime import datetime, timezone
+import time
 import uuid
 
-logger = logging.getLogger("NovaAethreaMemory")
-
-
-class MemoryKind(str, Enum):
-    IDENTITY = "identity"
-    PREFERENCE = "preference"
-    EPISODIC = "episodic"
-    SEMANTIC = "semantic"
-    PROCEDURAL = "procedural"
-    RELATIONSHIP = "relationship"
-    TASK_OUTCOME = "task_outcome"
-    SCENE = "scene"
-
+class Kind(str, Enum):
+    ID = "id"
+    PREF = "pref"
+    EPI = "epi"
+    SEM = "sem"
+    OUT = "out"
 
 @dataclass
-class MemoryRecord:
+class Rec:
     id: str
-    tenant_id: str
-    kind: MemoryKind
+    tenant: str
+    kind: Kind
     content: Dict[str, Any]
-    embedding: Optional[List[float]] = None
-    graph_links: List[str] = field(default_factory=list)
-    confidence: float = 1.0
-    decay_half_life_days: float = 90.0
-    created_at: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
-    updated_at: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
-    sensitivity: str = "internal"  # public | internal | confidential
-    provenance: Dict[str, Any] = field(default_factory=dict)
-    hash: str = ""
+    conf: float = 1.0
+    ts: float = field(default_factory=time.time)
+    h: str = ""
 
-    def compute_hash(self) -> str:
-        payload = json.dumps(
-            {"kind": self.kind.value, "content": self.content}, sort_keys=True
-        )
-        return hashlib.sha256(payload.encode()).hexdigest()[:32]
-
+    def hash(self) -> str:
+        b = json.dumps({"k": self.kind.value, "c": self.content}, sort_keys=True).encode()
+        return hashlib.sha256(b).hexdigest()[:24]
 
 class NovaAethreaMemoryStore:
-    """
-    Elite hybrid memory for Saphira / NovaAethrea.
+    __slots__ = ("_rec", "_hot", "_idx", "writes", "reads")
 
-    - Vector store for semantic recall
-    - Graph edges for relationships and causal chains
-    - Episodic timeline
-    - Tenant isolation + sensitivity gates
-    - Session consolidation into durable preferences
-    - Hot path for identity + preferences
-    """
+    def __init__(self):
+        self._rec: Dict[str, Rec] = {}
+        self._hot: Dict[str, Any] = {}          # tenant:kind -> content
+        self._idx: Dict[str, str] = {}          # tenant:hash -> id
+        self.writes = 0
+        self.reads = 0
 
-    def __init__(
-        self,
-        vector_backend: Any = None,
-        graph_backend: Any = None,
-        kv_backend: Any = None,
-    ):
-        # Backends are optional; fall back to in-memory for development
-        self.vector = vector_backend
-        self.graph = graph_backend
-        self.kv = kv_backend or _InMemoryKV()
-        self._records: Dict[str, MemoryRecord] = {}
-
-    async def write(
-        self, record: MemoryRecord, policy_ok: bool = True
-    ) -> str:
+    async def write(self, rec: Rec, policy_ok: bool = True) -> str:
         if not policy_ok:
-            raise PermissionError("Memory write blocked by policy")
-        record.hash = record.compute_hash()
-        key = f"{record.tenant_id}:{record.hash}"
-        existing = await self.kv.get(key)
-        if existing:
-            return existing
+            raise PermissionError("blocked")
+        rec.h = rec.hash()
+        key = f"{rec.tenant}:{rec.h}"
+        if key in self._idx:
+            return self._idx[key]
+        self._rec[rec.id] = rec
+        self._idx[key] = rec.id
+        if rec.kind in (Kind.ID, Kind.PREF):
+            self._hot[f"{rec.tenant}:{rec.kind.value}"] = rec.content
+        self.writes += 1
+        return rec.id
 
-        self._records[record.id] = record
-        await self.kv.set(key, record.id)
-
-        if self.vector is not None:
-            try:
-                await self.vector.upsert(record)
-            except Exception as e:
-                logger.warning("vector upsert failed: %s", e)
-
-        if self.graph is not None:
-            try:
-                await self.graph.add_node(record)
-                for link in record.graph_links:
-                    await self.graph.add_edge(record.id, link)
-            except Exception as e:
-                logger.warning("graph write failed: %s", e)
-
-        if record.kind in (MemoryKind.IDENTITY, MemoryKind.PREFERENCE):
-            await self.kv.set(
-                f"hot:{record.tenant_id}:{record.kind.value}", record.content
-            )
-
-        return record.id
-
-    async def recall(
-        self,
-        tenant_id: str,
-        query: str,
-        kinds: Optional[List[MemoryKind]] = None,
-        top_k: int = 12,
-        max_bytes: int = 12_000,
-    ) -> List[MemoryRecord]:
-        # Simple in-memory hybrid for bootstrap; replace with real backends later
-        candidates = [
-            r
-            for r in self._records.values()
-            if r.tenant_id == tenant_id
-            and (kinds is None or r.kind in kinds)
-        ]
-
-        # Naive relevance: keyword overlap + recency
-        scored = []
-        q_lower = query.lower()
-        for r in candidates:
-            text = json.dumps(r.content).lower()
-            score = sum(1 for tok in q_lower.split() if tok in text)
-            score += r.confidence
-            scored.append((score, r))
-
-        scored.sort(key=lambda x: x[0], reverse=True)
-        top = [r for _, r in scored[:top_k]]
-        return self._budget(top, max_bytes)
-
-    async def consolidate_session(
-        self, tenant_id: str, session_transcript: List[Dict[str, Any]]
-    ) -> None:
-        """Session → durable preferences + episodic summary."""
-        if not session_transcript:
-            return
-        summary = {
-            "turns": len(session_transcript),
-            "last_user": session_transcript[-1].get("text", "")[:300]
-            if session_transcript
-            else "",
-        }
-        record = MemoryRecord(
+    async def write_outcome(self, tenant: str, agent: str, result: Dict[str, Any]) -> None:
+        r = Rec(
             id=str(uuid.uuid4()),
-            tenant_id=tenant_id,
-            kind=MemoryKind.EPISODIC,
-            content=summary,
-            provenance={"source": "session_consolidation"},
+            tenant=tenant,
+            kind=Kind.OUT,
+            content={"agent": agent, "status": result.get("status"), "summary": str(result.get("message", ""))[:200]},
         )
-        await self.write(record)
+        await self.write(r)
 
-    def _budget(
-        self, records: List[MemoryRecord], max_bytes: int
-    ) -> List[MemoryRecord]:
-        out: List[MemoryRecord] = []
-        size = 0
-        for r in records:
+    async def recall(self, tenant: str, query: str, top_k: int = 8, max_bytes: int = 8000) -> List[Any]:
+        self.reads += 1
+        q = query.lower().split()
+        scored = []
+        for r in self._rec.values():
+            if r.tenant != tenant:
+                continue
+            text = json.dumps(r.content).lower()
+            score = sum(1 for t in q if t in text) + r.conf
+            scored.append((score, r))
+        scored.sort(key=lambda x: (-x[0], -x[1].ts))
+        out, size = [], 0
+        for _, r in scored[:top_k]:
             chunk = len(json.dumps(r.content))
             if size + chunk > max_bytes:
                 break
-            out.append(r)
+            out.append(r.content)
             size += chunk
         return out
 
-
-class _InMemoryKV:
-    def __init__(self):
-        self._store: Dict[str, Any] = {}
-
-    async def get(self, key: str) -> Any:
-        return self._store.get(key)
-
-    async def set(self, key: str, value: Any) -> None:
-        self._store[key] = value
+    def metrics(self) -> Dict[str, int]:
+        return {"writes": self.writes, "reads": self.reads, "records": len(self._rec)}

@@ -1,216 +1,126 @@
-# Copyright (c) 2026 Chelsea Megan Woods. All Rights Reserved.
-# Owner & Creator: Chelsea Megan Woods | Woods AI Studio / Lyman Legacies / Nova Umbrella
-#
-# EliteRouter — fail-safe capability routing with TaskGraph, isolation, and cycle guards.
+# © 2026 Chelsea Megan Woods
+# Lean EliteRouter — capability route, cycle guard, bounded parallel, latency metrics.
 
 from __future__ import annotations
-
 from typing import Any, Dict, List, Optional
 import asyncio
-import logging
+import time
 import uuid
-from datetime import datetime, timezone
+import logging
 
-from src.core.task_graph import TaskGraph, TaskNode, TaskStatus
+from src.core.task_graph import TaskGraph, Node, Status
 
-logger = logging.getLogger("SaphiraEliteRouter")
-
+logger = logging.getLogger("router")
 
 class EliteRouter:
-    """
-    Fail-safe routing engine for Saphira.
+    __slots__ = ("registry", "core", "max_parallel", "max_depth", "calls", "total_ms")
 
-    - Builds a dependency-gated TaskGraph from intent
-    - Routes by capability (never free-form agent chat)
-    - Hard cycle / depth / concurrency guards
-    - Identity isolation via isolation_token + secret-mask
-    - Parallel ready-wave execution with bulkhead + timeout
-    """
-
-    def __init__(
-        self,
-        registry: Any,
-        core_pipeline: Any = None,
-        max_parallel: int = 6,
-        max_graph_depth: int = 12,
-    ):
+    def __init__(self, registry, core=None, max_parallel: int = 4, max_depth: int = 10):
         self.registry = registry
-        self.core = core_pipeline
+        self.core = core
         self.max_parallel = max_parallel
-        self.max_graph_depth = max_graph_depth
-        self._active_graphs: Dict[str, TaskGraph] = {}
+        self.max_depth = max_depth
+        self.calls = 0
+        self.total_ms = 0.0
 
-    async def route(
-        self,
-        user_input: str,
-        context: Optional[Dict[str, Any]] = None,
-        tenant_id: str = "default",
-    ) -> Dict[str, Any]:
-        context = context or {}
-        graph = TaskGraph(root_intent=user_input, tenant_id=tenant_id)
+    @property
+    def metrics(self) -> Dict[str, Any]:
+        avg = self.total_ms / self.calls if self.calls else 0.0
+        return {"calls": self.calls, "avg_ms": round(avg, 2), "total_ms": round(self.total_ms, 2)}
 
-        plan = await self._plan_capabilities(user_input, context)
+    async def route(self, user_input: str, context: Optional[Dict] = None, tenant_id: str = "default") -> Dict[str, Any]:
+        t0 = time.perf_counter()
+        self.calls += 1
+        ctx = context or {}
+        g = TaskGraph(user_input, tenant_id)
+
+        plan = self._plan(user_input)
         if not plan:
-            if self.core is not None:
-                return await self.core.process(user_input, context)
-            return {
-                "status": "error",
-                "message": "No plan and no core pipeline available",
-            }
+            if self.core:
+                return await self.core.process(user_input, ctx)
+            return {"status": "error", "message": "no plan"}
 
-        prev_id: Optional[str] = None
+        prev = None
         for step in plan:
-            node = TaskNode(
-                id=str(uuid.uuid4()),
-                capability=step["capability"],
-                agent_key=self.registry.agent_for(step["capability"]),
-                payload={
-                    **context,
-                    **step.get("payload", {}),
-                    "user_input": user_input,
-                    "tenant_id": tenant_id,
-                },
-                depends_on=[prev_id] if prev_id and step.get("sequential", True) else [],
-            )
-            graph.add(node)
-            prev_id = node.id
+            nid = str(uuid.uuid4())
+            g.add(Node(
+                id=nid,
+                capability=step["c"],
+                agent_key=self.registry.agent_for(step["c"]),
+                payload={**ctx, "user_input": user_input, "tenant_id": tenant_id},
+                depends_on=[prev] if prev and step.get("seq", True) else [],
+            ))
+            prev = nid
 
-        if graph.has_cycle():
-            logger.error("Cycle detected in plan – aborting")
-            return {
-                "status": "error",
-                "message": "Internal routing cycle blocked by EliteRouter",
-            }
-
-        self._active_graphs[graph.graph_id] = graph
+        if g.has_cycle():
+            return {"status": "error", "message": "cycle blocked"}
 
         sem = asyncio.Semaphore(self.max_parallel)
-        while True:
-            ready = graph.ready_wave()
+        depth = 0
+        while depth < self.max_depth:
+            ready = g.ready()
             if not ready:
                 break
-            if len(graph.completed) + len(graph.failed) > self.max_graph_depth * 4:
-                logger.warning("Depth guard triggered for graph %s", graph.graph_id)
-                break
+            depth += 1
 
-            async def run_node(node: TaskNode) -> Dict[str, Any]:
+            async def run(n: Node):
                 async with sem:
-                    return await self._execute_node(node, graph)
+                    return await self._exec(n, g)
 
-            results = await asyncio.gather(
-                *(run_node(n) for n in ready), return_exceptions=True
-            )
-            for node, res in zip(ready, results):
+            results = await asyncio.gather(*(run(n) for n in ready), return_exceptions=True)
+            for n, res in zip(ready, results):
                 if isinstance(res, Exception):
-                    graph.mark_failed(node.id, str(res))
-                elif isinstance(res, dict) and res.get("status") in (
-                    "success",
-                    "recovered_from_failure",
-                    "scene_executed",
-                    "completed",
-                ):
-                    graph.mark_done(node.id, res)
+                    g.mark_fail(n.id, str(res))
+                elif isinstance(res, dict) and res.get("status") in ("success", "recovered_from_failure", "scene_executed"):
+                    g.mark_ok(n.id, res)
                 else:
-                    msg = (
-                        res.get("message", "unknown")
-                        if isinstance(res, dict)
-                        else "unknown"
-                    )
-                    graph.mark_failed(node.id, msg)
+                    g.mark_fail(n.id, (res or {}).get("message", "fail") if isinstance(res, dict) else "fail")
 
-            if graph.failed and not graph.ready_wave():
+            if g.failed and not g.ready():
                 break
 
-        return self._synthesize(graph, user_input)
+        ms = (time.perf_counter() - t0) * 1000
+        self.total_ms += ms
+        return self._synth(g, ms)
 
-    async def _execute_node(
-        self, node: TaskNode, graph: TaskGraph
-    ) -> Dict[str, Any]:
-        agent = self.registry.get(node.agent_key)
-        if agent is None:
-            return {
-                "status": "error",
-                "message": f"No agent registered for capability {node.capability}",
-            }
-
-        node.status = TaskStatus.RUNNING
-        node.started_at = datetime.now(timezone.utc).isoformat()
-
-        envelope = {
-            **node.payload,
-            "isolation_token": node.isolation_token,
-            "capability": node.capability,
-            "tenant_id": graph.tenant_id,
-            "secret_mask": True,
-        }
-
+    async def _exec(self, n: Node, g: TaskGraph) -> Dict[str, Any]:
+        agent = self.registry.get(n.agent_key)
+        if not agent:
+            return {"status": "error", "message": f"no agent {n.capability}"}
+        n.status = Status.RUN
+        n.t0 = time.perf_counter()
+        env = {**n.payload, "isolation_token": n.isolation_token, "capability": n.capability, "tenant_id": g.tenant}
         try:
             if hasattr(agent, "safe_run"):
-                return await asyncio.wait_for(
-                    agent.safe_run(envelope), timeout=node.timeout_s
-                )
-            if hasattr(agent, "run"):
-                return await asyncio.wait_for(
-                    agent.run(envelope), timeout=node.timeout_s
-                )
-            if hasattr(agent, "process"):
-                return await asyncio.wait_for(
-                    agent.process(envelope), timeout=node.timeout_s
-                )
-            return {
-                "status": "error",
-                "message": f"Agent {node.agent_key} has no executable method",
-            }
+                return await asyncio.wait_for(agent.safe_run(env), n.timeout_s)
+            return await asyncio.wait_for(agent.process(env), n.timeout_s)
         except asyncio.TimeoutError:
             return {"status": "error", "message": "timeout"}
         except Exception as e:
-            logger.exception("Node %s (%s) failed", node.id, node.agent_key)
             return {"status": "error", "error": str(e)}
 
-    async def _plan_capabilities(
-        self, user_input: str, context: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
-        """
-        Produce an ordered list of {capability, payload, sequential}.
-        Prefer registry rules + IntentClassifier; LLM only for complex cases.
-        Falls back to the classic six-agent pipeline when no specialist plan is found.
-        """
-        # Classic fixed pipeline as safe default
+    def _plan(self, text: str) -> List[Dict]:
+        # fixed pipeline default — deterministic, zero LLM cost for routing
         return [
-            {"capability": "intent.parse", "sequential": True},
-            {"capability": "perception.entity", "sequential": True},
-            {"capability": "security.gate", "sequential": True},
-            {"capability": "governance.plan", "sequential": True},
-            {"capability": "memory.read", "sequential": True},
-            {"capability": "device.execute", "sequential": True},
+            {"c": "intent.parse", "seq": True},
+            {"c": "perception.entity", "seq": True},
+            {"c": "security.gate", "seq": True},
+            {"c": "governance.plan", "seq": True},
+            {"c": "memory.read", "seq": True},
+            {"c": "device.execute", "seq": True},
         ]
 
-    def _synthesize(
-        self, graph: TaskGraph, user_input: str
-    ) -> Dict[str, Any]:
-        successes = [
-            n.result
-            for n in graph.nodes.values()
-            if n.status == TaskStatus.SUCCESS and n.result
-        ]
-        failures = [
-            {"agent": n.agent_key, "error": n.error}
-            for n in graph.nodes.values()
-            if n.status == TaskStatus.FAILED
-        ]
-
-        final_status = "success" if successes and not failures else "partial"
-        if not successes:
-            final_status = "error"
-
-        # Secret-mask: never expose agent_key list to the user surface
+    def _synth(self, g: TaskGraph, ms: float) -> Dict[str, Any]:
+        oks = [n.result for n in g.nodes.values() if n.status == Status.OK and n.result]
+        fails = [{"a": n.agent_key, "e": n.error} for n in g.nodes.values() if n.status == Status.FAIL]
+        status = "success" if oks and not fails else ("partial" if oks else "error")
         return {
-            "status": final_status,
-            "message": "Request processed by Saphira.",
-            "final": successes[-1] if successes else {},
-            "trace_count": len(graph.nodes),
-            "failures": failures if failures else None,
-            "graph_id": graph.graph_id,
-            "avatar_state": "talking" if final_status == "success" else "thinking",
+            "status": status,
+            "message": "ok",
+            "final": oks[-1] if oks else {},
+            "nodes": len(g.nodes),
+            "fails": fails or None,
+            "latency_ms": round(ms, 2),
+            "graph_id": g.graph_id,
             "owner": "Chelsea Megan Woods",
         }

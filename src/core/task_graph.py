@@ -1,109 +1,89 @@
-# Copyright (c) 2026 Chelsea Megan Woods. All Rights Reserved.
-# Owner & Creator: Chelsea Megan Woods | Woods AI Studio / Lyman Legacies / Nova Umbrella
-#
-# Elite TaskGraph — dependency-gated, cycle-safe, depth-limited graph for multi-agent work.
+# © 2026 Chelsea Megan Woods
+# Lean TaskGraph — cycle detect, depth bound, no bloat.
 
 from __future__ import annotations
-
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set
 import uuid
-from datetime import datetime, timezone
+import time
 
-
-class TaskStatus(str, Enum):
-    PENDING = "pending"
-    READY = "ready"
-    RUNNING = "running"
-    SUCCESS = "success"
-    FAILED = "failed"
-    CANCELLED = "cancelled"
-    NEEDS_APPROVAL = "needs_approval"
-    BLOCKED = "blocked"
-
+class Status(str, Enum):
+    PENDING = "P"
+    READY = "R"
+    RUN = "X"
+    OK = "OK"
+    FAIL = "F"
 
 @dataclass
-class TaskNode:
+class Node:
     id: str
     capability: str
     agent_key: str
     payload: Dict[str, Any]
     depends_on: List[str] = field(default_factory=list)
-    status: TaskStatus = TaskStatus.PENDING
+    status: Status = Status.PENDING
     result: Optional[Dict[str, Any]] = None
     error: Optional[str] = None
     attempts: int = 0
-    max_attempts: int = 3
-    timeout_s: float = 60.0
-    created_at: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
-    started_at: Optional[str] = None
-    finished_at: Optional[str] = None
+    max_attempts: int = 2
+    timeout_s: float = 30.0
     isolation_token: str = field(default_factory=lambda: str(uuid.uuid4()))
-
+    t0: float = 0.0
 
 class TaskGraph:
-    """
-    Fail-safe task graph used by EliteRouter.
-    Hard limits prevent infinite loops and runaway agent chatter.
-    """
+    __slots__ = ("graph_id", "root", "tenant", "nodes", "edges", "done", "failed", "max_nodes")
 
-    def __init__(self, root_intent: str, tenant_id: str = "default"):
+    def __init__(self, root: str, tenant: str = "default", max_nodes: int = 48):
         self.graph_id = str(uuid.uuid4())
-        self.root_intent = root_intent
-        self.tenant_id = tenant_id
-        self.nodes: Dict[str, TaskNode] = {}
+        self.root = root
+        self.tenant = tenant
+        self.nodes: Dict[str, Node] = {}
         self.edges: Dict[str, Set[str]] = {}
-        self.completed: Set[str] = set()
+        self.done: Set[str] = set()
         self.failed: Set[str] = set()
-        self.max_depth = 12
-        self.max_nodes = 64
+        self.max_nodes = max_nodes
 
-    def add(self, node: TaskNode) -> None:
+    def add(self, n: Node) -> None:
         if len(self.nodes) >= self.max_nodes:
-            raise RuntimeError("TaskGraph node limit exceeded (max 64)")
-        self.nodes[node.id] = node
-        for dep in node.depends_on:
-            self.edges.setdefault(dep, set()).add(node.id)
+            raise RuntimeError("node limit")
+        self.nodes[n.id] = n
+        for d in n.depends_on:
+            self.edges.setdefault(d, set()).add(n.id)
 
-    def ready_wave(self) -> List[TaskNode]:
-        ready: List[TaskNode] = []
+    def ready(self) -> List[Node]:
+        out = []
         for n in self.nodes.values():
-            if n.status != TaskStatus.PENDING:
-                continue
-            if all(d in self.completed for d in n.depends_on):
-                n.status = TaskStatus.READY
-                ready.append(n)
-        return ready
+            if n.status == Status.PENDING and all(d in self.done for d in n.depends_on):
+                n.status = Status.READY
+                out.append(n)
+        return out
 
     def has_cycle(self) -> bool:
-        in_degree = {nid: len(n.depends_on) for nid, n in self.nodes.items()}
-        queue = [nid for nid, deg in in_degree.items() if deg == 0]
-        visited = 0
-        while queue:
-            u = queue.pop(0)
-            visited += 1
-            for v in self.edges.get(u, set()):
-                in_degree[v] -= 1
-                if in_degree[v] == 0:
-                    queue.append(v)
-        return visited != len(self.nodes)
+        indeg = {i: len(n.depends_on) for i, n in self.nodes.items()}
+        q = [i for i, d in indeg.items() if d == 0]
+        seen = 0
+        while q:
+            u = q.pop()
+            seen += 1
+            for v in self.edges.get(u, ()):
+                indeg[v] -= 1
+                if indeg[v] == 0:
+                    q.append(v)
+        return seen != len(self.nodes)
 
-    def mark_done(self, node_id: str, result: Dict[str, Any]) -> None:
-        n = self.nodes[node_id]
-        n.status = TaskStatus.SUCCESS
+    def mark_ok(self, nid: str, result: Dict[str, Any]) -> None:
+        n = self.nodes[nid]
+        n.status = Status.OK
         n.result = result
-        n.finished_at = datetime.now(timezone.utc).isoformat()
-        self.completed.add(node_id)
+        self.done.add(nid)
 
-    def mark_failed(self, node_id: str, error: str) -> None:
-        n = self.nodes[node_id]
+    def mark_fail(self, nid: str, err: str) -> None:
+        n = self.nodes[nid]
         n.attempts += 1
-        n.error = error
+        n.error = err
         if n.attempts >= n.max_attempts:
-            n.status = TaskStatus.FAILED
-            self.failed.add(node_id)
+            n.status = Status.FAIL
+            self.failed.add(nid)
         else:
-            n.status = TaskStatus.PENDING
+            n.status = Status.PENDING
