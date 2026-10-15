@@ -11,7 +11,10 @@ Saphira exposes external systems as capability-scoped plugins behind the executi
 |---|---|---|---|
 | Google Workspace | workspace / productivity | schedule appointments, draft emails, read Drive files | write actions require approval |
 | Microsoft 365 | workspace / productivity | Outlook, Teams, OneDrive, calendar, and document automation | write actions require approval |
-| Web Research | research / grounding | live web browse, scrape, fact-check, summarized research | low-risk read |
+| Web Research | research / grounding | live web browse, scrape, fact-check, summarized research via Firecrawl / Tavily / Browserbase | low-risk read |
+| Firecrawl | web.search / web.scrape | AI-native search + clean markdown extraction | low-risk read |
+| Tavily | web.search / research.cite | agent-optimized search with citation-ready snippets | low-risk read |
+| Browserbase | web.browse / browser.session | managed browser sessions for Google, Maps, interactive sites | low-risk read (session create) |
 | Document Intelligence | document / pdf | parse and summarize PDFs, spreadsheets, and text | low-risk read |
 | Code Interpreter | code / sandbox | execute Python, analyze data, generate charts and assets | execute gated by policy |
 | Image Generation | media / image | generate visual assets via DALL·E / Midjourney-class bridges | generation requires approval |
@@ -38,6 +41,17 @@ Saphira exposes external systems as capability-scoped plugins behind the executi
 | Device | device / smart environment | permissioned phone, Bluetooth, accessibility and environment actions | approval by risk |
 | Analytics | intelligence | business and system telemetry | low-risk read |
 
+## Agent access (shared via registry)
+
+Web research connectors (Firecrawl, Tavily, Browserbase, and the aggregate `web_research` plugin) are registered for use by:
+
+- **Agent Two** — primary browser / security / structured extraction
+- **Agent Scholar** — research synthesis and source quality
+- **NovaAethrea** — memory & integrations lifecycle
+- **Orchestrator / Saphira surface** — automatic tool triggering when live data is required
+
+All other agents can request the same capabilities through the executive runtime and capability registry; they never bypass security or governance stages.
+
 ## Plugin contract
 
 Each plugin should provide:
@@ -54,7 +68,7 @@ Each plugin should provide:
 
 The reference registry is implemented in `src/integrations/plugin_registry.py`.
 
-Connector stubs for Google Workspace, Microsoft 365, Zapier, Twilio, Document Intelligence, Code Interpreter, Image Generation, and Social Content live under `src/connectors/`.
+Connector stubs for Google Workspace, Microsoft 365, Zapier, Twilio, Document Intelligence, Code Interpreter, Image Generation, Social Content, **Firecrawl, Tavily, and Browserbase** live under `src/connectors/`.
 
 ## Security rules
 
