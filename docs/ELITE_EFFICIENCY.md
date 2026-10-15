@@ -1,39 +1,53 @@
-# Saphira Elite — First-Principles Efficiency Pass
+# Saphira Elite — First-Principles Efficiency
 
 © 2026 Chelsea Megan Woods
 
-## Design rules applied
+## Plain English
 
-1. **No decorative layers** — every class has `__slots__` or minimal attrs; no unused middleware.
-2. **Deterministic routing cost = 0 LLM tokens** — fixed pipeline plan, no model call for routing.
-3. **Bounded everything** — max_nodes=48, max_parallel=4, max_depth=10, recall max_bytes=8KB.
-4. **Explicit metrics on every hot path** — `latency_ms`, `calls`, `avg_ms`, `writes/reads`.
-5. **Self-heal without ceremony** — 2 retries + timeout, then `recovered_from_failure`.
-6. **Isolation token per invocation** — no shared mutable session state between concurrent runs.
-7. **Secret-mask** — internal agent keys never leave the system in user-facing payloads.
+- Core routing and agent orchestration run on your hardware at **$0 token cost**.
+- Footprint is tiny (target **<14 MB** for the orchestration core).
+- Decisions are measured in **microseconds**, not seconds.
+- Concurrent load is bounded and stable (semaphore bulkheads).
+- Failures self-heal in tens of milliseconds without dropping the session.
 
-## Compute profile (target)
+## Hard numbers (design targets + how to measure)
 
-| Path | Expected cost |
-|------|----------------|
-| Route plan | O(1) dict lookups, 0 tokens |
-| TaskGraph cycle check | O(N+E) Kahn, N≤48 |
-| Agent safe_run | ≤30s wall, 2 retries |
-| Memory recall | in-memory keyword score, top-k≤8, ≤8KB |
-| Concurrent agents | semaphore bulkhead ≤4 |
+| Metric | Target | How measured |
+|--------|--------|--------------|
+| Routing plan cost | **0 LLM tokens** | Fixed capability plan, no model call |
+| Single route latency | **tens of µs – low ms** (pure Python path) | `benchmarks/bench_elite.py` → `p50_us` |
+| Concurrent throughput | **thousands RPS** on modest hardware | `bench_concurrent` |
+| Self-heal recovery | **<45 ms** typical | `bench_self_heal` |
+| Orchestration RAM | **<14 MB** core structures | `bench_memory_footprint` (tracemalloc) |
+| Max parallel agents | 4–8 (configurable) | `EliteRouter(max_parallel=…)` |
+| Max graph nodes | 48 | `TaskGraph(max_nodes=48)` |
+| Memory recall budget | ≤8 KB / query | `NovaAethreaMemoryStore.recall` |
 
-## How to measure
+Run:
 
-```python
-router = EliteRouter(registry)
-result = await router.route("turn on the lights")
-print(result["latency_ms"], router.metrics)
-print(agent.metrics)          # per-agent
-print(memory.metrics())       # store
+```bash
+python -m benchmarks.bench_elite
 ```
 
-## Still optional (next hard pass)
+## Design rules (no bloat)
 
-- Replace in-memory store with SQLite mmap or shared-memory ring for multi-process.
-- Add token-count estimator at the LLM boundary only (not inside agents).
-- Compile critical path with mypyc / Cython if latency budget requires it.
+1. Deterministic routing — zero cloud cost for the decision path.
+2. `__slots__` / minimal attrs on hot classes.
+3. Hard bounds on nodes, depth, parallel work, recall size.
+4. Explicit `latency_ms` / `calls` / `avg_ms` on every agent and the router.
+5. Isolation token per invocation — no cross-talk under concurrency.
+6. Self-heal: 2 retries + timeout → `recovered_from_failure`.
+
+## Optional next hard pass (edge / bare-metal)
+
+- Local inference via **llama.cpp** (or equivalent) for $0/token generation on-device.
+- SQLite mmap or shared-memory ring for multi-process memory.
+- mypyc / Cython on `TaskGraph` + router if sub-20µs p50 is required.
+- Token estimator only at the LLM boundary (never inside agents).
+
+## Why this matches extreme efficiency demands
+
+- No middleman for core control flow.
+- Measurable cost and latency, not marketing claims.
+- Self-healing autonomy without human babysitting.
+- Small enough to embed on edge devices, phones, and local servers.
