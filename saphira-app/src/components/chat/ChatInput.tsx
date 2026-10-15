@@ -1,26 +1,78 @@
-import React, { useRef, useState, type KeyboardEvent } from 'react';
-import Button from '../ui/Button';
-import { useUser } from '../../context/UserContext';
+import React, { useState, useRef, useCallback } from 'react';
 import { useChat } from '../../context/ChatContext';
+import { useUser } from '../../context/UserContext';
+import { useSaphiraStream } from '../../hooks/useSaphiraStream';
+import type { SaphiraMessage } from '../../types/saphira';
+import Button from '../ui/Button';
 
 /**
- * Chat composer for Saphira AI™
+ * Prompt Input UI Component for Saphira AI™
+ * Captures user text and submits it to the Saphira API handler.
  */
 const ChatInput: React.FC = () => {
-  const { user } = useUser();
-  const { sendMessage, isStreaming } = useChat();
   const [text, setText] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { messages, addMessage, setMessages } = useChat();
+  const { user } = useUser();
+  const { isStreaming, startStream, streamedContent } = useSaphiraStream();
 
-  const handleSubmit = async () => {
+  // When streaming updates, keep the last model message in sync
+  React.useEffect(() => {
+    if (!isStreaming || !streamedContent) return;
+    setMessages((prev) => {
+      const next = [...prev];
+      const last = next[next.length - 1];
+      if (last && last.role === 'model') {
+        next[next.length - 1] = { ...last, content: streamedContent };
+        return next;
+      }
+      return next;
+    });
+  }, [streamedContent, isStreaming, setMessages]);
+
+  const handleSubmit = useCallback(async () => {
     const trimmed = text.trim();
     if (!trimmed || isStreaming) return;
-    setText('');
-    await sendMessage(trimmed);
-    textareaRef.current?.focus();
-  };
 
-  const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    const userMsg: SaphiraMessage = {
+      id: `u-${Date.now()}`,
+      role: 'user',
+      content: trimmed,
+      createdAt: new Date().toISOString(),
+    };
+
+    const modelPlaceholder: SaphiraMessage = {
+      id: `m-${Date.now()}`,
+      role: 'model',
+      content: '',
+      createdAt: new Date().toISOString(),
+    };
+
+    addMessage(userMsg);
+    addMessage(modelPlaceholder);
+    setText('');
+
+    const history: SaphiraMessage[] = [...messages, userMsg];
+
+    try {
+      await startStream(history);
+    } catch {
+      // Error already stored in hook; ensure placeholder shows failure if empty
+      setMessages((prev) => {
+        const next = [...prev];
+        const last = next[next.length - 1];
+        if (last && last.role === 'model' && !last.content) {
+          next[next.length - 1] = {
+            ...last,
+            content: 'Sorry, I could not complete that request. Please try again.',
+          };
+        }
+        return next;
+      });
+    }
+  }, [text, isStreaming, messages, addMessage, setMessages, startStream]);
+
+  const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       void handleSubmit();
