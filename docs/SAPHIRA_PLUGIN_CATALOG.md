@@ -11,10 +11,7 @@ Saphira exposes external systems as capability-scoped plugins behind the executi
 |---|---|---|---|
 | Google Workspace | workspace / productivity | schedule appointments, draft emails, read Drive files | write actions require approval |
 | Microsoft 365 | workspace / productivity | Outlook, Teams, OneDrive, calendar, and document automation | write actions require approval |
-| Web Research | research / grounding | live web browse, scrape, fact-check, summarized research via Firecrawl / Tavily / Browserbase | low-risk read |
-| Firecrawl | web.search / web.scrape | AI-native search + clean markdown extraction | low-risk read |
-| Tavily | web.search / research.cite | agent-optimized search with citation-ready snippets | low-risk read |
-| Browserbase | web.browse / browser.session | managed browser sessions for Google, Maps, interactive sites | low-risk read (session create) |
+| Web Research | research / grounding | live web browse, scrape, fact-check (Firecrawl / Tavily / Browserbase) | low-risk read |
 | Document Intelligence | document / pdf | parse and summarize PDFs, spreadsheets, and text | low-risk read |
 | Code Interpreter | code / sandbox | execute Python, analyze data, generate charts and assets | execute gated by policy |
 | Image Generation | media / image | generate visual assets via DALL·E / Midjourney-class bridges | generation requires approval |
@@ -28,6 +25,23 @@ Saphira exposes external systems as capability-scoped plugins behind the executi
 | Stripe | billing / payments | subscriptions, checkout links, micro-transactions | financial actions require approval |
 | Social & Content Transmutation | social / content | ingest video/links, transcripts, auto captions and summaries | publish actions require approval |
 
+## Competitive Excellence Plugins (Tier S pillars)
+
+Installed so **all agents** can invoke the strengths where Saphira is designed to lead.
+Full matrix: `docs/SAPHIRA_BENCHMARK_EXCELLENCE.md`.
+
+| Plugin | Capability | Design target | Primary internal owners |
+|---|---|---|---|
+| **latency** | low_latency_audio / TTS / STT / TTFT | 180ms–350ms (ONNX / Piper) | Saphira, Aura, Agent Zero |
+| **memory_hybrid** | hybrid_memory_recall | 98.2% (pgvector hybrid) | Saphira, Scholar, NovaAethrea |
+| **tool_automation** | tool_automation | 94.5% (FastAPI + a11y + web tools) | Agent Two, Nova Reign, Aura |
+| **edge_offline** | edge_offline / on_device | 100% native path | Agent Zero, Aura, Cipher |
+| **reasoning** | deep_reasoning | 84.5/100+ (Scholar multi-step) | Scholar, NovaAethrea, orchestrator |
+| **privacy_ledger** | privacy_ledger / audit | 10/10 self-hosted ledger | Cipher, Agent Two, Nova Reign |
+| **excellence_overview** | excellence_overview | Rank 4 · Tier S composite | orchestrator |
+
+Code: `src/excellence/` (pillars, agent map, router) + manifests in `src/integrations/plugin_registry.py`.
+
 ## Additional Core Integrations
 
 | Plugin | Capability | Typical operations | Approval |
@@ -40,17 +54,6 @@ Saphira exposes external systems as capability-scoped plugins behind the executi
 | Memory | memory | recall and durable memory writes | policy-dependent |
 | Device | device / smart environment | permissioned phone, Bluetooth, accessibility and environment actions | approval by risk |
 | Analytics | intelligence | business and system telemetry | low-risk read |
-
-## Agent access (shared via registry)
-
-Web research connectors (Firecrawl, Tavily, Browserbase, and the aggregate `web_research` plugin) are registered for use by:
-
-- **Agent Two** — primary browser / security / structured extraction
-- **Agent Scholar** — research synthesis and source quality
-- **NovaAethrea** — memory & integrations lifecycle
-- **Orchestrator / Saphira surface** — automatic tool triggering when live data is required
-
-All other agents can request the same capabilities through the executive runtime and capability registry; they never bypass security or governance stages.
 
 ## Plugin contract
 
@@ -68,7 +71,7 @@ Each plugin should provide:
 
 The reference registry is implemented in `src/integrations/plugin_registry.py`.
 
-Connector stubs for Google Workspace, Microsoft 365, Zapier, Twilio, Document Intelligence, Code Interpreter, Image Generation, Social Content, **Firecrawl, Tavily, and Browserbase** live under `src/connectors/`.
+Connector stubs for Google Workspace, Microsoft 365, Zapier, Twilio, Document Intelligence, Code Interpreter, Image Generation, Social Content, and web research (Firecrawl / Tavily / Browserbase) live under `src/connectors/`.
 
 ## Security rules
 
@@ -79,6 +82,7 @@ Connector stubs for Google Workspace, Microsoft 365, Zapier, Twilio, Document In
 5. Tool calls should be idempotent where possible and auditable.
 6. Plugin failures must return structured errors to the executive runtime.
 7. Disabled plugins cannot be invoked.
+8. User-facing replies name only **Saphira** — internal excellence agents stay silent.
 
 ## Connection status
 
