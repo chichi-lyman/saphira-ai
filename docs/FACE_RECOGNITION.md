@@ -5,12 +5,12 @@ Ecosystem: Nova Umbrella™ · Woods AI Studio / Lyman Legacies
 
 ## Overview
 
-Saphira can recognize faces through the **Aura** perception agent.  
+Saphira can recognize faces through the **Aura** perception agent and store consented identities via **NovaAethrea**.  
 Design is strictly privacy-first:
 
 - Embeddings are extracted only when the user explicitly requests it.
 - Storage happens only after a clear consent step ("Yes, remember this is me / this is Mom").
-- Preferred execution path is **on-device** (Android ML Kit / MediaPipe / Flutter).
+- Preferred execution path is **on-device** (Android ML Kit).
 - Server-side path is available for development and for enrolled identities the user has already approved.
 
 Internal agent names are never shown to the user.
@@ -18,89 +18,122 @@ Internal agent names are never shown to the user.
 ## Architecture
 
 ```
-Client (camera) 
-    → (optional on-device detection / embedding)
-    → Aura.perceive({type: "face", image_b64: "...", known_faces: [...]})
-    → structured result (matches, requires_consent, …)
-    → NovaAethrea (memory) only writes after consent
+Client (camera + ML Kit)
+    → crop face JPEG (base64)
+    → POST /api/face/perceive
+    → Aura matches against NovaAethrea known faces
+    → if unknown → Saphira asks for consent
+    → POST /api/face/consent-token  (only after user says yes)
+    → POST /api/face/enroll
+    → NovaAethrea writes embedding to explicit fact ledger
 ```
 
-## Python API (Aura)
+## REST API
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/face/perceive` | Detect + recognize against stored faces |
+| POST | `/api/face/enroll` | Extract + store embedding (requires consent_token) |
+| GET  | `/api/face/list` | List remembered labels (no embeddings) |
+| DELETE | `/api/face/forget/{label}` | Remove a stored face |
+| POST | `/api/face/consent-token` | Generate one-time consent proof |
+
+### Perceive example
+
+```bash
+curl -X POST https://your-backend/api/face/perceive \
+  -H "Content-Type: application/json" \
+  -d '{"image_b64": "<base64 jpeg>", "return_embeddings": false}'
+```
+
+### Enroll flow
+
+1. User says "yes, remember this face as Chelsea"
+2. Client calls `POST /api/face/consent-token` → receives token
+3. Client calls `POST /api/face/enroll` with image, label, and token
+
+## Python API (Aura + NovaAethrea)
 
 ```python
 from agents.aura import AuraAgent
+from agents.novaaethrea import NovaAethreaAgent
 
 aura = AuraAgent()
+memory = NovaAethreaAgent()
 
-# 1. Perception / recognition
+# Perceive
 result = aura.perceive({
     "type": "face",
-    "image_b64": "<base64 jpeg/png>",
-    "known_faces": [
-        {"label": "Chelsea", "embedding": [...]},
-        {"label": "Mom", "embedding": [...]},
-    ],
-    "return_embeddings": False,   # set True only when enrolling
+    "image_b64": "<base64>",
+    "known_faces": memory.get_known_faces_for_perception(),
 })
 
-# 2. Enrollment (extract embedding — does NOT store)
+# Enroll after consent
 enroll = aura.enroll_face(
     image_payload={"image_b64": "..."},
     label="Chelsea",
-    consent_token="user-confirmed-abc123",  # required
+    consent_token="user-confirmed-token",
 )
-# Memory layer then persists enroll["embedding"] under the label.
+memory.store_face(
+    label="Chelsea",
+    embedding=enroll["embedding"],
+    consent_token="user-confirmed-token",
+)
 ```
 
-## Supported Backends (server)
+## On-Device (Android)
 
-Tried in order:
+- `FaceRecognitionHelper.kt` — ML Kit face detection + face crop to base64 JPEG
+- `SaphiraApi.kt` — `perceiveFace`, `requestConsentToken`, `enrollFace`, `listFaces`
+- Camera permission is declared; use only on explicit user action (never continuous background)
 
-1. `face_recognition` (dlib) — best quality when installed
+### Typical client flow
+
+```kotlin
+val helper = FaceRecognitionHelper(context)
+val result = helper.detect(bitmap, includeCropBase64 = true)
+val faceB64 = result.faceJpegBase64 ?: return
+
+// Recognize
+val perception = api.perceiveFace(faceB64).getOrThrow()
+if (perception.optBoolean("requires_consent")) {
+    // Ask user in natural language via Saphira
+    // On yes:
+    val token = api.requestConsentToken().getOrThrow()
+    api.enrollFace(faceB64, label = "Chelsea", consentToken = token)
+}
+```
+
+## Server backends (optional)
+
+Tried in order by Aura:
+
+1. `face_recognition` (dlib)
 2. DeepFace (Facenet)
-3. MediaPipe Face Detection + lightweight embedding
+3. MediaPipe
 4. OpenCV Haar (detection only)
 
-Install optional extras as needed:
+Install only what you need:
 
 ```bash
-pip install face_recognition   # or
-pip install deepface           # or
-pip install mediapipe opencv-python-headless
+pip install opencv-python-headless mediapipe numpy
+# or
+pip install face_recognition
+# or
+pip install deepface
 ```
 
-## On-Device (recommended for production)
+## Security & Privacy Rules
 
-### Android
-- Google ML Kit Face Detection + custom FaceNet / MobileFaceNet embedding.
-- Or MediaPipe Face Mesh / Face Detection solutions.
-
-### Flutter
-- `google_mlkit_face_detection`
-- Or `mediapipe` Flutter plugins + local embedding model.
-
-Send only the embedding (or a short list of match scores) to the backend when the user is already authenticated. Never stream raw camera frames continuously.
-
-## Consent Flow (required)
-
-1. Aura detects a face with no confident match → `requires_consent: true`.
-2. Saphira asks the user in natural language:  
-   “I see someone new. Would you like me to remember this face?”
-3. On explicit yes, generate a short-lived consent token and call `enroll_face`.
-4. NovaAethrea writes the embedding + label to the explicit fact ledger only.
-5. Future perceptions receive the updated `known_faces` list from memory.
-
-## Security Notes
-
-- No background camera access.
-- No remote image URL fetching inside Aura (keeps the privacy boundary clean).
+- No continuous camera access.
+- No remote image URL fetching inside Aura.
+- Face data treated as highly sensitive; stored only after explicit consent.
+- Consent token is required on enroll; generate it only after the user says yes.
 - Agent Two can later add liveness / anti-spoof checks before enrollment is accepted.
-- All face data is treated as highly sensitive personal data.
 
 ## Future Improvements
 
 - Multi-face support in a single frame
-- On-device ArcFace / MobileFaceNet ONNX models
-- Liveness detection (blink, head-pose) under Agent Two
+- On-device ArcFace / MobileFaceNet ONNX models (embeddings stay local)
+- Liveness detection under Agent Two
 - Family / household roster management UI
-"}, {

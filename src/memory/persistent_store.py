@@ -1,7 +1,7 @@
 # Copyright (c) 2026 Chelsea Megan Woods. All Rights Reserved.
 # Persistent memory storage for NovaAethrea
 # File-backed JSON store (can be swapped for SQLite / pgvector later)
-# Extended with ContextPack builder and connector health for multi-agent handoffs.
+# Extended with ContextPack builder, connector health, and consented faces.
 
 from __future__ import annotations
 
@@ -40,12 +40,14 @@ class PersistentMemoryStore:
                 "scenes": {},
                 "history": [],
                 "connector_health": {},
+                "faces": {},
             }
         self._data.setdefault("facts", {})
         self._data.setdefault("preferences", {})
         self._data.setdefault("scenes", {})
         self._data.setdefault("history", [])
         self._data.setdefault("connector_health", {})
+        self._data.setdefault("faces", {})
 
     def _save(self) -> None:
         try:
@@ -87,6 +89,31 @@ class PersistentMemoryStore:
     def all_data(self) -> Dict[str, Any]:
         return self._data
 
+    # --- Face memory (consent-gated) ---
+
+    def set_face(self, label: str, record: Dict[str, Any]) -> None:
+        """Store a consented face record under faces[label]."""
+        faces = self._data.setdefault("faces", {})
+        record = dict(record)
+        record["updated_at"] = datetime.now(timezone.utc).isoformat()
+        faces[label] = record
+        self._save()
+
+    def get_face(self, label: str) -> Optional[Dict[str, Any]]:
+        return self._data.get("faces", {}).get(label)
+
+    def list_faces(self) -> List[Dict[str, Any]]:
+        faces = self._data.get("faces", {})
+        return [{"label": k, **v} for k, v in faces.items()]
+
+    def delete_face(self, label: str) -> bool:
+        faces = self._data.setdefault("faces", {})
+        if label in faces:
+            del faces[label]
+            self._save()
+            return True
+        return False
+
     # --- Multi-agent extensions ---
 
     def update_connector_health(
@@ -102,36 +129,10 @@ class PersistentMemoryStore:
             "status": status,
             "retries": retries,
             "last_error": last_error,
-            "last_success_ms": int(datetime.now(timezone.utc).timestamp() * 1000)
-            if status == "ok"
-            else health.get(connector, {}).get("last_success_ms"),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
         }
         self._save()
 
-    def get_connector_health(self) -> Dict[str, Any]:
-        return dict(self._data.get("connector_health", {}))
 
-    def build_context_pack(
-        self,
-        *,
-        task_id: Optional[str] = None,
-        trace_id: Optional[str] = None,
-        policy_grant: str = "ALLOW",
-        history_limit: int = 10,
-    ) -> Dict[str, Any]:
-        """Assemble a ContextPack for NovaReign → NovaAethrea → Agent Zero handoffs."""
-        return {
-            "trace_id": trace_id or str(uuid.uuid4()),
-            "task_id": task_id or str(uuid.uuid4()),
-            "facts": dict(self._data.get("facts", {})),
-            "preferences": dict(self._data.get("preferences", {})),
-            "scenes": dict(self._data.get("scenes", {})),
-            "history_slice": self.get_history(history_limit),
-            "connector_health": self.get_connector_health(),
-            "policy_grant": policy_grant,
-            "built_at": datetime.now(timezone.utc).isoformat(),
-        }
-
-
-# Singleton used by NovaAethrea
+# Module-level singleton used across routers and agents
 persistent_memory = PersistentMemoryStore()

@@ -18,3 +18,14 @@ redis>=5.0
 celery>=5.3
 stripe>=8.0
 google-genai>=0.8
+
+# ---------------------------------------------------------------------------
+# Optional vision / face recognition (install only what you need)
+#   pip install opencv-python-headless mediapipe
+#   # or for higher server accuracy:
+#   pip install face_recognition   # requires dlib
+#   pip install deepface
+# ---------------------------------------------------------------------------
+# opencv-python-headless>=4.8
+# mediapipe>=0.10
+# numpy>=1.24

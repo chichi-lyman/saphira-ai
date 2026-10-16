@@ -12,6 +12,7 @@ from src.api.twilio_voice_router import router as twilio_voice_router
 from src.api.saphira_dispatcher import router as saphira_dispatcher_router
 from src.api.excellence_router import router as excellence_router
 from src.api.autonomy_router import router as autonomy_router
+from src.api.face_router import router as face_router
 from src.commerce.stripe_checkout import router as checkout_router
 from src.commerce.billing_router import router as billing_router
 from core.control_plane import router as control_plane_router
@@ -29,7 +30,7 @@ settings = validate_environment(strict=False)
 app = FastAPI(
     title="Saphira AI Enterprise",
     description="Conversational executive assistant with governed autonomous agents and enterprise control plane.",
-    version="17.3.0",
+    version="17.4.0",
 )
 
 app.add_middleware(
@@ -56,6 +57,7 @@ app.include_router(tiktok_router, prefix="/api")
 app.include_router(platform_router, prefix="/api")
 app.include_router(twilio_voice_router, prefix="/api")
 app.include_router(mcp_router, prefix="/api")
+app.include_router(face_router, prefix="/api")  # /api/face/*
 app.include_router(saphira_dispatcher_router)  # /v1/saphira/stream
 app.include_router(excellence_router)  # /v1/router/execute
 app.include_router(autonomy_router)  # /v1/autonomy/repair
@@ -79,48 +81,6 @@ async def verify_sentinel_token(api_key: str = Depends(api_key_header)):
 async def startup_mcp() -> None:
     """Bootstrap optional MCP servers from environment variables."""
     try:
-        await mcp_manager.bootstrap_default_servers()
+        await mcp_manager.startup()
     except Exception as exc:
-        logger.warning("[Saphira MCP] bootstrap deferred: %s", exc)
-
-
-@app.on_event("shutdown")
-async def shutdown_mcp() -> None:
-    await mcp_manager.shutdown()
-
-
-@app.get("/")
-async def root():
-    return {
-        "name": "Saphira AI",
-        "status": "running",
-        "version": "17.3.0",
-        "role": "conversational-ai-assistant",
-        "architecture": "autonomous-agent-operating-platform",
-        "platform_layer": "enabled",
-        "mcp_gateway": "enabled",
-        "excellence_router": "enabled",
-        "autonomy_self_repair": "enabled",
-        "tier": "S",
-        "rank_target": 4,
-        "environment": settings.environment,
-    }
-
-
-@app.get("/health")
-async def health():
-    return {
-        "status": "healthy",
-        "service": "saphira-ai",
-        "version": "17.3.0",
-        "config": settings.validation_report(),
-        "mcp_servers": list(mcp_manager.sessions.keys()),
-        "excellence": "/v1/router/health",
-        "autonomy": "/v1/autonomy/scoreboard",
-    }
-
-
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0", port=settings.port)
+        logger.warning("MCP startup skipped or partial: %s", exc)
