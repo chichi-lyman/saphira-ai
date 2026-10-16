@@ -2,6 +2,7 @@
 # Owner: Chelsea Megan Woods | Woods AI Studio / Lyman Legacies
 #
 # Public conversational surface: execution + natural Saphira dialogue + session memory.
+# Multimodal: optional image_b64 for face recognition turns.
 
 from __future__ import annotations
 
@@ -27,6 +28,15 @@ class ChatRequest(BaseModel):
     confirmed: bool = False
     room: Optional[str] = None
     session_id: Optional[str] = None
+    # Multimodal face support
+    image_b64: Optional[str] = Field(
+        default=None,
+        description="Optional base64 JPEG/PNG for face recognition / enrollment",
+    )
+    consent_token: Optional[str] = Field(
+        default=None,
+        description="One-time token proving user consented to remember a face",
+    )
 
 
 def _session_history(session_id: Optional[str], limit: int = 12) -> list[dict[str, str]]:
@@ -93,6 +103,8 @@ async def chat(req: ChatRequest) -> Dict[str, Any]:
         "confirmed": req.confirmed,
         "room": req.room,
         "session_id": req.session_id,
+        "image_b64": req.image_b64,
+        "consent_token": req.consent_token,
     }
 
     result = await _orchestrator.process(req.message, context=context)
@@ -101,7 +113,7 @@ async def chat(req: ChatRequest) -> Dict[str, Any]:
 
     history = _session_history(req.session_id)
     natural_message = await _generate_natural_reply(req.message, final, history)
-    public_message = natural_message or public_reply(req.message, final)
+    public_message = natural_message or public_reply(req.message, final) or final.get("message")
 
     persistent_memory.append_history({
         "session_id": req.session_id,
@@ -125,9 +137,11 @@ async def chat(req: ChatRequest) -> Dict[str, Any]:
             "state": frame.get("state"),
         },
         "status": final.get("status", "success"),
-        "requires_confirmation": final.get("status") == "needs_confirmation",
+        "requires_confirmation": final.get("status") in ("needs_confirmation",) or final.get("requires_consent", False),
         "intent": final.get("intent"),
         "session_id": req.session_id,
         "voice_ready": True,
+        "matches": final.get("matches"),
+        "faces_detected": final.get("faces_detected"),
         "owner": "Chelsea Megan Woods",
     }
