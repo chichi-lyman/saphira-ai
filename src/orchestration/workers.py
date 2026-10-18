@@ -1,1 +1,150 @@
-"""Concrete AgentWorker implementations for multi-agent workflows.\n\nCopyright © 2026 Chelsea Megan Woods\n\nThese workers are bound to the custom agent skills:\n- saphira-code-reviewer\n- saphira-systems-architect\n- saphira-data-analyst\n- saphira-security-auditor\n\nThey implement the AgentWorker protocol expected by TaskExecutor and\nMultiAgentWorkflowEngine. Heavy LLM / tool calls stay behind adapters;\nthese provide structured, testable behavior and handoff-compatible results.\n"""\n\nfrom __future__ import annotations\n\nimport logging\nfrom typing import Any\n\nfrom .task import Task\nfrom .executor import AgentWorker\n\ntry:\n    from .creative_workers import creative_workers as _creative_workers\nexcept ImportError:  # pragma: no cover\n    def _creative_workers():\n        return {}\n\nlogger = logging.getLogger(\"SaphiraWorkers\")\n\n\nclass BaseSkillWorker:\n    \"\"\"Shared helpers for skill-backed workers.\"\"\"\n\n    name: str = \"base\"\n    capabilities: set[str] = set()\n    skill: str = \"\"\n\n    async def execute(self, task: Task, step: dict[str, Any]) -> dict[str, Any] | None:\n        raise NotImplementedError\n\n    def _envelope(self, task: Task, step: dict[str, Any], payload: dict[str, Any]) -> dict[str, Any]:\n        return {\n            \"status\": \"completed\",\n            \"agent\": self.name,\n            \"skill\": self.skill,\n            \"step\": step.get(\"name\"),\n            \"capability\": step.get(\"capability\"),\n            \"task_id\": task.id,\n            \"payload\": payload,\n        }\n\n\nclass ResearchWorker(BaseSkillWorker):\n    name = \"research_agent\"\n    capabilities = {\"research\", \"web\"}\n    skill = \"deepsearch\"\n\n    async def execute(self, task: Task, step: dict[str, Any]) -> dict[str, Any] | None:\n        objective = task.objective\n        logger.info(\"ResearchWorker on: %s\", objective[:80])\n        return self._envelope(\n            task,\n            step,\n            {\n                \"summary\": f\"Research brief for: {objective}\",\n                \"sources\": [],\n                \"sub_queries\": [objective],\n                \"confidence\": 0.7,\n            },\n        )\n\n\nclass DeveloperWorker(BaseSkillWorker):\n    name = \"developer_agent\"\n    capabilities = {\"development\", \"system\"}\n    skill = \"saphira-build\"\n\n    async def execute(self, task: Task, step: dict[str, Any]) -> dict[str, Any] | None:\n        logger.info(\"DeveloperWorker on: %s\", task.objective[:80])\n        return self._envelope(\n            task,\n            step,\n            {\n                \"summary\": f\"Implementation plan for: {task.objective}\",\n                \"files_touched\": [],\n                \"tests_suggested\": [\"unit\", \"integration\"],\n            },\n        )\n\n\nclass QualityWorker(BaseSkillWorker):\n    name = \"qa_agent\"\n    capabilities = {\"quality\"}\n    skill = \"verification\"\n\n    async def execute(self, task: Task, step: dict[str, Any]) -> dict[str, Any] | None:\n        logger.info(\"QualityWorker verifying task %s\", task.id)\n        return self._envelope(\n            task,\n            step,\n            {\n                \"passed\": True,\n                \"checks\": [\"policy\", \"coherence\", \"artifact_presence\"],\n            },\n        )\n\n\nclass ContentWorker(BaseSkillWorker):\n    name = \"content_agent\"\n    capabilities = {\"content\"}\n    skill = \"content\"\n\n    async def execute(self, task: Task, step: dict[str, Any]) -> dict[str, Any] | None:\n        return self._envelope(\n            task,\n            step,\n            {\"summary\": f\"Draft / spec for: {task.objective}\", \"format\": \"markdown\"},\n        )\n\n\nclass CodeReviewerWorker(BaseSkillWorker):\n    name = \"code_reviewer_agent\"\n    capabilities = {\"code_review\", \"development\", \"quality\"}\n    skill = \"saphira-code-reviewer\"\n\n    async def execute(self, task: Task, step: dict[str, Any]) -> dict[str, Any] | None:\n        return self._envelope(task, step, {\"review\": {\"severity\": \"info\"}, \"skill\": self.skill})\n\n\nclass SystemsArchitectWorker(BaseSkillWorker):\n    name = \"systems_architect_agent\"\n    capabilities = {\"architecture\", \"system\", \"development\"}\n    skill = \"saphira-systems-architect\"\n\n    async def execute(self, task: Task, step: dict[str, Any]) -> dict[str, Any] | None:\n        return self._envelope(task, step, {\"architecture\": {\"pipeline\": \"fixed\"}})\n\n\nclass DataAnalystWorker(BaseSkillWorker):\n    name = \"data_analyst_agent\"\n    capabilities = {\"analytics\", \"research\", \"stem\"}\n    skill = \"saphira-data-analyst\"\n\n    async def execute(self, task: Task, step: dict[str, Any]) -> dict[str, Any] | None:\n        return self._envelope(task, step, {\"analysis\": {\"method\": \"descriptive\"}})\n\n\nclass SecurityAuditorWorker(BaseSkillWorker):\n    name = \"security_auditor_agent\"\n    capabilities = {\"security\", \"quality\", \"code_review\"}\n    skill = \"saphira-security-auditor\"\n\n    async def execute(self, task: Task, step: dict[str, Any]) -> dict[str, Any] | None:\n        return self._envelope(task, step, {\"audit\": {\"severity\": \"info\"}})\n\n\nclass ReasoningWorker(BaseSkillWorker):\n    name = \"planner_agent\"\n    capabilities = {\"reasoning\"}\n    skill = \"think-mode\"\n\n    async def execute(self, task: Task, step: dict[str, Any]) -> dict[str, Any] | None:\n        return self._envelope(task, step, {\"synthesis\": f\"Reasoned summary for: {task.objective}\", \"mode\": \"think\"})\n\n\ndef default_workers() -> dict[str, AgentWorker]:\n    \"\"\"Factory of all built-in skill workers including creative co-creation.\"\"\"\n    workers: list[BaseSkillWorker] = [\n        ResearchWorker(),\n        DeveloperWorker(),\n        QualityWorker(),\n        ContentWorker(),\n        CodeReviewerWorker(),\n        SystemsArchitectWorker(),\n        DataAnalystWorker(),\n        SecurityAuditorWorker(),\n        ReasoningWorker(),\n    ]\n    out = {w.name: w for w in workers}  # type: ignore[misc]\n    out.update(_creative_workers())\n    return out\n
+"""Concrete AgentWorker implementations for multi-agent workflows.
+
+Copyright © 2026 Chelsea Megan Woods
+"""
+
+from __future__ import annotations
+
+import logging
+from typing import Any
+
+from .task import Task
+from .executor import AgentWorker
+
+try:
+    from .creative_workers import creative_workers as _creative_workers
+except ImportError:  # pragma: no cover
+
+    def _creative_workers():
+        return {}
+
+logger = logging.getLogger("SaphiraWorkers")
+
+
+class BaseSkillWorker:
+    name: str = "base"
+    capabilities: set[str] = set()
+    skill: str = ""
+
+    async def execute(self, task: Task, step: dict[str, Any]) -> dict[str, Any] | None:
+        raise NotImplementedError
+
+    def _envelope(self, task: Task, step: dict[str, Any], payload: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "status": "completed",
+            "agent": self.name,
+            "skill": self.skill,
+            "step": step.get("name"),
+            "capability": step.get("capability"),
+            "task_id": task.id,
+            "payload": payload,
+        }
+
+
+class ResearchWorker(BaseSkillWorker):
+    name = "research_agent"
+    capabilities = {"research", "web"}
+    skill = "deepsearch"
+
+    async def execute(self, task: Task, step: dict[str, Any]) -> dict[str, Any] | None:
+        return self._envelope(
+            task,
+            step,
+            {"summary": f"Research brief for: {task.objective}", "sources": [], "confidence": 0.7},
+        )
+
+
+class DeveloperWorker(BaseSkillWorker):
+    name = "developer_agent"
+    capabilities = {"development", "system"}
+    skill = "saphira-build"
+
+    async def execute(self, task: Task, step: dict[str, Any]) -> dict[str, Any] | None:
+        return self._envelope(
+            task,
+            step,
+            {"summary": f"Implementation plan for: {task.objective}", "files_touched": []},
+        )
+
+
+class QualityWorker(BaseSkillWorker):
+    name = "qa_agent"
+    capabilities = {"quality"}
+    skill = "verification"
+
+    async def execute(self, task: Task, step: dict[str, Any]) -> dict[str, Any] | None:
+        return self._envelope(task, step, {"passed": True, "checks": ["policy", "coherence"]})
+
+
+class ContentWorker(BaseSkillWorker):
+    name = "content_agent"
+    capabilities = {"content"}
+    skill = "content"
+
+    async def execute(self, task: Task, step: dict[str, Any]) -> dict[str, Any] | None:
+        return self._envelope(task, step, {"summary": f"Draft for: {task.objective}", "format": "markdown"})
+
+
+class CodeReviewerWorker(BaseSkillWorker):
+    name = "code_reviewer_agent"
+    capabilities = {"code_review", "development", "quality"}
+    skill = "saphira-code-reviewer"
+
+    async def execute(self, task: Task, step: dict[str, Any]) -> dict[str, Any] | None:
+        return self._envelope(task, step, {"review": {"severity": "info"}})
+
+
+class SystemsArchitectWorker(BaseSkillWorker):
+    name = "systems_architect_agent"
+    capabilities = {"architecture", "system", "development"}
+    skill = "saphira-systems-architect"
+
+    async def execute(self, task: Task, step: dict[str, Any]) -> dict[str, Any] | None:
+        return self._envelope(task, step, {"architecture": {"pipeline": "fixed"}})
+
+
+class DataAnalystWorker(BaseSkillWorker):
+    name = "data_analyst_agent"
+    capabilities = {"analytics", "research", "stem"}
+    skill = "saphira-data-analyst"
+
+    async def execute(self, task: Task, step: dict[str, Any]) -> dict[str, Any] | None:
+        return self._envelope(task, step, {"analysis": {"method": "descriptive"}})
+
+
+class SecurityAuditorWorker(BaseSkillWorker):
+    name = "security_auditor_agent"
+    capabilities = {"security", "quality", "code_review"}
+    skill = "saphira-security-auditor"
+
+    async def execute(self, task: Task, step: dict[str, Any]) -> dict[str, Any] | None:
+        return self._envelope(task, step, {"audit": {"severity": "info"}})
+
+
+class ReasoningWorker(BaseSkillWorker):
+    name = "planner_agent"
+    capabilities = {"reasoning"}
+    skill = "think-mode"
+
+    async def execute(self, task: Task, step: dict[str, Any]) -> dict[str, Any] | None:
+        return self._envelope(
+            task, step, {"synthesis": f"Reasoned summary for: {task.objective}", "mode": "think"}
+        )
+
+
+def default_workers() -> dict[str, AgentWorker]:
+    """Factory of all built-in skill workers including creative co-creation."""
+    workers: list[BaseSkillWorker] = [
+        ResearchWorker(),
+        DeveloperWorker(),
+        QualityWorker(),
+        ContentWorker(),
+        CodeReviewerWorker(),
+        SystemsArchitectWorker(),
+        DataAnalystWorker(),
+        SecurityAuditorWorker(),
+        ReasoningWorker(),
+    ]
+    out = {w.name: w for w in workers}  # type: ignore[misc]
+    out.update(_creative_workers())
+    return out
