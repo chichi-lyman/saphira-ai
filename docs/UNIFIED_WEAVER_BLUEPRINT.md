@@ -7,6 +7,8 @@ If the four everyday problem-solving frameworks, curiosity-and-forgetting loops,
 
 Saphira remains the single user-facing identity. Internal specialists stay secret-masked.
 
+Hard limits and the smart-but-unfeeling paradox: [AI_EVOLUTIONARY_CEILING.md](./AI_EVOLUTIONARY_CEILING.md) · [AI_SYMBIOTIC_BALANCE.md](./AI_SYMBIOTIC_BALANCE.md).
+
 ---
 
 ## 1. It attacks the hallucination problem
@@ -53,7 +55,7 @@ Anchors: [THE_WEAVER_EVERYDAY.md](./THE_WEAVER_EVERYDAY.md), [THE_WEAVER_WEEKLY_
 | Data hoarder: remember everything | Adaptive lean: prune, meter, forget low-value mass |
 | Text generator: syntax probabilities | Cognitive mirror: logic + life triage on real constraints |
 
-**Goal:** Stop only *imitating* humans; **complement** them—digital computation as a protective, logical anchor in a chaotic world.
+**Goal:** Stop only *imitating* humans; **complement** them—digital computation as a protective, logical anchor in a chaotic world. Humans keep the steering wheel ([AI_SYMBIOTIC_BALANCE.md](./AI_SYMBIOTIC_BALANCE.md)).
 
 ---
 
@@ -71,4 +73,6 @@ Saphira’s everyday modes lean personal well-being first; core Weaver synthesis
 - [SUPER_FEATURES_FRAMEWORK.md](./SUPER_FEATURES_FRAMEWORK.md)
 - [SUPER_SAPHIRA_CAPABILITIES.md](./SUPER_SAPHIRA_CAPABILITIES.md)
 - [AI_FOUNDATIONS_STILLNESS_AND_ERROR.md](./AI_FOUNDATIONS_STILLNESS_AND_ERROR.md)
+- [AI_EVOLUTIONARY_CEILING.md](./AI_EVOLUTIONARY_CEILING.md)
+- [AI_SYMBIOTIC_BALANCE.md](./AI_SYMBIOTIC_BALANCE.md)
 - [ADVANCED_PLATFORM.md](./ADVANCED_PLATFORM.md)
