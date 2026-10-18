@@ -25,10 +25,18 @@ Features that define how Saphira can build, configure, and expand its own capabi
 - **System Prompt Architectures**  
   Create specialized sub-personas (e.g., Saphira Code Reviewer, Saphira Systems Architect, Saphira Data Analyst) with tailored system instructions and guardrails. Sub-personas never expose internal agent codenames to end users.
 
+  **Shipped skills:**
+  - `skills/saphira-code-reviewer/SKILL.md`
+  - `skills/saphira-systems-architect/SKILL.md`
+  - `skills/saphira-data-analyst/SKILL.md`
+
 ### Autonomous Agent Workflows
 
 - **Multi-Agent Orchestration**  
   Create sub-agents to divide complex tasks into parallel execution threads (e.g., one agent researches, another drafts code, a third tests and validates). Orchestration is performed by Nova Reign / the capability registry; outcomes surface only through Saphira.
+
+  **Implementation:** `src/orchestration/multi_agent_workflow.py` + `src/orchestration/workers.py`  
+  **Docs:** [MULTI_AGENT_WORKFLOWS.md](./MULTI_AGENT_WORKFLOWS.md)
 
 - **Tool Binding & Sandbox Environments**  
   Configure dedicated code execution environments (Python, Bash, etc.) or connect to external system tools via standardized tool protocols (MCP, function-calling adapters). Sandboxes remain isolated from production credentials.
@@ -94,6 +102,7 @@ How Saphira’s system performance, context capacity, and operational tiers can 
 
 | Area | Location |
 |------|----------|
+| Multi-agent workflows (this layer) | [MULTI_AGENT_WORKFLOWS.md](./MULTI_AGENT_WORKFLOWS.md) |
 | Super Saphira product surface & tier limits | [SUPER_SAPHIRA_CAPABILITIES.md](./SUPER_SAPHIRA_CAPABILITIES.md) |
 | Underlying Grok/xAI primitives | [GROK_CAPABILITIES.md](./GROK_CAPABILITIES.md) |
 | Entitlement metering (plans & quotas) | `src/platform/entitlements/metering.py` |
