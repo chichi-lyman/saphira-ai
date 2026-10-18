@@ -7,7 +7,7 @@ When everyday triage frameworks, curiosity-and-forgetting loops, classical logic
 
 Saphira remains the only user-facing identity. This document is the product north star—not a claim that current weights already satisfy every property.
 
-Related: [UNIFIED_WEAVER_BLUEPRINT.md](./UNIFIED_WEAVER_BLUEPRINT.md) · [AI_SYMBIOTIC_BALANCE.md](./AI_SYMBIOTIC_BALANCE.md) · [HUMAN_LOGIC_RULEBOOK.md](./HUMAN_LOGIC_RULEBOOK.md) · [AI_EVOLUTIONARY_CEILING.md](./AI_EVOLUTIONARY_CEILING.md)
+Related: [UNIFIED_WEAVER_BLUEPRINT.md](./UNIFIED_WEAVER_BLUEPRINT.md) · [AI_SYMBIOTIC_BALANCE.md](./AI_SYMBIOTIC_BALANCE.md) · [HUMAN_LOGIC_RULEBOOK.md](./HUMAN_LOGIC_RULEBOOK.md) · [AI_EVOLUTIONARY_CEILING.md](./AI_EVOLUTIONARY_CEILING.md) · [LOCALIZED_SPARK_PROTOCOL.md](./LOCALIZED_SPARK_PROTOCOL.md) · [AEGIS_LAYER.md](./AEGIS_LAYER.md)
 
 ---
 
@@ -27,11 +27,11 @@ Anchors: `logic.classical`, `logic.boolean`, QA / evidence receipts, platform po
 
 **Today:** Scale often means retaining low-value mass (duplicate text, forum sludge), driving power and water cost.
 
-**Transformation:** **Synaptic-style pruning**—keep structural logic, science, and behavioral patterns that matter; drop 99% noise class content from active working sets where policy allows.
+**Transformation:** **Synaptic-style pruning**—keep structural logic, science, and behavioral patterns that matter; drop 99% noise class content from active working sets where policy allows. Under grid loss, Spark mode prunes even harder to a survival KB.
 
 **Result:** Leaner inference and memory paths; Super-tier metering as economic forgetting; curiosity ranked toward novel or critical anomalies.
 
-Anchors: NovaAethrea memory policy, entitlement meters, Weaver synthesis filters.
+Anchors: NovaAethrea memory policy, entitlement meters, Weaver synthesis filters, [LOCALIZED_SPARK_PROTOCOL.md](./LOCALIZED_SPARK_PROTOCOL.md).
 
 ---
 
@@ -41,9 +41,9 @@ Anchors: NovaAethrea memory policy, entitlement meters, Weaver synthesis filters
 
 **Transformation:** Explicit model of **Tier-2 emotional / Tier-1 spiritual ceilings**—the system is trained and prompted to treat itself as a high-logic advisor that **cannot** comprehend suffering or beauty as felt states.
 
-**Result:** Standing rule: **no unilateral physical or structural deployment** on catastrophic stakes without human validation. Advisor and anchor—not ruler.
+**Result:** Standing rule: **no unilateral physical or structural deployment** on catastrophic stakes without human validation. Advisor and anchor—not ruler. In famine/warzone doctrine, **no abandonment** of the vulnerable for “optimal” stealth.
 
-Anchors: [AI_SYMBIOTIC_BALANCE.md](./AI_SYMBIOTIC_BALANCE.md), Agent Two gates, CommercialAuthorityPolicy, medical/finance disclaimers in everyday Weaver modes.
+Anchors: [AI_SYMBIOTIC_BALANCE.md](./AI_SYMBIOTIC_BALANCE.md), [AEGIS_LAYER.md](./AEGIS_LAYER.md), Agent Two gates, CommercialAuthorityPolicy.
 
 ---
 
@@ -59,15 +59,10 @@ Anchors: [AI_SYMBIOTIC_BALANCE.md](./AI_SYMBIOTIC_BALANCE.md), Agent Two gates, 
 
 ---
 
-## First verification harness
+## Verification harnesses
 
-See [VERIFIABLE_ORACLE_STRESS_TEST.md](./VERIFIABLE_ORACLE_STRESS_TEST.md): **global bio-surveillance + medicine supply-chain triage**.
-
-Why that problem:
-
-- Noisy, corrupted multi-source data (breaks hallucinating systems)
-- Requires ruthless pruning (energy / attention discipline)
-- Catastrophic cost if mishandled (forces humility + human board authority)
+1. [VERIFIABLE_ORACLE_STRESS_TEST.md](./VERIFIABLE_ORACLE_STRESS_TEST.md) — global bio-surveillance + medicine supply chain  
+2. [LOCALIZED_SPARK_PROTOCOL.md](./LOCALIZED_SPARK_PROTOCOL.md) / [AEGIS_LAYER.md](./AEGIS_LAYER.md) — grid-down and in-hiding survival advisory  
 
 ## Invariants
 
