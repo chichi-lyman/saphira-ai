@@ -1,5 +1,6 @@
-# Lyra — Survival educational hooks
+# Lyra — Survival / AEMP educational hooks
 
 **Copyright © 2026 Chelsea Megan Woods**
 
-- Ration matrices, cooling/hypothermia timelines, acoustic timing as calculations—not targeting  
+- Quantify reaction windows, ration matrices, thermal/timing estimates  
+- Never convert calculations into targeting solutions  
