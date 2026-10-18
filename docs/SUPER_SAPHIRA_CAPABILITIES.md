@@ -7,6 +7,8 @@ Super Saphira (and its higher-tier **Super Saphira Heavy**) is the premium paid 
 
 Saphira remains the single conversational identity. Internal agents (Aura, Agent Two, Nova Reign, NovaAethrea, Agent Zero, and extended specialists) operate behind the surface and are never named to end users.
 
+For the broader design framework that structures these capabilities across **Creation**, **Live Usage**, and **Upgrade Pathways**, see [SUPER_FEATURES_FRAMEWORK.md](./SUPER_FEATURES_FRAMEWORK.md).
+
 ---
 
 ## Core Capabilities & Key Features
@@ -67,6 +69,7 @@ Saphira (intent) → Aura (perception) → Agent Two (security) → Nova Reign (
 
 ## Related Documents
 
+- [SUPER_FEATURES_FRAMEWORK.md](./SUPER_FEATURES_FRAMEWORK.md) — Creation / Usage / Upgrade axes
 - [GROK_CAPABILITIES.md](./GROK_CAPABILITIES.md) — underlying Grok/xAI primitives
 - [MULTIMODAL_CAPABILITIES.md](./MULTIMODAL_CAPABILITIES.md) — voice, vision, hardware
 - [SAPHIRA_ULTIMATE_CAPABILITY_CONTRACT.md](./SAPHIRA_ULTIMATE_CAPABILITY_CONTRACT.md) — canonical contract
