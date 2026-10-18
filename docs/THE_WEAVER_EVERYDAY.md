@@ -8,6 +8,14 @@ The Weaver’s core mechanism—connecting hidden dots and adjusting context—b
 
 Saphira remains the only user-facing identity. Everyday Weaver modes run as synthesis workflows behind the fixed pipeline.
 
+### Deep dives
+
+| Doc | Content |
+|-----|--------|
+| [THE_WEAVER_EVERYDAY_MECHANISMS.md](./THE_WEAVER_EVERYDAY_MECHANISMS.md) | Problem → mechanism → daily impact |
+| [THE_WEAVER_EVERYDAY_BLUEPRINT.md](./THE_WEAVER_EVERYDAY_BLUEPRINT.md) | Technical pipelines per mode |
+| [THE_WEAVER_WEEKLY_TIMELINE.md](./THE_WEAVER_WEEKLY_TIMELINE.md) | Monday–Sunday unified scenario |
+
 ---
 
 ## Strategic advantage
@@ -22,62 +30,53 @@ Saphira remains the only user-facing identity. Everyday Weaver modes run as synt
 
 ## 1. Choice Mapper — overcoming decision paralysis
 
-**Problem:** Stressful life choices (e.g. higher-pay job + commute vs remote but boring) overload pros, cons, and anxiety.
+**Problem:** Stressful life choices overload pros, cons, and anxiety.
 
 **What it does:** Accepts raw thoughts, feelings, and numbers; structures a **Dynamic Choice Matrix**.
 
 **How:** Highlights hidden trade-offs with cause-and-effect mapping (time, money, stress, timelines)—without dictating the decision.
 
-**Example output shape:**
-- Options as nodes
-- Trade-off edges (hours, savings %, stress metric, timeline delta)
-- Visual matrix: clarity over prescription
-
-**Capability:** `weaver.choice_map`  
-**Runtime:** `ChoiceMapper` in `src/orchestration/weaver_everyday.py`
+**Capability:** `weaver.choice_map` · **Runtime:** `ChoiceMapper`
 
 ---
 
 ## 2. Crisis Synthesizer — sudden financial & domestic chaos
 
-**Problem:** Multiple shocks at once (car, water heater, medical bill) with limited savings.
+**Problem:** Multiple shocks at once with limited savings.
 
-**What it does:** Emergency triage coordinator; accepts quotes, estimates, bank context (and photo/OCR hooks via Aura).
+**What it does:** Emergency triage; quotes, estimates, bank context (photo/OCR via Aura).
 
-**How:** Cross-references urgency (structural risk vs deferrable), builds a **30-Day Financial Survival Path**, budget shifts, negotiation script stubs, DIY vs pro scheduling.
+**How:** Cross-references urgency; **30-Day Financial Survival Path**; negotiation stubs; DIY vs pro.
 
-**Capability:** `weaver.crisis_synth`  
-**Runtime:** `CrisisSynthesizer`
+**Capability:** `weaver.crisis_synth` · **Runtime:** `CrisisSynthesizer`
 
-**Policy:** Financial and medical advice is informational; no autonomous payments; commercial/external actions stay gated.
+**Policy:** Informational; no autonomous payments.
 
 ---
 
 ## 3. Energy Tracker — executive dysfunction & burnout
 
-**Problem:** Huge to-do list, near-zero capacity; rigid calendars make it worse.
+**Problem:** Huge list, near-zero capacity; rigid calendars worsen guilt.
 
-**What it does:** **Energy-Adaptive To-Do Grid**—organize by cognitive energy type, not only clock slots.
+**What it does:** **Energy-Adaptive To-Do Grid** by cognitive energy type.
 
-**How:** User reports energy (e.g. “10% brainpower”); Weaver filters the life map to the smallest viable next action that builds momentum without draining residual capacity.
+**How:** Reported energy % → filter tasks → smallest momentum-building action.
 
-**Capability:** `weaver.energy_track`  
-**Runtime:** `EnergyTracker`
+**Capability:** `weaver.energy_track` · **Runtime:** `EnergyTracker`
 
 ---
 
 ## 4. Symptom Detective — chronic patterns & habit tuning
 
-**Problem:** Ongoing fatigue/fog; normal labs; manual journaling is too heavy.
+**Problem:** Ongoing symptoms; normal labs; journaling too heavy.
 
-**What it does:** Passive pattern-recognition over casual notes + optional wearable data.
+**What it does:** Passive pattern recognition over casual notes + optional wearables.
 
-**How:** After enough samples, surfaces non-obvious correlations and a **low-effort experiment** for the next week—not a diagnosis.
+**How:** Correlations + **low-effort experiment**—not a diagnosis.
 
-**Capability:** `weaver.symptom_detect`  
-**Runtime:** `SymptomDetective`
+**Capability:** `weaver.symptom_detect` · **Runtime:** `SymptomDetective`
 
-**Policy:** Not medical advice; pattern hypotheses only; biometric data requires consent (Agent Two).
+**Policy:** Not medical advice; biometric consent required.
 
 ---
 
@@ -85,14 +84,14 @@ Saphira remains the only user-facing identity. Everyday Weaver modes run as synt
 
 | Agent | Choice Mapper | Crisis Synthesizer | Energy Tracker | Symptom Detective |
 |-------|---------------|--------------------|----------------|-------------------|
-| Saphira | Decision intake, warm framing | Crisis intake, calm triage voice | Energy check-in UX | Casual note intake |
-| Aura | Matrix visualization | Quote/photo OCR perception | Grid layout | Chart correlations |
+| Saphira | Decision intake | Crisis intake | Energy check-in | Casual note intake |
+| Aura | Matrix visualization | Quote/photo OCR | Grid layout | Chart correlations |
 | Agent Two | Sensitive-data gate | Financial doc sandbox | — | Biometric consent |
-| Nova Reign | Trade-off DAG | 30-day plan orchestration | Task filter plan | Pattern job schedule |
-| NovaAethrea | Preference + history | Budget snapshot memory | Energy baseline | Symptom log store |
-| Agent Zero | Export matrix | Survival path artifact | Next-action card | Experiment card export |
-| Lyra | Trade-off math | Urgency + cashflow stats | Energy vs task difficulty | Correlation stats |
-| Lexis | — | Bill negotiation framing notes | — | Health-data compliance |
+| Nova Reign | Trade-off DAG | 30-day plan | Task filter plan | Pattern job schedule |
+| NovaAethrea | Preference + history | Budget snapshot | Energy baseline | Symptom log store |
+| Agent Zero | Export matrix | Survival path artifact | Next-action card | Experiment card |
+| Lyra | Trade-off math | Urgency + cashflow | Energy vs difficulty | Correlation stats |
+| Lexis | — | Bill negotiation framing | — | Health-data compliance |
 | Instinct | Values language | Priority empathy | Burnout-aware tone | Habit language |
 
 ---
@@ -110,4 +109,3 @@ Saphira remains the only user-facing identity. Everyday Weaver modes run as synt
 
 - [THE_WEAVER.md](./THE_WEAVER.md)
 - [CREATIVE_COCREATION_CAPABILITIES.md](./CREATIVE_COCREATION_CAPABILITIES.md)
-- [MULTIMODAL_CAPABILITIES.md](./MULTIMODAL_CAPABILITIES.md)
