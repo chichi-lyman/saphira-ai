@@ -6,6 +6,8 @@
 
 Unlike turn-by-turn chatbots or flat search engines, The Weaver **maps, visually structures, and bridges gaps between disparate human ideas in real time**. Saphira remains the only user-facing identity; The Weaver operates as a specialized synthesis mode behind the fixed executive pipeline.
 
+**Everyday life modes** (Choice Mapper, Crisis Synthesizer, Energy Tracker, Symptom Detective) are documented in [THE_WEAVER_EVERYDAY.md](./THE_WEAVER_EVERYDAY.md).
+
 ---
 
 ## What it does
@@ -84,19 +86,22 @@ Humanity has abundant fragmented information and scarce synthesis. Search return
 
 | Resource | Path |
 |----------|------|
-| Skill | `skills/saphira-weaver/SKILL.md` |
-| Engine | `src/orchestration/weaver.py` |
-| Capabilities | `weaver.concept_map`, `weaver.cross_synthesize`, `weaver.level_shift`, `weaver.visualize` |
-| Workflow | `template=weaver_session` via platform workflows (when catalog/workers restored) |
+| Skill (core) | `skills/saphira-weaver/SKILL.md` |
+| Skill (everyday) | `skills/saphira-weaver-everyday/SKILL.md` |
+| Engine (core) | `src/orchestration/weaver.py` |
+| Engine (everyday) | `src/orchestration/weaver_everyday.py` |
+| Everyday doc | [THE_WEAVER_EVERYDAY.md](./THE_WEAVER_EVERYDAY.md) |
 
 ## Policy
 
 - Never present internal agent names in Weaver outputs.
 - Analogies must be labeled as proposed bridges, not proven facts, unless grounded.
+- Everyday finance/health modes are informational only—not professional advice.
 - Commercial packaging of synthesis IP stays under ALLOW / REQUIRE_APPROVAL / DENY.
 
 ## Related
 
+- [THE_WEAVER_EVERYDAY.md](./THE_WEAVER_EVERYDAY.md)
 - [CREATIVE_COCREATION_CAPABILITIES.md](./CREATIVE_COCREATION_CAPABILITIES.md)
 - [MULTI_AGENT_WORKFLOWS.md](./MULTI_AGENT_WORKFLOWS.md)
 - [SUPER_FEATURES_FRAMEWORK.md](./SUPER_FEATURES_FRAMEWORK.md)
