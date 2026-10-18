@@ -7,6 +7,7 @@ Supports:
 - Structured handoff envelopes (never expose codenames to end users)
 - Research → Code → Validate pattern as a first-class template
 - Integration with TaskPlanner / AgentRegistry / TaskExecutor
+- Optional entitlement metering (workflow_runs_day)
 """
 
 from __future__ import annotations
@@ -15,13 +16,12 @@ import asyncio
 import logging
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Awaitable
+from typing import Any
 from uuid import uuid4
 
 from .task import Task, TaskStatus, utc_now
 from .registry import AgentRegistry, AgentSpec
 from .executor import TaskExecutor, AgentWorker, ExecutionResult
-from .planner import TaskPlanner
 
 logger = logging.getLogger("SaphiraMultiAgentWorkflow")
 
@@ -119,16 +119,11 @@ class WorkflowGraph:
         return [n for n in self.nodes.values() if n.status == NodeStatus.FAILED]
 
 
-# ---------------------------------------------------------------------------
-# Workflow templates
-# ---------------------------------------------------------------------------
-
 def build_research_code_validate(objective: str) -> WorkflowGraph:
     """Classic parallel-friendly pattern: research ‖ draft → code → validate."""
     g = WorkflowGraph(objective=objective)
     research = g.add_node("research", "research", parallel_group="fanout_1")
     draft = g.add_node("draft_spec", "content", parallel_group="fanout_1")
-    # Fan-in: code depends on both research and draft
     code = g.add_node("implement", "development", depends_on=[research, draft])
     validate = g.add_node("validate", "quality", depends_on=[code])
     return g
@@ -148,6 +143,17 @@ def build_analyze_architect_review(objective: str) -> WorkflowGraph:
     return g
 
 
+def build_secure_delivery(objective: str) -> WorkflowGraph:
+    """Research ‖ architecture → implement → security audit → validate."""
+    g = WorkflowGraph(objective=objective)
+    research = g.add_node("research", "research", parallel_group="fanout_1")
+    arch = g.add_node("systems_architecture", "architecture", parallel_group="fanout_1")
+    code = g.add_node("implement", "development", depends_on=[research, arch])
+    audit = g.add_node("security_audit", "security", depends_on=[code])
+    validate = g.add_node("validate", "quality", depends_on=[audit])
+    return g
+
+
 def build_custom_linear(objective: str, steps: list[tuple[str, str]]) -> WorkflowGraph:
     """Linear chain from (name, capability) pairs."""
     g = WorkflowGraph(objective=objective)
@@ -158,16 +164,13 @@ def build_custom_linear(objective: str, steps: list[tuple[str, str]]) -> Workflo
     return g
 
 
-# ---------------------------------------------------------------------------
-# Engine
-# ---------------------------------------------------------------------------
-
 class MultiAgentWorkflowEngine:
     """
     Executes WorkflowGraph nodes with dependency resolution and parallel groups.
 
     Workers are looked up via AgentRegistry routing on capability tags.
     Results are merged into a Task for downstream verification / memory.
+    Optional tenant_id enables Super-tier metering on workflow_runs_day.
     """
 
     def __init__(
@@ -176,19 +179,21 @@ class MultiAgentWorkflowEngine:
         executor: TaskExecutor | None = None,
         max_parallel: int = 6,
         timeout_seconds: float = 300,
+        entitlements_registry: Any | None = None,
     ) -> None:
         self.registry = registry or AgentRegistry()
         self.executor = executor or TaskExecutor()
         self.max_parallel = max_parallel
         self.timeout_seconds = timeout_seconds
+        self.entitlements = entitlements_registry
         self._ensure_skill_capabilities()
 
     def _ensure_skill_capabilities(self) -> None:
-        """Register skill-linked agents if not already present."""
         extras = (
             ("code_reviewer_agent", {"code_review", "development", "quality"}, 15, "Saphira Code Reviewer skill"),
             ("systems_architect_agent", {"architecture", "system", "development"}, 15, "Saphira Systems Architect skill"),
             ("data_analyst_agent", {"analytics", "research", "stem"}, 15, "Saphira Data Analyst skill"),
+            ("security_auditor_agent", {"security", "quality", "code_review"}, 12, "Saphira Security Auditor skill"),
         )
         for name, caps, priority, desc in extras:
             if name not in self.registry.agents:
@@ -197,7 +202,6 @@ class MultiAgentWorkflowEngine:
                 )
 
     def route_graph(self, graph: WorkflowGraph) -> None:
-        """Assign agents to nodes from the capability registry."""
         for node in graph.nodes.values():
             candidates = [
                 a
@@ -207,6 +211,24 @@ class MultiAgentWorkflowEngine:
             candidates.sort(key=lambda a: a.priority)
             if candidates:
                 node.agent = candidates[0].name
+
+    def _meter_or_raise(self, tenant_id: str | None) -> dict[str, Any] | None:
+        if not tenant_id or self.entitlements is None:
+            return None
+        ok, ent, reason = self.entitlements.enforce(tenant_id, "workflow_runs_day", 1.0)
+        if not ok:
+            return {
+                "error": "quota_exceeded",
+                "reason": reason,
+                "plan": ent.plan.name if ent else None,
+                "metric": "workflow_runs_day",
+                "remaining": ent.remaining("workflow_runs_day") if ent else 0,
+            }
+        return {
+            "plan": ent.plan.name,
+            "priority_compute": ent.plan.priority_compute,
+            "remaining_workflow_runs": ent.remaining("workflow_runs_day"),
+        }
 
     async def _run_node(
         self,
@@ -245,7 +267,6 @@ class MultiAgentWorkflowEngine:
                 )
                 node.result = result or {"status": "ok", "agent": node.agent}
             else:
-                # Soft stub when worker not connected — keeps graph progressing in tests/dev
                 node.result = {
                     "status": "stub",
                     "agent": node.agent,
@@ -265,13 +286,20 @@ class MultiAgentWorkflowEngine:
         self,
         graph: WorkflowGraph,
         context: dict[str, Any] | None = None,
-    ) -> tuple[Task, WorkflowGraph]:
-        """Execute the full graph with parallel groups respected."""
+        tenant_id: str | None = None,
+    ) -> tuple[Task, WorkflowGraph, dict[str, Any] | None]:
+        """Execute the full graph. Returns (task, graph, meter_info_or_quota_error)."""
+        meter = self._meter_or_raise(tenant_id)
+        if meter and meter.get("error") == "quota_exceeded":
+            task = Task(objective=graph.objective, context=context or {})
+            task.set_status(TaskStatus.FAILED)
+            task.errors.append(meter["reason"])
+            return task, graph, meter
+
         task = Task(objective=graph.objective, context=context or {})
         task.set_status(TaskStatus.RUNNING)
         self.route_graph(graph)
 
-        # Materialize plan steps for observability
         for node in graph.nodes.values():
             task.add_step(node.name, node.capability, agent=node.agent, workflow_node=node.id)
 
@@ -280,7 +308,6 @@ class MultiAgentWorkflowEngine:
         while not graph.is_complete():
             ready = graph.ready_nodes()
             if not ready:
-                # Deadlock or all remaining depend on failed nodes
                 for n in graph.nodes.values():
                     if n.status == NodeStatus.PENDING:
                         n.status = NodeStatus.SKIPPED
@@ -308,23 +335,28 @@ class MultiAgentWorkflowEngine:
                 "checks": ["workflow_graph_complete"],
                 "nodes": len(graph.nodes),
             }
-            # Collect artifacts
             for n in graph.nodes.values():
                 if n.result:
                     task.artifacts.append(n.result)
             task.set_status(TaskStatus.COMPLETED)
             task.emit("workflow_completed", workflow_id=graph.id)
 
-        return task, graph
+        return task, graph, meter
 
     async def run_research_code_validate(
-        self, objective: str, context: dict[str, Any] | None = None
-    ) -> tuple[Task, WorkflowGraph]:
+        self, objective: str, context: dict[str, Any] | None = None, tenant_id: str | None = None
+    ) -> tuple[Task, WorkflowGraph, dict[str, Any] | None]:
         graph = build_research_code_validate(objective)
-        return await self.run(graph, context)
+        return await self.run(graph, context, tenant_id=tenant_id)
 
     async def run_analyze_architect_review(
-        self, objective: str, context: dict[str, Any] | None = None
-    ) -> tuple[Task, WorkflowGraph]:
+        self, objective: str, context: dict[str, Any] | None = None, tenant_id: str | None = None
+    ) -> tuple[Task, WorkflowGraph, dict[str, Any] | None]:
         graph = build_analyze_architect_review(objective)
-        return await self.run(graph, context)
+        return await self.run(graph, context, tenant_id=tenant_id)
+
+    async def run_secure_delivery(
+        self, objective: str, context: dict[str, Any] | None = None, tenant_id: str | None = None
+    ) -> tuple[Task, WorkflowGraph, dict[str, Any] | None]:
+        graph = build_secure_delivery(objective)
+        return await self.run(graph, context, tenant_id=tenant_id)

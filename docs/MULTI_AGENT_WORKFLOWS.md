@@ -11,74 +11,68 @@ Concrete implementation of the **Creation → Live Usage** multi-agent axis from
 |-------|------|
 | DAG workflow engine | `src/orchestration/multi_agent_workflow.py` |
 | Skill-backed workers | `src/orchestration/workers.py` |
-| Custom agent skills | `skills/saphira-code-reviewer/`, `skills/saphira-systems-architect/`, `skills/saphira-data-analyst/` |
+| Platform HTTP API | `src/api/platform_router.py` → `/api/platform/workflows/*` |
+| Entitlement metering | `src/platform/entitlements/metering.py` (`workflow_runs_per_day`) |
+| Custom agent skills | `skills/saphira-code-reviewer/`, `saphira-systems-architect/`, `saphira-data-analyst/`, `saphira-security-auditor/` |
 | Tests | `tests/test_multi_agent_workflow.py` |
 
-## Engine capabilities
+## HTTP API (live platform)
 
-- **WorkflowGraph** — nodes with `depends_on` and optional `parallel_group`
-- **Templates**
-  - `build_research_code_validate` — research ‖ draft → implement → validate
-  - `build_analyze_architect_review` — data ‖ architecture ‖ code review → synthesize
-  - `build_custom_linear` — arbitrary linear chains
-- **MultiAgentWorkflowEngine** — routes capabilities via `AgentRegistry`, runs ready nodes in parallel (semaphore-bounded), records structured handoff envelopes, merges artifacts into a `Task`
-- **HandoffEnvelope** — internal only; aligns with [AGENT_INTERACTION_PROTOCOLS.md](./AGENT_INTERACTION_PROTOCOLS.md)
+Base: `/api/platform`
+
+| Method | Path | Purpose |
+|--------|------|--------|
+| POST | `/workflows/run` | Generic runner (`template` + optional `custom_steps`) |
+| POST | `/workflows/research-code-validate` | Research ‖ draft → code → validate |
+| POST | `/workflows/analyze-architect-review` | Data ‖ arch ‖ review → synthesize |
+| POST | `/workflows/secure-delivery` | Research ‖ arch → code → **security audit** → validate |
+| GET | `/entitlements/{tenant_id}` | Plan, usage, remaining quotas |
+| GET | `/entitlements/plans` | All plan limits including Super Saphira / Heavy |
+| POST | `/entitlements/assign` | Assign plan to tenant |
+
+Example:
+
+```bash
+curl -X POST /api/platform/workflows/secure-delivery \
+  -H 'Content-Type: application/json' \
+  -d '{"objective":"Ship webhook safely","tenant_id":"demo"}'
+```
+
+Quota exceeded → **HTTP 429** with metering detail.
+
+## Templates
+
+- `research_code_validate`
+- `analyze_architect_review`
+- `secure_delivery` (includes Security Auditor)
+- `custom` — pass `custom_steps: [["name","capability"], ...]`
 
 ## Custom agent skills (sub-personas)
 
-These are system-prompt architectures registered as skills. Users only ever talk to **Saphira**; the skills guide background workers.
+| Skill | Worker | Capabilities |
+|-------|--------|--------------|
+| Code Reviewer | `code_reviewer_agent` | code_review, development, quality |
+| Systems Architect | `systems_architect_agent` | architecture, system, development |
+| Data Analyst | `data_analyst_agent` | analytics, research, stem |
+| **Security Auditor** | `security_auditor_agent` | security, quality, code_review |
 
-### 1. Saphira Code Reviewer — `skills/saphira-code-reviewer/`
+Users only ever talk to **Saphira**; skills guide background workers.
 
-- Correctness, security, style, tests
-- Worker: `code_reviewer_agent` (`CodeReviewerWorker`)
-- Capabilities: `code_review`, `development`, `quality`
+## Super-tier metering
 
-### 2. Saphira Systems Architect — `skills/saphira-systems-architect/`
+| Plan | workflow_runs / day | priority_compute |
+|------|---------------------|------------------|
+| free | 10 | no |
+| pro | 50 | no |
+| super_saphira | 200 | no |
+| super_saphira_heavy | 1_000 | yes |
+| enterprise | 5_000 | yes |
 
-- Component boundaries, pipeline layout, reliability
-- Worker: `systems_architect_agent` (`SystemsArchitectWorker`)
-- Capabilities: `architecture`, `system`, `development`
-
-### 3. Saphira Data Analyst — `skills/saphira-data-analyst/`
-
-- Metrics, trends, caveats, chart guidance
-- Worker: `data_analyst_agent` (`DataAnalystWorker`)
-- Capabilities: `analytics`, `research`, `stem`
-
-Each `SKILL.md` follows agentskills.io frontmatter rules and the secret-mask invariant.
-
-## Quick usage
-
-```python
-from src.orchestration.multi_agent_workflow import MultiAgentWorkflowEngine
-from src.orchestration.workers import default_workers
-from src.orchestration.executor import TaskExecutor
-
-workers = default_workers()
-engine = MultiAgentWorkflowEngine(executor=TaskExecutor(workers=workers))
-
-task, graph = await engine.run_research_code_validate(
-    "Add a health endpoint and tests"
-)
-assert task.status.value == "completed"
-```
-
-Or the architect / analyst fan-out:
-
-```python
-task, graph = await engine.run_analyze_architect_review(
-    "Review the multi-agent pipeline and propose metrics"
-)
-```
-
-## Pipeline alignment
-
-Workflows are planned under **Nova Reign** (governance), executed by workers that map to Agent Zero / Lyra / specialist lanes, and always surface through **Saphira**. Internal agent and skill names never appear in user-facing text.
+Enforced in `MultiAgentWorkflowEngine.run(..., tenant_id=...)` via `entitlements.enforce`.
 
 ## Related
 
 - [SUPER_FEATURES_FRAMEWORK.md](./SUPER_FEATURES_FRAMEWORK.md)
+- [SUPER_SAPHIRA_CAPABILITIES.md](./SUPER_SAPHIRA_CAPABILITIES.md)
 - [AGENT_SKILL_FRAMEWORK.md](./AGENT_SKILL_FRAMEWORK.md)
 - [AGENT_INTERACTION_PROTOCOLS.md](./AGENT_INTERACTION_PROTOCOLS.md)
-- [ORCHESTRATOR_CHAIN.md](./ORCHESTRATOR_CHAIN.md)

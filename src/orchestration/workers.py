@@ -6,6 +6,7 @@ These workers are bound to the custom agent skills:
 - saphira-code-reviewer
 - saphira-systems-architect
 - saphira-data-analyst
+- saphira-security-auditor
 
 They implement the AgentWorker protocol expected by TaskExecutor and
 MultiAgentWorkflowEngine. Heavy LLM / tool calls stay behind adapters;
@@ -196,6 +197,39 @@ class DataAnalystWorker(BaseSkillWorker):
         )
 
 
+class SecurityAuditorWorker(BaseSkillWorker):
+    """Bound to skills/saphira-security-auditor."""
+
+    name = "security_auditor_agent"
+    capabilities = {"security", "quality", "code_review"}
+    skill = "saphira-security-auditor"
+
+    async def execute(self, task: Task, step: dict[str, Any]) -> dict[str, Any] | None:
+        logger.info("SecurityAuditor skill on: %s", task.objective[:80])
+        return self._envelope(
+            task,
+            step,
+            {
+                "audit": {
+                    "threat_model": "stub_baseline",
+                    "findings": [],
+                    "severity": "info",
+                    "checks": [
+                        "secrets_not_in_source",
+                        "policy_gates_present",
+                        "sandbox_isolation",
+                        "external_io_requires_approval",
+                    ],
+                    "recommendations": [
+                        "Keep production secrets in env / secret store",
+                        "Route commercial actions through CommercialAuthorityPolicy",
+                        "Do not bypass Agent Two security gate",
+                    ],
+                }
+            },
+        )
+
+
 class ReasoningWorker(BaseSkillWorker):
     name = "planner_agent"
     capabilities = {"reasoning"}
@@ -222,6 +256,7 @@ def default_workers() -> dict[str, AgentWorker]:
         CodeReviewerWorker(),
         SystemsArchitectWorker(),
         DataAnalystWorker(),
+        SecurityAuditorWorker(),
         ReasoningWorker(),
     ]
     return {w.name: w for w in workers}  # type: ignore[misc]

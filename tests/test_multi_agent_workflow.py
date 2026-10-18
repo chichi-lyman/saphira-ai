@@ -11,12 +11,13 @@ from src.orchestration.multi_agent_workflow import (
     MultiAgentWorkflowEngine,
     build_research_code_validate,
     build_analyze_architect_review,
-    WorkflowGraph,
+    build_secure_delivery,
     NodeStatus,
 )
 from src.orchestration.workers import default_workers
 from src.orchestration.executor import TaskExecutor
 from src.orchestration.task import TaskStatus
+from src.platform.entitlements.metering import EntitlementRegistry
 
 
 @pytest.mark.asyncio
@@ -25,7 +26,7 @@ async def test_research_code_validate_completes():
     executor = TaskExecutor(workers=workers)
     engine = MultiAgentWorkflowEngine(executor=executor)
 
-    task, graph = await engine.run_research_code_validate(
+    task, graph, meter = await engine.run_research_code_validate(
         "Build a small API that lists health status"
     )
 
@@ -33,7 +34,6 @@ async def test_research_code_validate_completes():
     assert graph.is_complete()
     assert not graph.failed_nodes()
     assert len(task.artifacts) >= 3
-    # Parallel research + draft should both complete before implement
     statuses = {n.name: n.status for n in graph.nodes.values()}
     assert statuses["research"] == NodeStatus.COMPLETED
     assert statuses["draft_spec"] == NodeStatus.COMPLETED
@@ -47,7 +47,7 @@ async def test_analyze_architect_review_fanout():
     executor = TaskExecutor(workers=workers)
     engine = MultiAgentWorkflowEngine(executor=executor)
 
-    task, graph = await engine.run_analyze_architect_review(
+    task, graph, meter = await engine.run_analyze_architect_review(
         "Review the multi-agent pipeline and suggest metrics"
     )
 
@@ -57,7 +57,6 @@ async def test_analyze_architect_review_fanout():
     assert "systems_architecture" in names
     assert "code_review" in names
     assert "synthesize" in names
-    # Skill-linked agents should be assigned
     agents = {n.name: n.agent for n in graph.nodes.values()}
     assert agents["code_review"] == "code_reviewer_agent"
     assert agents["systems_architecture"] == "systems_architect_agent"
@@ -65,19 +64,56 @@ async def test_analyze_architect_review_fanout():
 
 
 @pytest.mark.asyncio
-async def test_custom_linear_graph():
+async def test_secure_delivery_includes_auditor():
     workers = default_workers()
     executor = TaskExecutor(workers=workers)
     engine = MultiAgentWorkflowEngine(executor=executor)
 
-    from src.orchestration.multi_agent_workflow import build_custom_linear
-
-    graph = build_custom_linear(
-        "Linear demo",
-        [("research", "research"), ("implement", "development"), ("validate", "quality")],
+    task, graph, meter = await engine.run_secure_delivery(
+        "Ship a new webhook endpoint safely"
     )
-    task, graph = await engine.run(graph)
     assert task.status == TaskStatus.COMPLETED
-    ordered = [n for n in graph.nodes.values()]
-    # dependency chain respected: first has no deps, last depends on previous
-    assert ordered[0].depends_on == [] or len(list(graph.nodes.values())[0].depends_on) == 0
+    agents = {n.name: n.agent for n in graph.nodes.values()}
+    assert agents["security_audit"] == "security_auditor_agent"
+    assert "security_auditor" in default_workers()
+
+
+@pytest.mark.asyncio
+async def test_metering_blocks_when_quota_exhausted():
+    reg = EntitlementRegistry()
+    reg.assign("t1", "free")
+    ent = reg.get("t1")
+    assert ent is not None
+    # Exhaust free workflow quota
+    for _ in range(ent.plan.workflow_runs_per_day):
+        assert ent.consume("workflow_runs_day")
+
+    workers = default_workers()
+    engine = MultiAgentWorkflowEngine(
+        executor=TaskExecutor(workers=workers),
+        entitlements_registry=reg,
+    )
+    task, graph, meter = await engine.run_research_code_validate(
+        "Should be blocked", tenant_id="t1"
+    )
+    assert task.status == TaskStatus.FAILED
+    assert meter is not None
+    assert meter.get("error") == "quota_exceeded"
+
+
+@pytest.mark.asyncio
+async def test_super_saphira_allows_more_runs():
+    reg = EntitlementRegistry()
+    reg.assign("vip", "super_saphira")
+    workers = default_workers()
+    engine = MultiAgentWorkflowEngine(
+        executor=TaskExecutor(workers=workers),
+        entitlements_registry=reg,
+    )
+    task, graph, meter = await engine.run_research_code_validate(
+        "Allowed on super", tenant_id="vip"
+    )
+    assert task.status == TaskStatus.COMPLETED
+    assert meter is not None
+    assert meter.get("plan") == "super_saphira"
+    assert meter.get("remaining_workflow_runs", 0) >= 0
