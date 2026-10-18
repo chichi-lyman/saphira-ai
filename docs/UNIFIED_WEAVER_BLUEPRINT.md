@@ -3,7 +3,9 @@
 **Copyright © 2026 Chelsea Megan Woods**  
 **System:** saphira-ai / Nova Umbrella
 
-If the four everyday problem-solving frameworks, curiosity-and-forgetting loops, and the strict human logic rulebook are treated as **foundational architecture** (not optional chat personas), the product stops being “a better chatbot” and becomes a different class of system.
+If the four everyday problem-solving frameworks, curiosity-and-forgetting loops, and the strict human logic rulebook are treated as **foundational architecture** (not optional chat personas), the product stops being “a better chatbot” and becomes a different class of system—the **Verifiable Oracle**.
+
+See [VERIFIABLE_ORACLE.md](./VERIFIABLE_ORACLE.md) and the first harness [VERIFIABLE_ORACLE_STRESS_TEST.md](./VERIFIABLE_ORACLE_STRESS_TEST.md).
 
 Saphira remains the single user-facing identity. Internal specialists stay secret-masked.
 
@@ -70,6 +72,8 @@ Saphira’s everyday modes lean personal well-being first; core Weaver synthesis
 
 ## Related
 
+- [VERIFIABLE_ORACLE.md](./VERIFIABLE_ORACLE.md)
+- [VERIFIABLE_ORACLE_STRESS_TEST.md](./VERIFIABLE_ORACLE_STRESS_TEST.md)
 - [SUPER_FEATURES_FRAMEWORK.md](./SUPER_FEATURES_FRAMEWORK.md)
 - [SUPER_SAPHIRA_CAPABILITIES.md](./SUPER_SAPHIRA_CAPABILITIES.md)
 - [AI_FOUNDATIONS_STILLNESS_AND_ERROR.md](./AI_FOUNDATIONS_STILLNESS_AND_ERROR.md)
