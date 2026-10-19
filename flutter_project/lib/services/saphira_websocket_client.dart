@@ -4,6 +4,7 @@
 // lib/services/saphira_websocket_client.dart
 // Dual WebSocket stream for low-latency voice/text transport to the
 // Saphira FastAPI orchestrator.
+// Includes barge-in / stop_audio interruption support.
 
 import 'dart:async';
 import 'dart:convert';
@@ -18,8 +19,10 @@ class SaphiraVoiceClient {
   final void Function(String text) onTextReceived;
   final void Function(Uint8List audioChunk) onAudioReceived;
   final void Function(bool isConnected) onConnectionStateChanged;
+  final void Function()? onBargeIn; // optional callback when local barge-in fires
 
   bool _isConnected = false;
+  bool _isSpeaking = false; // tracks active TTS playback
   Timer? _pingTimer;
 
   SaphiraVoiceClient({
@@ -27,9 +30,11 @@ class SaphiraVoiceClient {
     required this.onTextReceived,
     required this.onAudioReceived,
     required this.onConnectionStateChanged,
+    this.onBargeIn,
   });
 
   bool get isConnected => _isConnected;
+  bool get isSpeaking => _isSpeaking;
 
   /// Establishes dual WebSocket stream for low-latency voice/text transport.
   Future<void> connect() async {
@@ -48,14 +53,22 @@ class SaphiraVoiceClient {
               final type = parsed['type'] as String? ?? '';
               if (type == 'text_delta' || type == 'transcript' || type == 'text') {
                 onTextReceived(parsed['content'] as String? ?? '');
+              } else if (type == 'status') {
+                final state = parsed['state'] as String? ?? '';
+                _isSpeaking = state == 'speaking';
+              } else if (type == 'stop_audio' || type == 'audio_aborted') {
+                // Server acknowledged barge-in
+                _isSpeaking = false;
               }
             } catch (_) {
               // plain text frame
               onTextReceived(data);
             }
           } else if (data is Uint8List) {
+            _isSpeaking = true;
             onAudioReceived(data);
           } else if (data is List<int>) {
+            _isSpeaking = true;
             onAudioReceived(Uint8List.fromList(data));
           }
         },
@@ -99,9 +112,32 @@ class SaphiraVoiceClient {
     }
   }
 
+  /// Barge-in: immediately abort active TTS stream on server and flush local playback.
+  /// Call this the millisecond the local openwakeword / wake engine fires while
+  /// Saphira is mid-speech.
+  void interruptSpeech() {
+    if (!_isConnected || _channel == null) return;
+
+    // 1. Signal server to flush TTS packet queue
+    final payload = jsonEncode({
+      'type': 'stop_audio',
+      'reason': 'barge_in',
+      'timestamp': DateTime.now().toIso8601String(),
+    });
+    _channel!.sink.add(payload);
+
+    // 2. Local state
+    _isSpeaking = false;
+    onBargeIn?.call();
+  }
+
+  /// Alias matching the evaluation naming.
+  void sendStopAudio() => interruptSpeech();
+
   void _handleDisconnect() {
     _pingTimer?.cancel();
     _isConnected = false;
+    _isSpeaking = false;
     onConnectionStateChanged(false);
   }
 

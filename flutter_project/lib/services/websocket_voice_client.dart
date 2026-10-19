@@ -18,11 +18,13 @@ import 'package:web_socket_channel/status.dart' as status;
 ///     { "type": "text", "content": "..." }
 ///     { "type": "audio", "format": "pcm16", "data": "<base64>" }
 ///     { "type": "ping" }
+///     { "type": "stop_audio", "reason": "barge_in" }
 ///   Server → Client:
 ///     { "type": "transcript", "role": "user|assistant", "content": "..." }
 ///     { "type": "audio", "format": "mp3|pcm16", "data": "<base64>" }
 ///     { "type": "tool_call", "server": "...", "tool": "...", "arguments": {} }
 ///     { "type": "status", "state": "listening|thinking|speaking|idle" }
+///     { "type": "audio_aborted" }
 ///     { "type": "error", "message": "..." }
 class SaphiraWebSocketVoiceClient extends ChangeNotifier {
   SaphiraWebSocketVoiceClient({
@@ -62,41 +64,32 @@ class SaphiraWebSocketVoiceClient extends ChangeNotifier {
     if (_connected) return;
 
     _setState('connecting');
-    final uri = _buildUri();
-
     try {
+      final uri = _buildUri();
       _channel = WebSocketChannel.connect(uri);
       await _channel!.ready;
-
       _subscription = _channel!.stream.listen(
         _onMessage,
         onError: _onError,
         onDone: _onDone,
         cancelOnError: false,
       );
-
       _connected = true;
+      _lastError = null;
       _setState('connected');
       _startPing();
-
-      // Announce device identity
-      sendJson({
-        'type': 'hello',
-        'device_id': deviceId ?? 'flutter-client',
-        'client': 'saphira_flutter',
-        'version': '1.0.0',
-      });
     } catch (e) {
       _lastError = e.toString();
+      _connected = false;
       _setState('error');
+      _scheduleReconnect();
       rethrow;
     }
   }
 
   Uri _buildUri() {
-    final normalized = baseUrl.replaceAll(RegExp(r'/$'), '');
-    // Prefer dedicated stream path; fall back to device WS if configured that way
-    var path = '/v1/saphira/stream';
+    var normalized = baseUrl.trim().replaceAll(RegExp(r'/+$'), '');
+    String path = '/v1/saphira/stream';
     if (normalized.contains('/api')) {
       path = '/api/device/ws';
     }
@@ -143,6 +136,10 @@ class SaphiraWebSocketVoiceClient extends ChangeNotifier {
             tool: msg['tool'] as String? ?? '',
             arguments: Map<String, dynamic>.from(msg['arguments'] as Map? ?? {}),
           ));
+          break;
+        case 'stop_audio':
+        case 'audio_aborted':
+          _statusController.add('idle');
           break;
         case 'error':
           _lastError = msg['message'] as String? ?? 'unknown error';
@@ -213,6 +210,18 @@ class SaphiraWebSocketVoiceClient extends ChangeNotifier {
   void endUtterance() {
     sendJson({'type': 'end_of_utterance'});
   }
+
+  /// Barge-in: immediately abort active TTS on the server and signal local flush.
+  void interruptSpeech({String reason = 'barge_in'}) {
+    sendJson({
+      'type': 'stop_audio',
+      'reason': reason,
+      'timestamp': DateTime.now().toIso8601String(),
+    });
+    _statusController.add('idle');
+  }
+
+  void sendStopAudio() => interruptSpeech();
 
   Future<void> disconnect() async {
     _pingTimer?.cancel();
