@@ -198,3 +198,8 @@ class ProviderRegistry:
 
 
 provider_registry = ProviderRegistry()
+
+
+def get_provider_registry() -> ProviderRegistry:
+    """Return the process-wide provider registry singleton."""
+    return provider_registry
