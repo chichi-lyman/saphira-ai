@@ -1,22 +1,93 @@
-# Nova Umbrella Service Registry (skeleton)
+# Nova Umbrella Service Registry
 # Owner: Chelsea Megan Woods
-# Status: Initial declarative registry — extend, do not replace existing platform config
+# Extends existing platform config — does not replace src/platform modules
 
-version: "0.1.0"
+version: "0.2.0"
 ecosystem: nova-umbrella
 owner: chelsea-megan-woods
 
-# Feature flags (default conservative)
+layers:
+  managed_multi_agent_runtime:
+    status: partial
+    modules:
+      - src/core/orchestrator.py
+      - src/core/swarm_orchestrator.py
+      - src/core/live_orchestrator.py
+      - src/core/execution_contract.py
+      - agents/
+    notes: "Fixed pipeline + contract; not Foundry/AgentCore managed cloud runtime"
+
+  enterprise_identity_rbac_tenant:
+    status: partial
+    modules:
+      - src/platform/identity/
+      - src/platform/policy/
+      - src/core/execution_contract.py
+    notes: "RBAC + L1/L2/L3 policy exist; harden tenant isolation on all memory/tool paths"
+
+  tool_mcp_connector_ecosystem:
+    status: partial
+    modules:
+      - src/connectors/
+      - src/integrations/
+    notes: "GitHub partial; MCP-standard registry planned; all tools via AUTHORIZE"
+
+  durable_background_jobs_recovery:
+    status: partial
+    modules:
+      - src/commerce/states.py
+      - src/core/execution_contract.py
+      - src/core/self_healing.py
+    notes: "Celery/Redis foundations + retries; production DLQ/task ledger next"
+
+  memory_persistent_multitenant:
+    status: partial
+    modules:
+      - src/platform/memory/
+    notes: "Hybrid memory; enforce tenant scope + retention controls"
+
+  observability_evaluation:
+    status: partial
+    modules:
+      - src/platform/evidence/
+      - src/core/operational_telemetry.py
+      - src/commerce/leados_workflow.py
+    notes: "Stage evidence exists; full Levels 1-5 harness planned"
+
+  commerce_spend_limits_billing:
+    status: implemented_phase1
+    modules:
+      - src/commerce/
+      - src/commerce/leados_workflow.py
+      - src/platform/entitlements/
+    notes: "Authority + audit + Stripe verify + LeadOS under contract; no live traffic"
+
+  voice_multimodal_native:
+    status: partial
+    modules:
+      - src/core/saphira_voice.py
+      - src/platform/voice/
+      - src/core/multimodal_registry.py
+    notes: "ElevenLabs + streaming foundations; outbound voice requires L1"
+
+  self_healing_failure_injection:
+    status: partial
+    modules:
+      - src/core/self_healing.py
+      - src/core/execution_contract.py
+    notes: "SelfHealingOrchestrator + contract rollback; wire into workers + Level 3 tests"
+
 features:
-  lead_os: false          # enable only after Stripe + approval gates verified
+  lead_os: false
   autonomous_outreach: false
   local_inference: false
   research_lab: true
   multi_model_routing: true
   cost_telemetry: true
   evaluation_gates: true
+  mcp_tool_registry: false
+  full_matrix_harness: false
 
-# Provider registry (extend existing keys; do not hard-code secrets)
 providers:
   openai:
     enabled: true
@@ -31,7 +102,6 @@ providers:
     enabled: true
     type: voice
 
-# Capability surface (maps to Super Saphira entitlements)
 capabilities:
   chat: true
   research: true
@@ -41,7 +111,6 @@ capabilities:
   workflow: true
   commerce: true
 
-# Execution contract enforcement (all services)
 execution_contract:
   stages:
     - propose
@@ -59,12 +128,11 @@ execution_contract:
   max_retries: 3
   idempotency: required
 
-# Commerce (references docs/COMMERCE_OS.md)
 commerce:
   products:
     lead_os:
       default_price_usd: 199
-      status: planned
+      status: implemented_under_contract
     saphira_subscription:
       tiers: [19, 49, 99]
       status: planned
@@ -72,8 +140,8 @@ commerce:
     webhook_signature_required: true
     idempotent_events: true
 
-# Observability
 telemetry:
   track_cost_per_task: true
   track_latency_p50_p95_p99: true
   track_policy_violations: true
+  track_contract_stages: true
