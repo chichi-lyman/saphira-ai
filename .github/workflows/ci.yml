@@ -2,7 +2,7 @@ name: Monorepo CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/nova-umbrella-stress-test-and-integration]
   pull_request:
     branches: [main]
   workflow_dispatch:
