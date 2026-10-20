@@ -1,0 +1,79 @@
+# Nova Umbrella Service Registry (skeleton)
+# Owner: Chelsea Megan Woods
+# Status: Initial declarative registry — extend, do not replace existing platform config
+
+version: "0.1.0"
+ecosystem: nova-umbrella
+owner: chelsea-megan-woods
+
+# Feature flags (default conservative)
+features:
+  lead_os: false          # enable only after Stripe + approval gates verified
+  autonomous_outreach: false
+  local_inference: false
+  research_lab: true
+  multi_model_routing: true
+  cost_telemetry: true
+  evaluation_gates: true
+
+# Provider registry (extend existing keys; do not hard-code secrets)
+providers:
+  openai:
+    enabled: true
+    priority: 10
+  gemini:
+    enabled: true
+    priority: 20
+  xai:
+    enabled: true
+    priority: 15
+  elevenlabs:
+    enabled: true
+    type: voice
+
+# Capability surface (maps to Super Saphira entitlements)
+capabilities:
+  chat: true
+  research: true
+  voice: true
+  image: true
+  video: true
+  workflow: true
+  commerce: true
+
+# Execution contract enforcement (all services)
+execution_contract:
+  stages:
+    - propose
+    - validate
+    - authorize
+    - reserve
+    - execute
+    - verify
+    - commit_or_rollback
+  require_l1_for:
+    - payment
+    - outbound_message
+    - deploy
+    - account_change
+  max_retries: 3
+  idempotency: required
+
+# Commerce (references docs/COMMERCE_OS.md)
+commerce:
+  products:
+    lead_os:
+      default_price_usd: 199
+      status: planned
+    saphira_subscription:
+      tiers: [19, 49, 99]
+      status: planned
+  stripe:
+    webhook_signature_required: true
+    idempotent_events: true
+
+# Observability
+telemetry:
+  track_cost_per_task: true
+  track_latency_p50_p95_p99: true
+  track_policy_violations: true
