@@ -12,6 +12,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
 from src.core.orchestrator import SaphiraOrchestrator
+from src.core.logic_validator import validate_specialist_output
 from src.core.saphira_persona import SAMANTHA_PERSONA_PROMPT
 from src.core.saphira_translator import public_reply
 from src.avatar.grok_avatar_service import avatar_service
@@ -114,6 +115,21 @@ async def chat(req: ChatRequest) -> Dict[str, Any]:
     history = _session_history(req.session_id)
     natural_message = await _generate_natural_reply(req.message, final, history)
     public_message = natural_message or public_reply(req.message, final) or final.get("message")
+    public_message = str(public_message or "").strip()
+
+    # Pre-commit gate: invalid agent-generated content must never enter user-visible
+    # response history. The fallback is deterministic and contains no unverified claims.
+    verdict = validate_specialist_output(
+        user_instruction=req.message,
+        specialist_output=public_message,
+        metadata={"loop_count": final.get("loop_count", 0)},
+    )
+    if not verdict.ok:
+        public_message = (
+            "I couldn't verify that response reliably. Please try rephrasing the request."
+        )
+        final = {**final, "status": "validation_blocked"}
+        avatar_state = "thinking"
 
     persistent_memory.append_history({
         "session_id": req.session_id,
