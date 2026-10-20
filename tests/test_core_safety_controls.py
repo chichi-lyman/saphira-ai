@@ -76,7 +76,7 @@ class TestLocalFallbackRouting:
 
         assert result.endpoint is not None
         assert result.endpoint.key == "vllm_local"
-        assert "prefer local" in result.reason.lower()
+        assert "local slm preferred" in result.reason.lower()
         assert router.calls[0]["prefer"] == "vllm_local"
 
     def test_heavy_task_skips_local_preference(self) -> None:
