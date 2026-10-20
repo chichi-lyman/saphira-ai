@@ -70,5 +70,5 @@ jobs:
           python-version: "3.11"
       - name: Import agent package
         run: |
-          pip install pydantic
+          pip install -r requirements.txt
           python -c "from agents.${{ matrix.agent }}.agent import *; print('${{ matrix.agent }} OK')"
