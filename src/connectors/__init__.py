@@ -21,6 +21,11 @@ from .saphira_mcp_client import SaphiraMCPManager, mcp_manager, router as mcp_ro
 from .firecrawl import FirecrawlConnector
 from .tavily import TavilyConnector
 from .browserbase import BrowserbaseConnector
+from .travel import TravelConnector
+from .local_services import LocalServicesConnector
+from .shopping import ShoppingConnector
+from .finance import FinanceConnector
+from .messaging import MessagingConnector
 
 __all__ = [
     "FacebookConnector",
@@ -46,4 +51,9 @@ __all__ = [
     "FirecrawlConnector",
     "TavilyConnector",
     "BrowserbaseConnector",
+    "TravelConnector",
+    "LocalServicesConnector",
+    "ShoppingConnector",
+    "FinanceConnector",
+    "MessagingConnector",
 ]
