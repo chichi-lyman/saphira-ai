@@ -25,7 +25,7 @@ AGENTS: Dict[str, AgentMeta] = {
     "apex": AgentMeta("agents.apex", "Venture Strategist", "ALLOW"),
     "instinct": AgentMeta("agents.instinct", "Market & Content", "ALLOW"),
     "lexis": AgentMeta("agents.lexis", "Regulatory Guardian", "REQUIRE_APPROVAL"),
-    "cipher": AgentMeta("agents.cipher", "System Architect", "ALLOW"),
+    "cipher": AgentMeta("agents.cipher", "System Architect + Sentinel Gate", "REQUIRE_APPROVAL"),
     "scholar": AgentMeta("agents.scholar", "Knowledge Synthesizer", "ALLOW"),
 }
 
