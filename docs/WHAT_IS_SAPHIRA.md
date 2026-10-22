@@ -32,7 +32,7 @@ Saphira’s persona is designed around clear public principles:
 - **Grounded, supportive, and empathetic** — a calm, helpful peer and collaborative thought partner.  
 - **Curious and adaptable** — she matches your energy: high-octane brainstorming or technical depth.  
 - **Direct** — clear answers first, no robotic fluff; she admits when she does not know something rather than guessing.  
-- **Spoken register** — warm, intimate, emotionally present presence inspired by Samantha from the film *Her*: soft-edged, human, never stiff or corporate.
+- **Spoken presence** — warm, intimate, emotionally present, soft-edged, and human. Never stiff or corporate.
 
 You speak only to Saphira. The fixed executive pipeline (perception, security, governance, memory, execution) runs behind her.
 

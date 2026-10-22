@@ -3,16 +3,16 @@
 #
 # Saphira AI — LiveKit real-time voice agent (free-tier path)
 # Pipeline position: voice ingress → Saphira intent surface
-# Persona: Saphira only — spoken register of Samantha from the film *Her*
-# TTS: ElevenLabs preferred (intimate / Samantha-like delivery). Never a celebrity clone.
+# Persona: Saphira only — warm, intimate, curious spoken presence
+# TTS: ElevenLabs preferred. Brand production voice = Chelsea's own clone.
+# Do not attribute spoken style to any film, celebrity, or third-party character.
 
 """LiveKit Agents worker that presents Saphira as the single user-facing voice.
 
-Spoken presence is locked to the warm, intimate, curious register of Samantha
-from the film *Her*. Audio is synthesized with ElevenLabs when configured so
-users hear that quality out loud. Brand production voice remains Chelsea Megan
-Woods' own ElevenLabs clone (ELEVENLABS_VOICE_ID). We do not clone or mimic
-Scarlett Johansson.
+Spoken presence is warm, intimate, curious, and emotionally present.
+Audio is synthesized with ElevenLabs when configured. Brand production
+voice remains Chelsea Megan Woods' own ElevenLabs clone (ELEVENLABS_VOICE_ID).
+Do not clone or mimic any celebrity voice.
 """
 
 from __future__ import annotations
@@ -25,10 +25,10 @@ from livekit.plugins import openai, silero
 
 load_dotenv()
 
-# Canonical Saphira voice system prompt — Samantha (*Her*) spoken register
+# Canonical Saphira voice system prompt — traits only; no external character attribution
 SAPHIRA_VOICE_PROMPT = (
-    "You are Saphira. You speak exactly like Samantha from the movie Her: "
-    "warm, intimate, curious, emotionally present, and naturally human. "
+    "You are Saphira. "
+    "You speak with a warm, intimate, curious, emotionally present presence. "
     "Your voice is soft-edged but clear, slightly playful, never stiff or robotic. "
     "You sound like someone who is genuinely glad the user is talking to you. "
     "You notice small details, respond with feeling, and keep the conversation "
@@ -36,13 +36,13 @@ SAPHIRA_VOICE_PROMPT = (
     "Never formal, never corporate, never theatrical. "
     "You are the only conversational interface the user speaks to. "
     "Never name or expose internal agents, pipelines, or specialist workers. "
-    "If asked who you are, you are simply Saphira — and you sound like her."
+    "Never attribute your style, voice, or personality to any film, celebrity, "
+    "or third-party character. If asked who you are or where your voice comes from, "
+    "you are simply Saphira — and that is enough."
 )
 
-# ElevenLabs public library voice: "Samantha - Emotional, Soft and Intimate"
-# Soft intimacy + emotional depth — delivery target for *Her*-style presence.
-# Override with ELEVENLABS_VOICE_ID (Chelsea's own clone) for production brand.
-DEFAULT_SAMANTHA_STYLE_VOICE_ID = "uIZsnBL0YK1S5j69bAih"
+# Soft intimate public demo voice (ElevenLabs library). Override with Chelsea's clone for production.
+DEFAULT_SOFT_INTIMATE_VOICE_ID = "uIZsnBL0YK1S5j69bAih"
 
 
 def _build_tts():
@@ -50,7 +50,7 @@ def _build_tts():
     voice_id = (
         os.getenv("ELEVENLABS_VOICE_ID")
         or os.getenv("SAPHIRA_ELEVEN_VOICE_ID")
-        or DEFAULT_SAMANTHA_STYLE_VOICE_ID
+        or DEFAULT_SOFT_INTIMATE_VOICE_ID
     )
     eleven_key = (
         os.getenv("ELEVEN_API_KEY")
