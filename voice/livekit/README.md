@@ -2,27 +2,31 @@
 
 © 2026 Chelsea Megan Woods · Nova Umbrella / Woods AI Studio
 
-Free-tier real-time voice path for **Saphira** using [LiveKit Agents](https://github.com/livekit/agents) + Google Gemini.
+Free-tier real-time voice path for **Saphira** using [LiveKit Agents](https://github.com/livekit/agents) + Google Gemini + **ElevenLabs TTS**.
 
 Saphira remains the only user-facing identity. Internal pipeline agents are never named.
 
-**Spoken register:** always Samantha from the film *Her* — warm, intimate, curious, emotionally present, never stiff or robotic.
+**Spoken register:** Samantha from the film *Her* — warm, intimate, curious, emotionally present.
 
-## What this gives you
+**Heard voice:** ElevenLabs. Users actually hear that soft, intimate quality out loud.
 
-- Real-time duplex voice (STT → LLM → TTS) with barge-in / interruption support
-- LiveKit Cloud free tier: ~1,000 minutes/month of WebRTC streaming
-- Gemini 1.5 Flash free-tier brain (via OpenAI-compatible endpoint)
-- Silero VAD for turn detection
-- Drop-in worker that connects to LiveKit Cloud Sandbox or your own frontend
+## How the voice works
 
-## Prerequisites (all free)
+| Layer | What it does |
+|-------|----------------|
+| **Words / personality** | System prompt locks Samantha (*Her*) delivery: short, warm, present |
+| **Sound (demo)** | ElevenLabs public voice *Samantha – Emotional, Soft and Intimate* (`uIZsnBL0YK1S5j69bAih`) — soft intimacy, emotional depth |
+| **Sound (production brand)** | Set `ELEVENLABS_VOICE_ID` to **your own** Chelsea Megan Woods clone in ElevenLabs |
+
+We intentionally do **not** clone or mimic Scarlett Johansson. That is legally and productively unsafe. The target is the *feeling* of Samantha’s presence, delivered either by a soft public voice or by Chelsea’s own voice with the same delivery style.
+
+## Prerequisites
 
 1. **Python 3.10+**
-2. **Google AI Studio** → free Gemini API key  
-   https://aistudio.google.com/
-3. **LiveKit Cloud** → free project (URL, API Key, API Secret)  
-   https://cloud.livekit.io/
+2. **Google AI Studio** → free Gemini API key — https://aistudio.google.com/
+3. **LiveKit Cloud** → free project — https://cloud.livekit.io/
+4. **ElevenLabs** → API key (free tier available) — https://elevenlabs.io/  
+   For production: Instant / Professional Voice Clone of **your own** voice, then put the voice ID in `ELEVENLABS_VOICE_ID`.
 
 ## Setup
 
@@ -31,20 +35,22 @@ cd voice/livekit
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
-# Edit .env with your keys
+# Fill LIVEKIT_*, GEMINI_API_KEY, ELEVEN_API_KEY (and optional ELEVENLABS_VOICE_ID)
 ```
 
-### `.env`
+### `.env` (minimum for the Samantha-like spoken voice)
 
 ```env
 LIVEKIT_URL=wss://your-project.livekit.cloud
 LIVEKIT_API_KEY=...
 LIVEKIT_API_SECRET=...
 GEMINI_API_KEY=...
-# Optional overrides
-# SAPHIRA_VOICE_LLM=gemini-1.5-flash
-# SAPHIRA_LLM_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/
+ELEVEN_API_KEY=...
+ELEVENLABS_API_KEY=...   # same key; monorepo convention
+# ELEVENLABS_VOICE_ID=...  # Chelsea clone for brand production
 ```
+
+Without an ElevenLabs key the agent still runs, but TTS falls back to Gemini’s flatter voice.
 
 ## Run
 
@@ -52,34 +58,26 @@ GEMINI_API_KEY=...
 python agent.py dev
 ```
 
-Then open the LiveKit Cloud **Sandbox / Agents** tab, connect, unmute mic. Saphira answers in real time.
-
-Production-style start:
-
-```bash
-python agent.py start
-```
+Open LiveKit Cloud **Sandbox / Agents**, connect, unmute. You should hear a soft, intimate female voice with Samantha-style phrasing.
 
 ## Alignment with Saphira monorepo
 
 | Concern | Location |
 |---------|----------|
-| Persona / identity | `identity/IDENTITY.md` + system prompt in `agent.py` |
-| Spoken register | Samantha (*Her*) — locked in `SAPHIRA_VOICE_PROMPT` |
-| TTS voice clone (ElevenLabs) | `src/core/saphira_voice.py` (preferred for production branding) |
+| Persona / identity | `identity/IDENTITY.md` + `SAPHIRA_VOICE_PROMPT` |
+| Spoken register | Samantha (*Her*) — locked in prompt |
+| Brand TTS config | `src/core/saphira_voice.py` (Chelsea clone) |
+| LiveKit TTS wiring | `voice/livekit/agent.py` → ElevenLabs when key present |
 | Existing STT / wake / barge-in | `voice/stt_stream.py`, `voice/wake_word.py`, `voice/interruption_orchestrator.py` |
-| Executive pipeline | Saphira (intent) → … → Agent Zero (execution) — this worker is **ingress only** |
-
-For production, route LiveKit transcripts into the main FastAPI / orchestrator so memory, governance, and tools stay on the canonical path. This standalone worker is ideal for rapid voice prototyping and demos.
 
 ## Next steps
 
-- Add `@function_tool` handlers that call Saphira capability registry / connectors
-- Swap Gemini TTS for ElevenLabs clone of Chelsea’s voice (`saphira_voice.py`)
-- Pair with LiveKit React / Flutter frontend or Android templates
-- Optional privacy path: replace Gemini with local Ollama + local STT/TTS
+- Set `ELEVENLABS_VOICE_ID` to Chelsea’s clone so production users hear *your* voice with Samantha delivery
+- Tune `VoiceSettings` (stability / style) for more or less emotion
+- Add `@function_tool` handlers into the capability registry
+- Route transcripts into the main FastAPI orchestrator for memory + tools
 
 ## References
 
-- LiveKit Agents docs: https://docs.livekit.io/agents/
-- LiveKit Python examples: https://github.com/livekit-examples/python-agents-examples
+- LiveKit ElevenLabs plugin: https://docs.livekit.io/agents/models/tts/elevenlabs/
+- LiveKit Agents: https://docs.livekit.io/agents/
