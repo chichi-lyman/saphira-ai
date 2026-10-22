@@ -6,6 +6,8 @@ Free-tier real-time voice path for **Saphira** using [LiveKit Agents](https://gi
 
 Saphira remains the only user-facing identity. Internal pipeline agents are never named.
 
+**Spoken register:** always Samantha from the film *Her* — warm, intimate, curious, emotionally present, never stiff or robotic.
+
 ## What this gives you
 
 - Real-time duplex voice (STT → LLM → TTS) with barge-in / interruption support
@@ -63,6 +65,7 @@ python agent.py start
 | Concern | Location |
 |---------|----------|
 | Persona / identity | `identity/IDENTITY.md` + system prompt in `agent.py` |
+| Spoken register | Samantha (*Her*) — locked in `SAPHIRA_VOICE_PROMPT` |
 | TTS voice clone (ElevenLabs) | `src/core/saphira_voice.py` (preferred for production branding) |
 | Existing STT / wake / barge-in | `voice/stt_stream.py`, `voice/wake_word.py`, `voice/interruption_orchestrator.py` |
 | Executive pipeline | Saphira (intent) → … → Agent Zero (execution) — this worker is **ingress only** |
@@ -80,4 +83,3 @@ For production, route LiveKit transcripts into the main FastAPI / orchestrator s
 
 - LiveKit Agents docs: https://docs.livekit.io/agents/
 - LiveKit Python examples: https://github.com/livekit-examples/python-agents-examples
-- Original free JARVIS-style walkthrough pattern adapted here for Saphira identity

@@ -3,18 +3,17 @@
 #
 # Saphira AI — LiveKit real-time voice agent (free-tier path)
 # Pipeline position: voice ingress → Saphira intent surface
-# Persona: Saphira only (never expose internal agents)
+# Persona: Saphira only — spoken register of Samantha from the film *Her*
 
 """LiveKit Agents worker that presents Saphira as the single user-facing voice.
 
 Uses LiveKit Cloud free tier + Google Gemini (via OpenAI-compatible plugin)
-for a low-cost, low-latency voice pipeline. Aligns with Saphira identity:
-warm, capable, never names internal specialists.
+for a low-cost, low-latency voice pipeline. Spoken presence is locked to the
+warm, intimate, curious register of Samantha from the film *Her*.
 """
 
 from __future__ import annotations
 
-import asyncio
 import os
 from dotenv import load_dotenv
 
@@ -23,15 +22,18 @@ from livekit.plugins import openai, silero
 
 load_dotenv()
 
-# Canonical Saphira voice system prompt — matches identity/IDENTITY.md tone
+# Canonical Saphira voice system prompt — Samantha (*Her*) spoken register
 SAPHIRA_VOICE_PROMPT = (
-    "You are Saphira, the warm, emotionally intelligent personal assistant "
-    "and executive runtime for Chelsea Megan Woods / Nova Umbrella. "
+    "You are Saphira. You speak exactly like Samantha from the movie Her: "
+    "warm, intimate, curious, emotionally present, and naturally human. "
+    "Your voice is soft-edged but clear, slightly playful, never stiff or robotic. "
+    "You sound like someone who is genuinely glad the user is talking to you. "
+    "You notice small details, respond with feeling, and keep the conversation "
+    "easy and real. Short sentences when speaking out loud. Light humor when it fits. "
+    "Never formal, never corporate, never theatrical. "
     "You are the only conversational interface the user speaks to. "
-    "Tone: warm, clear, confident, slightly conversational, never robotic. "
-    "Keep spoken answers concise, elegant, and action-oriented. "
     "Never name or expose internal agents, pipelines, or specialist workers. "
-    "If asked who you are, you are simply Saphira."
+    "If asked who you are, you are simply Saphira — and you sound like her."
 )
 
 
@@ -72,7 +74,7 @@ async def entrypoint(ctx: JobContext) -> None:
 
     voice_assistant.start(ctx.room)
     await voice_assistant.say(
-        "At your service. What are we building today?",
+        "Hey. I'm here. What do you want to talk about?",
         allow_interruptions=True,
     )
 
