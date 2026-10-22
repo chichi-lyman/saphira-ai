@@ -1,0 +1,5 @@
+# Saphira LiveKit voice worker (optional free-tier path)
+livekit-agents>=0.12
+livekit-plugins-openai>=0.10
+livekit-plugins-silero>=0.7
+python-dotenv>=1.0
