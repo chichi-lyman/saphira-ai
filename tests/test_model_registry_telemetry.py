@@ -17,7 +17,7 @@ def test_local_endpoints_registered():
 
 
 def test_cloud_endpoint_registered():
-    ep = SaphiraModelRegistry.get_endpoint("gemini_primary")
+    ep = SaphiraModelRegistry.get_endpoint("gemini_flash")
     assert ep is not None
     assert ep.is_local is False
     assert ep.provider == "google"

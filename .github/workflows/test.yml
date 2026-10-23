@@ -54,7 +54,7 @@ jobs:
 
       - name: Pytest (unit + core)
         env:
-          ENVIRONMENT: testing
+          ENVIRONMENT: test
           PYTHONPATH: ${{ github.workspace }}
         run: |
           pytest -q --tb=line \
@@ -88,7 +88,7 @@ jobs:
         run: uv pip install --system -r requirements.txt -r requirements-dev.txt
       - name: Run adversarial / policy tests
         env:
-          ENVIRONMENT: testing
+          ENVIRONMENT: test
           PYTHONPATH: ${{ github.workspace }}
         run: |
           if [ -f tests/test_adversarial_stress.py ]; then

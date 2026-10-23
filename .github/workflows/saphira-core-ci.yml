@@ -33,7 +33,7 @@ jobs:
 
       - name: Execute Core Test Suite
         env:
-          ENVIRONMENT: testing
+          ENVIRONMENT: test
           PYTHONPATH: ${{ github.workspace }}
         run: |
           pytest tests/ -q --tb=line || true

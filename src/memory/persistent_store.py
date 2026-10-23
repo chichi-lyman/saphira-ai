@@ -133,6 +133,30 @@ class PersistentMemoryStore:
         }
         self._save()
 
+    def get_connector_health(self) -> Dict[str, Any]:
+        return dict(self._data.get("connector_health", {}))
+
+    def build_context_pack(
+        self,
+        *,
+        task_id: Optional[str] = None,
+        trace_id: Optional[str] = None,
+        policy_grant: str = "ALLOW",
+        history_limit: int = 10,
+    ) -> Dict[str, Any]:
+        """Assemble a ContextPack for NovaReign → NovaAethrea → Agent Zero handoffs."""
+        return {
+            "trace_id": trace_id or str(uuid.uuid4()),
+            "task_id": task_id or str(uuid.uuid4()),
+            "facts": dict(self._data.get("facts", {})),
+            "preferences": dict(self._data.get("preferences", {})),
+            "scenes": dict(self._data.get("scenes", {})),
+            "history_slice": self.get_history(history_limit),
+            "connector_health": self.get_connector_health(),
+            "policy_grant": policy_grant,
+            "built_at": datetime.now(timezone.utc).isoformat(),
+        }
+
 
 # Module-level singleton used across routers and agents
 persistent_memory = PersistentMemoryStore()

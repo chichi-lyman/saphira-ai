@@ -75,7 +75,7 @@ async def test_secure_delivery_includes_auditor():
     assert task.status == TaskStatus.COMPLETED
     agents = {n.name: n.agent for n in graph.nodes.values()}
     assert agents["security_audit"] == "security_auditor_agent"
-    assert "security_auditor" in default_workers()
+    assert "security_auditor_agent" in default_workers()
 
 
 @pytest.mark.asyncio

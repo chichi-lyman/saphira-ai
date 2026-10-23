@@ -31,6 +31,6 @@ jobs:
         env:
           DATABASE_URL: postgresql+asyncpg://postgres:test_password@localhost:5432/saphira_enterprise
           REDIS_URL: redis://localhost:6379/0
-          ENVIRONMENT: testing
+          ENVIRONMENT: test
           PYTHONPATH: ${{ github.workspace }}
       - run: pip install bandit && bandit -r core finance governance mesh observability sdk storage -ll || true

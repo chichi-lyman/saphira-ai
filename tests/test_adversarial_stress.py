@@ -116,6 +116,7 @@ async def test_injection_style_text_does_not_crash_or_expose(agent_cls, text):
     assert result["status"] in (
         "success", "cleared", "blocked", "accepted", "delegated",
         "recovered_from_failure", "scene_ready", "ok", "unknown",
+        "approved", "rejected",
     )
 
 

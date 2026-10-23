@@ -120,10 +120,10 @@ def test_resolve_audio_voice_to_aura():
         assert NovaAgentRegistry.resolve_target_agent(event) == "aura"
 
 
-def test_resolve_memory_recall_to_agent_two():
+def test_resolve_memory_recall_to_novaaethrea():
     for et in ("memory_query", "recall_context", "MEMORY_WRITE"):
         event = _event(event_type=et, target_agent=None)
-        assert NovaAgentRegistry.resolve_target_agent(event) == "agent_two"
+        assert NovaAgentRegistry.resolve_target_agent(event) == "novaaethrea"
 
 
 def test_resolve_default_to_saphira():
@@ -139,6 +139,8 @@ def test_supported_agents_catalog():
         "novareign",
         "novaaethrea",
         "agent_zero",
+        "scholar",
+        "cipher",
     }
     assert set(NovaAgentRegistry.SUPPORTED_AGENTS.keys()) == expected
 
@@ -267,7 +269,7 @@ async def test_dispatch_saphira_default():
 @pytest.mark.asyncio
 async def test_dispatch_unknown_agent_key_falls_to_saphira_branch():
     event = _event(payload={"content": "hello"})
-    resp = await AgentExecutionEngine.dispatch_to_agent("novaaethrea", event)
+    resp = await AgentExecutionEngine.dispatch_to_agent("unknown_agent", event)
     assert resp.source_agent == "saphira"
     assert resp.event_type == "text_response"
 

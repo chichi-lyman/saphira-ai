@@ -193,7 +193,7 @@ class MultiAgentWorkflowEngine:
             ("code_reviewer_agent", {"code_review", "development", "quality"}, 15, "Saphira Code Reviewer skill"),
             ("systems_architect_agent", {"architecture", "system", "development"}, 15, "Saphira Systems Architect skill"),
             ("data_analyst_agent", {"analytics", "research", "stem"}, 15, "Saphira Data Analyst skill"),
-            ("security_auditor_agent", {"security", "quality", "code_review"}, 12, "Saphira Security Auditor skill"),
+            ("security_auditor_agent", {"security", "quality"}, 12, "Saphira Security Auditor skill"),
         )
         for name, caps, priority, desc in extras:
             if name not in self.registry.agents:
