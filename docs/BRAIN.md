@@ -19,6 +19,15 @@ src/core/saphira_brain.py  →  SaphiraBrain
    - xAI / Grok
 4. **Falls back cleanly** when a key is missing or a provider errors.
 
+## Surfaces that use the brain
+
+| Surface | Path | Notes |
+|---------|------|--------|
+| HTTP chat | `POST /chat` | Full conversational + orchestrator result |
+| WebSocket live | `WS /v1/saphira/stream` | Default Saphira path + scholar reasoning |
+
+Internal structural agents (aura, novareign, cipher, agent_zero, agent_two) stay non-LLM. Only user-facing natural language goes through the brain.
+
 ## Enable the brain
 
 In `.env` / deployment secrets:
@@ -50,11 +59,9 @@ brain = get_saphira_brain()
 # Full control
 result = await brain.think("Help me plan the next sprint")
 
-# Convenience for chat
+# Convenience for chat / live
 text = await brain.reply("What should I focus on today?")
 ```
-
-The public `/chat` endpoint already routes natural language generation through `SaphiraBrain`.
 
 ## Design rule
 
