@@ -5,6 +5,8 @@
 
 User-facing voice remains Saphira only. Internal agents receive capability-aware
 routes from ExcellenceRouter before execution. LoopGuard blocks identical cycles.
+Natural-language generation for the Saphira surface goes through SaphiraBrain
+(persona + competitive directive locked, multi-provider fallback).
 """
 
 from __future__ import annotations
@@ -18,6 +20,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
 
 from src.core.novareign_a11y_parser import NovaReignScreenParser
+from src.core.saphira_brain import get_saphira_brain
 from src.excellence.router import ExcellenceRouter, route_excellence
 from src.excellence.agent_map import pillars_for_agent
 from src.excellence.telemetry import excellence_telemetry
@@ -32,6 +35,7 @@ logger = logging.getLogger("SaphiraDispatcher")
 _excellence = ExcellenceRouter()
 _latency = LatencyRouter()
 _privacy = PrivacyFilter()
+_brain = get_saphira_brain()
 
 
 class ClientEvent(BaseModel):
@@ -125,6 +129,7 @@ class AgentExecutionEngine:
         event: ClientEvent,
         *,
         excellence_meta: Optional[Dict[str, Any]] = None,
+        utterance: str = "",
     ) -> AgentResponse:
         logger.info(
             "[Nova Pipeline] Routing event '%s' to agent: %s pillars=%s",
@@ -199,11 +204,34 @@ class AgentExecutionEngine:
             )
 
         if agent_key == "scholar":
-            content = event.payload.get("content", "")
+            # Deep reasoning still surfaces as Saphira; use the brain for the plan text.
+            content = utterance or event.payload.get("content", "") or ""
+            plan_text = None
+            if content.strip():
+                try:
+                    plan_text = await _brain.reply(
+                        content,
+                        conversation_context=(
+                            "[MODE: Scholar / deep reasoning]\n"
+                            "Produce a clear multi-step reasoning plan or analysis. "
+                            "Stay in Saphira's warm voice; do not name internal agents."
+                        ),
+                    )
+                except Exception as e:
+                    logger.warning("[Dispatcher] scholar brain call failed: %s", e)
+
             return AgentResponse(
-                source_agent="scholar",
-                event_type="reasoning_plan",
-                payload={"status": "queued", "task": content, "mode": "multi_step"},
+                source_agent="saphira",  # user-facing identity stays Saphira
+                event_type="text_response",
+                payload={
+                    "text": plan_text
+                    or (
+                        "I'm working through that carefully. "
+                        "Give me a moment to lay out the steps."
+                    ),
+                    "mode": "reasoning",
+                    "task": content,
+                },
                 excellence=excellence_meta,
             )
 
@@ -235,15 +263,42 @@ class AgentExecutionEngine:
                 excellence=excellence_meta,
             )
 
-        content = event.payload.get("content", "")
+        # ---- Default: Saphira conversational surface via brain ----
+        content = utterance or event.payload.get("content", "") or ""
+        if not content.strip():
+            return AgentResponse(
+                source_agent="saphira",
+                event_type="text_response",
+                payload={"text": "I'm here. What would you like to do?"},
+                excellence=excellence_meta,
+            )
+
+        try:
+            reply = await _brain.reply(
+                content,
+                conversation_context=(
+                    "[WEBSOCKET / LIVE SESSION]\n"
+                    "Respond as Saphira in a natural, warm, present voice. "
+                    "Keep answers concise enough for live interaction unless depth is needed. "
+                    "Never name internal agents or system internals."
+                ),
+            )
+        except Exception as e:
+            logger.error("[Dispatcher] brain call failed: %s", e)
+            reply = None
+
+        text = reply or (
+            "I heard you"
+            + (f": {content[:120]}" if content else ".")
+            + " — give me another beat if that didn't land."
+        )
+
         return AgentResponse(
             source_agent="saphira",
             event_type="text_response",
             payload={
-                "text": (
-                    f"Saphira received your request"
-                    + (f": {content}" if content else ".")
-                )
+                "text": text,
+                "brain": "SaphiraBrain",
             },
             excellence=excellence_meta,
         )
@@ -373,6 +428,7 @@ async def websocket_dispatcher_endpoint(websocket: WebSocket):
                 "privacy_redacted": sanitized.redacted,
                 "internal_agent": target_agent,
                 "surface_agent": "Saphira",
+                "brain": "SaphiraBrain",
                 "loop": {
                     "allowed": True,
                     "fingerprint": loop_verdict.fingerprint,
@@ -381,8 +437,25 @@ async def websocket_dispatcher_endpoint(websocket: WebSocket):
             }
 
             agent_response = await AgentExecutionEngine.dispatch_to_agent(
-                target_agent, client_event, excellence_meta=excellence_meta
+                target_agent,
+                client_event,
+                excellence_meta=excellence_meta,
+                utterance=sanitized.text,
             )
+
+            # Record assistant turn when we produced natural language
+            if (
+                agent_response.source_agent == "saphira"
+                and agent_response.event_type == "text_response"
+            ):
+                reply_text = (agent_response.payload or {}).get("text") or ""
+                if reply_text:
+                    dual_memory.append_turn(
+                        "assistant",
+                        reply_text,
+                        session_id=client_event.session_id,
+                        event_type="text_response",
+                    )
 
             elapsed_ms = int((time.perf_counter() - t0) * 1000)
             excellence_telemetry.record_dispatch(
