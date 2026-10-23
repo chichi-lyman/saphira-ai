@@ -20,7 +20,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies first (better layer caching)
-COPY pyproject.toml requirements.txt* ./nRUN pip install --upgrade pip \
+COPY pyproject.toml requirements.txt* ./
+RUN pip install --upgrade pip \
     && if [ -f requirements.txt ]; then pip install -r requirements.txt; fi \
     && pip install -e .
 
