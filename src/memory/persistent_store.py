@@ -133,6 +133,28 @@ class PersistentMemoryStore:
         }
         self._save()
 
+    def get_connector_health(self) -> Dict[str, Any]:
+        """Return a shallow copy of connector health records."""
+        return dict(self._data.get("connector_health", {}))
+
+    def build_context_pack(
+        self,
+        task_id: Optional[str] = None,
+        policy_grant: str = "ALLOW",
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        """Build a ContextPack for downstream agents (NovaAethrea / dispatcher)."""
+        pack: Dict[str, Any] = {
+            "task_id": task_id,
+            "facts": dict(self._data.get("facts", {})),
+            "preferences": dict(self._data.get("preferences", {})),
+            "policy_grant": policy_grant,
+            "history_slice": self.get_history(10),
+            "connector_health": self.get_connector_health(),
+        }
+        pack.update(kwargs)
+        return pack
+
 
 # Module-level singleton used across routers and agents
 persistent_memory = PersistentMemoryStore()
