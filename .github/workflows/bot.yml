@@ -1,0 +1,44 @@
+name: Sample Automation Bot
+
+# Demonstrates the pattern described in docs/AUTOMATION_BOTS.md
+# Trigger on push / schedule and run a lightweight Python step.
+# Replace the run block with real bot logic or call into the Saphira pipeline.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/bot.yml"
+      - "scripts/bots/**"
+  schedule:
+    - cron: "0 */6 * * *"   # every 6 hours
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  run-bot:
+    name: Execute automation bot step
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Bot heartbeat / placeholder
+        env:
+          ENVIRONMENT: test
+        run: |
+          echo "Saphira / Nova Umbrella automation bot heartbeat"
+          echo "Repo: ${{ github.repository }}"
+          echo "Event: ${{ github.event_name }}"
+          echo "SHA: ${{ github.sha }}"
+          # Example: call a local script when present
+          if [ -f scripts/bots/heartbeat.py ]; then
+            python scripts/bots/heartbeat.py
+          else
+            echo "No scripts/bots/heartbeat.py found — placeholder only."
+          fi
