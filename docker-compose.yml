@@ -1,91 +1,42 @@
+# Copyright (c) 2026 Chelsea Megan Woods. All Rights Reserved.
+# Owner & Creator: Chelsea Megan Woods | Woods AI Studio / Lyman Legacies
+#
+# Local / staging docker-compose for Saphira AI
+# Supports FastAPI backend + optional local model fallback later
+
 services:
-  saphira-core:
+  saphira:
     build: .
-    container_name: saphira_core
     ports:
       - "8000:8000"
+    env_file:
+      - .env
     environment:
-      PORT: 8000
-      DATABASE_URL: postgresql://${POSTGRES_USER:-chelsea_admin}:${POSTGRES_PASSWORD:-change-me}@saphira-db:5432/${POSTGRES_DB:-saphira_god_memory}
-      REDIS_URL: redis://saphira-redis:6379/0
-      CELERY_BROKER_URL: redis://saphira-redis:6379/0
-      CELERY_RESULT_BACKEND: redis://saphira-redis:6379/1
-      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      SEARCH_API_KEY: ${SEARCH_API_KEY:-}
-      SAPHIRA_SENTINEL_SECRET: ${SAPHIRA_SENTINEL_SECRET:-}
-      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
-      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
-      STRIPE_PRICE_MONTHLY: ${STRIPE_PRICE_MONTHLY:-}
-      PRODUCTION_DOMAIN_URL: ${PRODUCTION_DOMAIN_URL:-http://localhost:3000}
-      RESEND_API_KEY: ${RESEND_API_KEY:-}
-      RESEND_FROM: ${RESEND_FROM:-}
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
-      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
-    depends_on:
-      saphira-db:
-        condition: service_healthy
-      saphira-redis:
-        condition: service_healthy
-    restart: unless-stopped
-
-  saphira-worker:
-    build: .
-    container_name: saphira_worker
-    command: celery -A celery_app.celery_app worker --loglevel=INFO --concurrency=2
-    environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-chelsea_admin}:${POSTGRES_PASSWORD:-change-me}@saphira-db:5432/${POSTGRES_DB:-saphira_god_memory}
-      REDIS_URL: redis://saphira-redis:6379/0
-      CELERY_BROKER_URL: redis://saphira-redis:6379/0
-      CELERY_RESULT_BACKEND: redis://saphira-redis:6379/1
-      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      SEARCH_API_KEY: ${SEARCH_API_KEY:-}
-      SAPHIRA_SENTINEL_SECRET: ${SAPHIRA_SENTINEL_SECRET:-}
-      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
-      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
-      RESEND_API_KEY: ${RESEND_API_KEY:-}
-    depends_on:
-      saphira-db:
-        condition: service_healthy
-      saphira-redis:
-        condition: service_healthy
-    restart: unless-stopped
-
-  saphira-db:
-    image: pgvector/pgvector:pg16
-    container_name: saphira_db
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-chelsea_admin}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
-      POSTGRES_DB: ${POSTGRES_DB:-saphira_god_memory}
-    ports:
-      - "5432:5432"
+      - ENVIRONMENT=docker
+      - PYTHONPATH=/app
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./src/storage/schema.sql:/docker-entrypoint-initdb.d/001_saphira.sql:ro
+      # Mount only what is needed for development; remove for production images
+      - ./src:/app/src:ro
+      - ./agents:/app/agents:ro
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
-      interval: 5s
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
       timeout: 5s
-      retries: 10
-    restart: unless-stopped
+      retries: 3
+      start_period: 20s
 
-  saphira-redis:
-    image: redis:7-alpine
-    container_name: saphira_redis
-    command: redis-server --appendonly yes
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-    restart: unless-stopped
+  # Optional: local Postgres for multi-tenant / ledger work
+  # db:
+  #   image: postgres:16-alpine
+  #   environment:
+  #     POSTGRES_USER: saphira
+  #     POSTGRES_PASSWORD: saphira
+  #     POSTGRES_DB: saphira
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - saphira_pg:/var/lib/postgresql/data
 
-volumes:
-  postgres_data:
-  redis_data:
+# volumes:
+#   saphira_pg:
