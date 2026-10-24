@@ -3,6 +3,15 @@
 # IMPORTANT: Paths are relative to repo root. Use leading / so only
 # the monorepo root directories are ignored — never saphira-app/src.
 
+# Backend/runtime source is not part of the Vercel client bundle.
+/src/
+agents/
+memory/
+governance/
+execution/
+infrastructure/
+perception/
+tests/
 # Python packaging / lockfiles (not needed for the client bundle)
 /requirements.txt
 /requirements-*.txt
