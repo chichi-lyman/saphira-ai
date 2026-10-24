@@ -27,7 +27,8 @@ def test_connector_health(tmp_path):
 
 
 def test_specialist_registry_policies():
-    assert specialist_registry.policy_for("agent_apex") == "REQUIRE_APPROVAL"
+    # Owner policy (2026-09): Agent Apex and Agent Instinct are ALLOW
+    assert specialist_registry.policy_for("agent_apex") == "ALLOW"
     assert specialist_registry.policy_for("agent_cipher") == "ALLOW"
     specs = specialist_registry.list_specs()
     assert len(specs) >= 5
