@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     )
 
     port: int = Field(default=8000, ge=1, le=65535)
-    environment: Literal["development", "staging", "production", "test"] = Field(
+    environment: Literal["development", "staging", "production", "test", "testing"] = Field(
         default="development", validation_alias="ENVIRONMENT"
     )
     saphira_env: Optional[str] = Field(default=None, validation_alias="SAPHIRA_ENV")
