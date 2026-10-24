@@ -10,12 +10,17 @@ from src.api.device_ws import router as device_router
 from src.api.tiktok_router import router as tiktok_router
 from src.api.platform_router import router as platform_router
 from src.api.twilio_voice_router import router as twilio_voice_router
+from src.api.saphira_dispatcher import router as saphira_dispatcher_router
+from src.api.excellence_router import router as excellence_router
+from src.api.autonomy_router import router as autonomy_router
+from src.api.face_router import router as face_router
 from src.commerce.stripe_checkout import router as checkout_router
 from src.commerce.billing_router import router as billing_router
 from core.control_plane import router as control_plane_router
 from observability.telemetry import router as telemetry_router
 from core.audit_middleware import AuditEventMiddleware
 from src.config.settings import validate_environment
+from src.connectors.saphira_mcp_client import router as mcp_router, mcp_manager
 
 load_dotenv()
 load_dotenv(".env.local", override=False)
@@ -26,7 +31,7 @@ settings = validate_environment(strict=False)
 app = FastAPI(
     title="Saphira AI Enterprise",
     description="Conversational executive assistant with governed autonomous agents and enterprise control plane.",
-    version="17.1.0",
+    version="17.4.0",
 )
 
 app.add_middleware(
@@ -54,6 +59,11 @@ app.include_router(device_router, prefix="/api")
 app.include_router(tiktok_router, prefix="/api")
 app.include_router(platform_router, prefix="/api")
 app.include_router(twilio_voice_router, prefix="/api")
+app.include_router(mcp_router, prefix="/api")
+app.include_router(face_router, prefix="/api")  # /api/face/*
+app.include_router(saphira_dispatcher_router)  # /v1/saphira/stream
+app.include_router(excellence_router)  # /v1/router/execute
+app.include_router(autonomy_router)  # /v1/autonomy/repair
 app.include_router(checkout_router)
 app.include_router(billing_router)
 app.include_router(control_plane_router)
@@ -70,30 +80,10 @@ async def verify_sentinel_token(api_key: str = Depends(api_key_header)):
     return api_key
 
 
-@app.get("/")
-async def root():
-    return {
-        "name": "Saphira AI",
-        "status": "running",
-        "version": "17.1.0",
-        "role": "conversational-ai-assistant",
-        "architecture": "autonomous-agent-operating-platform",
-        "platform_layer": "enabled",
-        "environment": settings.environment,
-    }
-
-
-@app.get("/health")
-async def health():
-    return {
-        "status": "healthy",
-        "service": "saphira-ai",
-        "version": "17.1.0",
-        "config": settings.validation_report(),
-    }
-
-
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0", port=settings.port)
+@app.on_event("startup")
+async def startup_mcp() -> None:
+    """Bootstrap optional MCP servers from environment variables."""
+    try:
+        await mcp_manager.startup()
+    except Exception as exc:
+        logger.warning("MCP startup skipped or partial: %s", exc)

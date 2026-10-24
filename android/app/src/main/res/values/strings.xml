@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Saphira AI</string>
+    <string name="accessibility_service_description">
+        Allows Saphira to perform explicitly authorized screen-aware actions such as
+        reading the UI hierarchy, tapping buttons, scrolling, and entering text.
+        Saphira only acts after you enable this service and the backend policy layer
+        issues a short-lived authorization token. Screen contents are never captured
+        or stored by default.
+    </string>
+</resources>

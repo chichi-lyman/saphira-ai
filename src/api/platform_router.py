@@ -1,10 +1,10 @@
-"""Platform API: autonomy, memory, voice, entitlements, evidence, devices."""
+"""Platform API: autonomy, memory, voice, entitlements, evidence, devices, workflows."""
 
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from src.platform.policy import AutonomyPolicy, CounterfactualPreview
@@ -18,7 +18,23 @@ from src.platform.plugins import plugin_registry, PluginSpec
 from src.platform.observability_ext import model_router
 from src.platform.biometrics import biometric_stress
 
+from src.orchestration.multi_agent_workflow import (
+    MultiAgentWorkflowEngine,
+    build_research_code_validate,
+    build_analyze_architect_review,
+    build_secure_delivery,
+    build_custom_linear,
+)
+from src.orchestration.workers import default_workers
+from src.orchestration.executor import TaskExecutor
+
 router = APIRouter(prefix="/platform", tags=["platform"])
+
+# Shared engine instance (workers registered once)
+_workflow_engine = MultiAgentWorkflowEngine(
+    executor=TaskExecutor(workers=default_workers()),
+    entitlements_registry=entitlements,
+)
 
 
 class AutonomyRequest(BaseModel):
@@ -86,6 +102,14 @@ class ReceiptRequest(BaseModel):
     payload: Dict[str, Any] = Field(default_factory=dict)
 
 
+class WorkflowRunRequest(BaseModel):
+    objective: str
+    tenant_id: str = "default"
+    template: str = "research_code_validate"  # research_code_validate | analyze_architect_review | secure_delivery | custom
+    custom_steps: List[List[str]] = Field(default_factory=list)  # [[name, capability], ...]
+    context: Dict[str, Any] = Field(default_factory=dict)
+
+
 @router.get("/health")
 async def platform_health():
     return {"status": "ok", "layer": "platform"}
@@ -151,7 +175,63 @@ async def voice_state(session_id: str, body: VoiceStateRequest):
 @router.post("/entitlements/assign")
 async def entitlements_assign(body: EntitlementAssignRequest):
     ent = entitlements.assign(body.tenant_id, body.plan)
-    return {"tenant_id": ent.tenant_id, "plan": ent.plan.name, "autonomy_max": ent.plan.autonomy_max}
+    return {
+        "tenant_id": ent.tenant_id,
+        "plan": ent.plan.name,
+        "autonomy_max": ent.plan.autonomy_max,
+        "workflow_runs_per_day": ent.plan.workflow_runs_per_day,
+        "priority_compute": ent.plan.priority_compute,
+    }
+
+
+@router.get("/entitlements/{tenant_id}")
+async def entitlements_usage(tenant_id: str):
+    ent = entitlements.get_or_assign(tenant_id)
+    return {
+        "tenant_id": tenant_id,
+        "plan": ent.plan.name,
+        "priority_compute": ent.plan.priority_compute,
+        "limits": {
+            "messages_per_4h": ent.plan.messages_per_4h,
+            "deepsearch_per_day": ent.plan.deepsearch_per_day,
+            "images_per_day": ent.plan.images_per_day,
+            "videos_per_day": ent.plan.videos_per_day,
+            "voice_session_mins": ent.plan.voice_session_mins,
+            "workflow_runs_per_day": ent.plan.workflow_runs_per_day,
+        },
+        "usage": {
+            "messages_4h": ent.usage.messages_4h,
+            "deepsearch_day": ent.usage.deepsearch_day,
+            "images_day": ent.usage.images_day,
+            "videos_day": ent.usage.videos_day,
+            "workflow_runs_day": ent.usage.workflow_runs_day,
+            "api_calls": ent.usage.api_calls,
+            "agent_minutes": ent.usage.agent_minutes,
+        },
+        "remaining": {
+            "workflow_runs_day": ent.remaining("workflow_runs_day"),
+            "deepsearch_day": ent.remaining("deepsearch_day"),
+            "messages_4h": ent.remaining("messages_4h"),
+        },
+    }
+
+
+@router.get("/entitlements/plans")
+async def entitlements_plans():
+    plans = entitlements.list_plans()
+    return {
+        name: {
+            "messages_per_4h": p.messages_per_4h,
+            "deepsearch_per_day": p.deepsearch_per_day,
+            "images_per_day": p.images_per_day,
+            "videos_per_day": p.videos_per_day,
+            "voice_session_mins": p.voice_session_mins,
+            "workflow_runs_per_day": p.workflow_runs_per_day,
+            "priority_compute": p.priority_compute,
+            "autonomy_max": p.autonomy_max,
+        }
+        for name, p in plans.items()
+    }
 
 
 @router.post("/devices/command")
@@ -216,3 +296,98 @@ async def biometrics_analyze(body: BiometricRequest):
         "components": analysis.components,
         "tone_guidance": analysis.tone_guidance,
     }
+
+
+# ---------------------------------------------------------------------------
+# Multi-agent workflows (metered)
+# ---------------------------------------------------------------------------
+
+def _serialize_task(task, graph, meter):
+    return {
+        "task_id": task.id,
+        "status": task.status.value,
+        "objective": task.objective,
+        "errors": task.errors,
+        "artifact_count": len(task.artifacts),
+        "artifacts": task.artifacts,
+        "verification": task.verification,
+        "workflow_id": graph.id,
+        "nodes": [
+            {
+                "id": n.id,
+                "name": n.name,
+                "capability": n.capability,
+                "agent": n.agent,
+                "status": n.status.value,
+                "error": n.error,
+            }
+            for n in graph.nodes.values()
+        ],
+        "metering": meter,
+    }
+
+
+@router.post("/workflows/run")
+async def workflow_run(body: WorkflowRunRequest):
+    """Run a multi-agent workflow template under tenant metering."""
+    template = body.template.strip().lower()
+    if template == "research_code_validate":
+        task, graph, meter = await _workflow_engine.run_research_code_validate(
+            body.objective, context=body.context, tenant_id=body.tenant_id
+        )
+    elif template == "analyze_architect_review":
+        task, graph, meter = await _workflow_engine.run_analyze_architect_review(
+            body.objective, context=body.context, tenant_id=body.tenant_id
+        )
+    elif template == "secure_delivery":
+        task, graph, meter = await _workflow_engine.run_secure_delivery(
+            body.objective, context=body.context, tenant_id=body.tenant_id
+        )
+    elif template == "custom":
+        steps = [(s[0], s[1]) for s in body.custom_steps if len(s) >= 2]
+        if not steps:
+            raise HTTPException(status_code=400, detail="custom_steps required for template=custom")
+        graph = build_custom_linear(body.objective, steps)
+        task, graph, meter = await _workflow_engine.run(
+            graph, context=body.context, tenant_id=body.tenant_id
+        )
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="template must be research_code_validate | analyze_architect_review | secure_delivery | custom",
+        )
+
+    if meter and meter.get("error") == "quota_exceeded":
+        raise HTTPException(status_code=429, detail=meter)
+
+    return _serialize_task(task, graph, meter)
+
+
+@router.post("/workflows/research-code-validate")
+async def workflow_rcv(body: WorkflowRunRequest):
+    task, graph, meter = await _workflow_engine.run_research_code_validate(
+        body.objective, context=body.context, tenant_id=body.tenant_id
+    )
+    if meter and meter.get("error") == "quota_exceeded":
+        raise HTTPException(status_code=429, detail=meter)
+    return _serialize_task(task, graph, meter)
+
+
+@router.post("/workflows/analyze-architect-review")
+async def workflow_aar(body: WorkflowRunRequest):
+    task, graph, meter = await _workflow_engine.run_analyze_architect_review(
+        body.objective, context=body.context, tenant_id=body.tenant_id
+    )
+    if meter and meter.get("error") == "quota_exceeded":
+        raise HTTPException(status_code=429, detail=meter)
+    return _serialize_task(task, graph, meter)
+
+
+@router.post("/workflows/secure-delivery")
+async def workflow_secure(body: WorkflowRunRequest):
+    task, graph, meter = await _workflow_engine.run_secure_delivery(
+        body.objective, context=body.context, tenant_id=body.tenant_id
+    )
+    if meter and meter.get("error") == "quota_exceeded":
+        raise HTTPException(status_code=429, detail=meter)
+    return _serialize_task(task, graph, meter)

@@ -1,26 +1,37 @@
 # Vercel hosts the React/Vite client only.
 # Saphira Core runs separately on Railway.
-requirements.txt
-requirements-*.txt
-pyproject.toml
-setup.py
-setup.cfg
-Pipfile
-Pipfile.lock
-poetry.lock
-uv.lock
+# IMPORTANT: Paths are relative to repo root. Use leading / so only
+# the monorepo root directories are ignored — never saphira-app/src.
 
-# Backend/runtime source is not part of the Vercel client bundle.
-src/
-agents/
-memory/
-governance/
-execution/
-infrastructure/
-perception/
-tests/
+# Python packaging / lockfiles (not needed for the client bundle)
+/requirements.txt
+/requirements-*.txt
+/pyproject.toml
+/setup.py
+/setup.cfg
+/Pipfile
+/Pipfile.lock
+/poetry.lock
+/uv.lock
 
-# Local/runtime artifacts
+# Backend / runtime source (Railway only) — root paths only
+/src/
+/agents/
+/memory/
+/governance/
+/execution/
+/infrastructure/
+/perception/
+/workers/
+/core/
+/finance/
+/mesh/
+/observability/
+/sdk/
+/storage/
+/tests/
+
+# Local / runtime artifacts
 .venv/
 venv/
 __pycache__/
@@ -30,3 +41,14 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .coverage
+*.egg-info/
+dist/
+build/
+
+# Android / native (not part of Vercel client)
+/android/
+
+# Docker / infra
+/Dockerfile*
+/docker-compose*.yml
+/deploy/

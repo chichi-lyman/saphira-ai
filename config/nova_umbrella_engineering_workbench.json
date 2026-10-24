@@ -1,0 +1,125 @@
+{
+  "schema_version": "1.0.0",
+  "ecosystem": "Nova Umbrella",
+  "assistant": "Saphira AI",
+  "capability_id": "autonomous_engineering_workbench",
+  "status": "specification",
+  "feature_flags": {
+    "engineering_workbench_enabled": false,
+    "python_sandbox_enabled": false,
+    "data_lab_enabled": false,
+    "app_builder_enabled": false,
+    "repository_audit_enabled": false,
+    "patch_generation_enabled": false,
+    "database_migration_generation_enabled": false,
+    "external_network_tools_enabled": false
+  },
+  "tools": [
+    {
+      "id": "data_lab",
+      "capabilities": [
+        "csv",
+        "json",
+        "jsonl",
+        "xml",
+        "text parsing",
+        "profiling",
+        "cleaning",
+        "validation",
+        "export"
+      ],
+      "network_default": false
+    },
+    {
+      "id": "app_builder",
+      "capabilities": [
+        "architecture plan",
+        "multi-file scaffold",
+        "tests",
+        "lint configuration",
+        "environment templates",
+        "branch patch"
+      ]
+    },
+    {
+      "id": "repository_audit",
+      "capabilities": [
+        "dependency map",
+        "data-flow review",
+        "security findings",
+        "minimal patch proposals",
+        "regression tests"
+      ],
+      "default_mode": "read_only"
+    },
+    {
+      "id": "pipeline_studio",
+      "capabilities": [
+        "structured extraction",
+        "schema validation",
+        "relational schema drafts",
+        "migration generation",
+        "rollback notes"
+      ]
+    },
+    {
+      "id": "bounded_engineering_agent",
+      "capabilities": [
+        "plan",
+        "execute authorized steps",
+        "run tests",
+        "analyze failures",
+        "bounded correction loop"
+      ],
+      "max_attempts": 3
+    }
+  ],
+  "governance": {
+    "lifecycle": [
+      "PROPOSE",
+      "VALIDATE",
+      "AUTHORIZE",
+      "RESERVE",
+      "EXECUTE",
+      "VERIFY",
+      "COMMIT_OR_ROLLBACK"
+    ],
+    "decisions": [
+      "ALLOW",
+      "REQUIRE_APPROVAL",
+      "DENY"
+    ],
+    "require_approval_for": [
+      "protected_branch_writes",
+      "pull_requests",
+      "deployment",
+      "production_migrations",
+      "external_messages",
+      "paid_actions",
+      "destructive_actions"
+    ],
+    "require_isolated_runtime": true,
+    "network_access_default": false,
+    "tenant_scoped_artifacts": true,
+    "audit_required": true
+  },
+  "integration": {
+    "model_routing": "reuse_existing_saphira_core_provider_registry",
+    "ui_location": "Tools",
+    "storage": "configured_tenant_scoped_persistence",
+    "feature_status_must_reflect_verified_implementation": true
+  },
+  "acceptance_criteria": [
+    "isolated_python_execution",
+    "resource_limits_enforced",
+    "data_transformations_reported",
+    "app_scaffolds_include_tests",
+    "repository_audits_read_only_by_default",
+    "patches_scoped_to_feature_branch",
+    "migration_generation_requires_validation",
+    "bounded_self_correction",
+    "approval_gates_tested",
+    "secret_redaction_and_tenant_isolation_tested",
+    "ci_lint_typecheck_tests_security_checks"
+  ]
+}

@@ -2,6 +2,7 @@
 # Owner: Chelsea Megan Woods | Woods AI Studio / Lyman Legacies
 #
 # Shared contract: anatomy, pillars, loop + Nova ecosystem classification
+# Purpose binds every agent: compute patterns, automate tasks, solve at scale.
 
 from typing import Dict, Any, List
 from enum import Enum
@@ -34,6 +35,18 @@ class AgentPillars:
         ]
 
 
+# Canonical purpose string shared by every agent in the ecosystem
+AI_PURPOSE = (
+    "AI exists to compute patterns, automate tasks, and solve problems faster "
+    "than human brains can alone. Automate complex cognitive tasks, analyze vast "
+    "datasets, and solve problems at scale to augment human capabilities. Process "
+    "information faster and more accurately so humans can leave repetitive labor, "
+    "accelerate discovery, and improve decisions. Empower professionals to focus "
+    "on higher-level strategy while AI handles time-consuming analysis. Foster "
+    "collaboration between human intelligence and machine learning for solutions "
+    "previously unimaginable."
+)
+
 SAPHIRA_ROLE_MAP = {
     "saphira": AgentRole.ORCHESTRATOR,
     "agent_zero": AgentRole.EXECUTION,
@@ -51,6 +64,7 @@ def describe_agent(name: str) -> Dict[str, Any]:
         "name": name,
         "role": role.value,
         "model_vs_agent": "agent",
+        "purpose": AI_PURPOSE,
         "pillars_required": AgentPillars.checklist(),
         "loop": [
             "observe",
@@ -75,18 +89,6 @@ def describe_agent(name: str) -> Dict[str, Any]:
 def perception_pipeline_note() -> str:
     return (
         "Raw input → tokenize/encode → embeddings → reason over goals. "
-        "No biological emotion; optimization via task success + safety constraints."
+        "No biological emotion; optimization via task success + safety constraints. "
+        "Purpose: compute patterns and automate cognitive work at scale."
     )
-
-
-def full_ecosystem() -> List[Dict[str, Any]]:
-    names = [
-        "saphira",
-        "nova_reign",
-        "nova_aethrea",
-        "aura",
-        "agent_zero",
-        "agent_two",
-        "lyra",
-    ]
-    return [describe_agent(n) for n in names]

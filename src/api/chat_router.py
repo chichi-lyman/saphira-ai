@@ -2,26 +2,25 @@
 # Owner: Chelsea Megan Woods | Woods AI Studio / Lyman Legacies
 #
 # Public conversational surface: execution + natural Saphira dialogue + session memory.
+# Multimodal: optional image_b64 for face recognition turns.
+# Brain: all natural language generation goes through SaphiraBrain (persona-locked).
 
 from __future__ import annotations
 
-import asyncio
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
-from src.agents.core_agents import SaphiraCore
 from src.core.orchestrator import SaphiraOrchestrator
-from src.core.saphira_persona import SAMANTHA_PERSONA_PROMPT
+from src.core.saphira_brain import get_saphira_brain
 from src.core.saphira_translator import public_reply
 from src.avatar.grok_avatar_service import avatar_service
 from src.memory.persistent_store import persistent_memory
-from src.connectors.gemini import GeminiConnector
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 _orchestrator = SaphiraOrchestrator()
-_gemini = GeminiConnector()
+_brain = get_saphira_brain()
 
 
 class ChatRequest(BaseModel):
@@ -29,6 +28,15 @@ class ChatRequest(BaseModel):
     confirmed: bool = False
     room: Optional[str] = None
     session_id: Optional[str] = None
+    # Multimodal face support
+    image_b64: Optional[str] = Field(
+        default=None,
+        description="Optional base64 JPEG/PNG for face recognition / enrollment",
+    )
+    consent_token: Optional[str] = Field(
+        default=None,
+        description="One-time token proving user consented to remember a face",
+    )
 
 
 def _session_history(session_id: Optional[str], limit: int = 12) -> list[dict[str, str]]:
@@ -39,7 +47,7 @@ def _session_history(session_id: Optional[str], limit: int = 12) -> list[dict[st
     return session[-limit:]
 
 
-def _natural_prompt(
+def _conversation_context(
     user_message: str,
     task_result: Dict[str, Any],
     history: list[dict[str, str]],
@@ -48,13 +56,10 @@ def _natural_prompt(
     status = task_result.get("status", "success")
 
     history_text = "\n".join(
-        f"{item.get('role', 'user').upper()}: {item.get('text', '')}"
-        for item in history
+        f"{item.get('role', 'user').upper()}: {item.get('text', '')}" for item in history
     ) or "No earlier messages in this session."
 
-    return f"""{SAMANTHA_PERSONA_PROMPT}
-
-[CONVERSATION MODE]
+    return f"""[CONVERSATION MODE]
 You are actively conversing with the user, not merely reporting a task result.
 Sound natural, warm, curious, emotionally intelligent, playful when appropriate, and present.
 Use contractions and varied sentence length. Ask a natural follow-up when it genuinely helps.
@@ -77,20 +82,6 @@ Result: {safe_message}
 Write Saphira's next message directly to the user. Make it sound like a real ongoing conversation rather than a system status report."""
 
 
-async def _generate_natural_reply(
-    user_message: str,
-    task_result: Dict[str, Any],
-    history: list[dict[str, str]],
-) -> Optional[str]:
-    if not _gemini.api_key:
-        return None
-    prompt = _natural_prompt(user_message, task_result, history)
-    result = await asyncio.to_thread(_gemini.generate, prompt)
-    if result.get("status") == "success" and result.get("text"):
-        return str(result["text"]).strip()
-    return None
-
-
 @router.post("")
 async def chat(req: ChatRequest) -> Dict[str, Any]:
     """Main Saphira conversation endpoint: execute, remember, and respond naturally."""
@@ -98,6 +89,8 @@ async def chat(req: ChatRequest) -> Dict[str, Any]:
         "confirmed": req.confirmed,
         "room": req.room,
         "session_id": req.session_id,
+        "image_b64": req.image_b64,
+        "consent_token": req.consent_token,
     }
 
     result = await _orchestrator.process(req.message, context=context)
@@ -105,8 +98,11 @@ async def chat(req: ChatRequest) -> Dict[str, Any]:
     avatar_state = result.get("avatar_state", "talking")
 
     history = _session_history(req.session_id)
-    natural_message = await _generate_natural_reply(req.message, final, history)
-    public_message = natural_message or public_reply(req.message, final)
+    ctx = _conversation_context(req.message, final, history)
+
+    # Brain path: persona + competitive directive always injected
+    natural_message = await _brain.reply(req.message, conversation_context=ctx)
+    public_message = natural_message or public_reply(req.message, final) or final.get("message")
 
     persistent_memory.append_history({
         "session_id": req.session_id,
@@ -130,9 +126,12 @@ async def chat(req: ChatRequest) -> Dict[str, Any]:
             "state": frame.get("state"),
         },
         "status": final.get("status", "success"),
-        "requires_confirmation": final.get("status") == "needs_confirmation",
+        "requires_confirmation": final.get("status") in ("needs_confirmation",) or final.get("requires_consent", False),
         "intent": final.get("intent"),
         "session_id": req.session_id,
         "voice_ready": True,
+        "matches": final.get("matches"),
+        "faces_detected": final.get("faces_detected"),
         "owner": "Chelsea Megan Woods",
+        "brain": "SaphiraBrain",
     }
