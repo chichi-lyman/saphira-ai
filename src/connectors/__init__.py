@@ -17,6 +17,15 @@ from .document_intelligence import DocumentIntelligenceConnector
 from .code_interpreter import CodeInterpreterConnector
 from .image_generation import ImageGenerationConnector
 from .social_content import SocialContentConnector
+from .saphira_mcp_client import SaphiraMCPManager, mcp_manager, router as mcp_router
+from .firecrawl import FirecrawlConnector
+from .tavily import TavilyConnector
+from .browserbase import BrowserbaseConnector
+from .travel import TravelConnector
+from .local_services import LocalServicesConnector
+from .shopping import ShoppingConnector
+from .finance import FinanceConnector
+from .messaging import MessagingConnector
 
 __all__ = [
     "FacebookConnector",
@@ -36,4 +45,15 @@ __all__ = [
     "CodeInterpreterConnector",
     "ImageGenerationConnector",
     "SocialContentConnector",
+    "SaphiraMCPManager",
+    "mcp_manager",
+    "mcp_router",
+    "FirecrawlConnector",
+    "TavilyConnector",
+    "BrowserbaseConnector",
+    "TravelConnector",
+    "LocalServicesConnector",
+    "ShoppingConnector",
+    "FinanceConnector",
+    "MessagingConnector",
 ]

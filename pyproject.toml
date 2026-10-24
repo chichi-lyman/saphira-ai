@@ -24,6 +24,7 @@ dependencies = [
   "langchain-core>=0.2",
   "celery[redis]>=5.4",
   "stripe>=11.0",
+  "mcp>=1.0",
 ]
 
 [project.optional-dependencies]

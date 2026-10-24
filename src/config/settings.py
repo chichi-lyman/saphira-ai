@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     )
 
     port: int = Field(default=8000, ge=1, le=65535)
-    environment: Literal["development", "staging", "production", "test"] = Field(
+    environment: Literal["development", "staging", "production", "test", "testing"] = Field(
         default="development", validation_alias="ENVIRONMENT"
     )
     saphira_env: Optional[str] = Field(default=None, validation_alias="SAPHIRA_ENV")
@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     openai_api_key: Optional[str] = Field(default=None, validation_alias="OPENAI_API_KEY")
     gemini_api_key: Optional[str] = Field(default=None, validation_alias="GEMINI_API_KEY")
     xai_api_key: Optional[str] = Field(default=None, validation_alias="XAI_API_KEY")
+    anthropic_api_key: Optional[str] = Field(default=None, validation_alias="ANTHROPIC_API_KEY")
     saphira_model: Optional[str] = Field(default=None, validation_alias="SAPHIRA_MODEL")
 
     # --- Provider Registry (configuration-driven) ---
@@ -48,13 +49,18 @@ class Settings(BaseSettings):
     openai_content_model: str = Field(default="gpt-4o-mini", validation_alias="OPENAI_CONTENT_MODEL")
     gemini_model: str = Field(default="gemini-2.0-flash", validation_alias="GEMINI_MODEL")
     xai_model: str = Field(default="grok-2-latest", validation_alias="XAI_MODEL")
+    anthropic_model: str = Field(
+        default="claude-sonnet-4-5-20250929",
+        validation_alias="ANTHROPIC_MODEL",
+    )
     llm_preference: str = Field(
-        default="gemini,openai,xai",
+        default="gemini,anthropic,openai,xai",
         validation_alias="SAPHIRA_LLM_PREFERENCE",
     )
     openai_enabled: bool = Field(default=True, validation_alias="OPENAI_ENABLED")
     gemini_enabled: bool = Field(default=True, validation_alias="GEMINI_ENABLED")
     xai_enabled: bool = Field(default=True, validation_alias="XAI_ENABLED")
+    anthropic_enabled: bool = Field(default=True, validation_alias="ANTHROPIC_ENABLED")
 
     elevenlabs_api_key: Optional[str] = Field(default=None, validation_alias="ELEVENLABS_API_KEY")
     elevenlabs_voice_id: Optional[str] = Field(default=None, validation_alias="ELEVENLABS_VOICE_ID")
@@ -92,7 +98,15 @@ class Settings(BaseSettings):
         return [o.strip() for o in self.saphira_allowed_origins.split(",") if o.strip()]
 
     def has_any_llm_provider(self) -> bool:
-        return any(bool(v and v.strip()) for v in (self.openai_api_key, self.gemini_api_key, self.xai_api_key))
+        return any(
+            bool(v and v.strip())
+            for v in (
+                self.openai_api_key,
+                self.gemini_api_key,
+                self.xai_api_key,
+                self.anthropic_api_key,
+            )
+        )
 
     def llm_preference_list(self) -> List[str]:
         return [p.strip().lower() for p in self.llm_preference.split(",") if p.strip()]
@@ -125,5 +139,7 @@ def get_settings() -> Settings:
 def validate_environment(*, strict: bool = False) -> Settings:
     settings = Settings()
     if strict and not settings.has_any_llm_provider():
-        raise ValueError("Strict validation failed: set OPENAI_API_KEY, GEMINI_API_KEY, or XAI_API_KEY")
+        raise ValueError(
+            "Strict validation failed: set OPENAI_API_KEY, GEMINI_API_KEY, XAI_API_KEY, or ANTHROPIC_API_KEY"
+        )
     return settings

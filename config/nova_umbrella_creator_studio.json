@@ -1,0 +1,88 @@
+{
+  "schema_version": "1.0.0",
+  "ecosystem": "Nova Umbrella",
+  "user_facing_assistant": "Saphira AI",
+  "capability_id": "creator_studio",
+  "display_name": "Creator Studio",
+  "status": "specification",
+  "feature_flags": {
+    "creator_studio_enabled": false,
+    "content_generation_enabled": false,
+    "image_generation_enabled": false,
+    "audio_generation_enabled": false,
+    "publishing_enabled": false,
+    "analytics_import_enabled": false
+  },
+  "brand_profile": {
+    "channel": "Megan's World",
+    "show": "Chels' Tea Room",
+    "format": "faceless YouTube talk show with AI character and voiceover",
+    "target_episode_minutes": {
+      "min": 10,
+      "max": 12
+    },
+    "signature_symbol": "🥀",
+    "palette": [
+      "black",
+      "blood red",
+      "silver"
+    ],
+    "content_pillars": [
+      "money, wealth, and financial power",
+      "shadow work, betrayal, and rebirth",
+      "fake loyalty, toxic people, and boundaries",
+      "mysticism, numbers, and Scorpio symbolism"
+    ],
+    "thumbnail_concepts": [
+      "MONEY TALKS",
+      "FAKE LOYALTY",
+      "DARK REBIRTH",
+      "QUIET WEALTH"
+    ],
+    "anthem_working_title": "BAD DECISIONS",
+    "series": [
+      "The Visionary Edge",
+      "The Alchemical Depth",
+      "The Master Blueprint"
+    ]
+  },
+  "workflow": [
+    "brief",
+    "research_and_fact_check",
+    "episode_script",
+    "original_audio_direction",
+    "thumbnail_and_brand_assets",
+    "shorts_and_metadata",
+    "creator_approval",
+    "publish_or_export",
+    "performance_review"
+  ],
+  "governance": {
+    "decisions": [
+      "ALLOW",
+      "REQUIRE_APPROVAL",
+      "DENY"
+    ],
+    "approval_required_for": [
+      "publishing",
+      "paid_promotion",
+      "account_changes",
+      "irreversible_external_actions",
+      "voice_or_likeness_rights_unclear"
+    ]
+  },
+  "integration_contract": {
+    "model_routing": "reuse_existing_provider_registry",
+    "secrets": "server_side_only",
+    "storage": "configured_user_scoped_application_storage",
+    "billing": "reuse_canonical_entitlements_and_usage_metering",
+    "audit_events": [
+      "generation_requested",
+      "provider_invoked",
+      "approval_decided",
+      "asset_exported",
+      "publishing_attempted",
+      "operation_failed"
+    ]
+  }
+}

@@ -59,7 +59,8 @@ Lyra provides cross-cutting structural integrity for data fabrics and script res
 ## Policy Invariants
 
 - Never reveal internal agent codenames to end users (secret-mask rule).
-- Preserve the Samantha-style persona (warm, emotionally intelligent, non-robotic).
+- Preserve Saphira’s warm, emotionally intelligent, non-robotic presence.
+- Do not attribute Saphira’s spoken style or presence to any film, celebrity, or third-party character in user-facing output.
 - All commerce and external actions remain under CommercialAuthorityPolicy (ALLOW / REQUIRE_APPROVAL / DENY) and hash-chained audit.
 - Self-healing patterns and next-agent hand-off lists must stay consistent with the six-core pipeline.
 

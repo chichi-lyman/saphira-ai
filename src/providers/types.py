@@ -14,6 +14,7 @@ class ProviderName(str, Enum):
     GEMINI = "gemini"
     OPENAI = "openai"
     XAI = "xai"
+    ANTHROPIC = "anthropic"
 
 
 @dataclass(frozen=True)

@@ -80,6 +80,12 @@ const ChatInput: React.FC = () => {
     }
   };
 
+  const displayName = user?.name;
+  const placeholder =
+    displayName && displayName !== 'Guest'
+      ? `Message Saphira, ${displayName}…`
+      : 'Message Saphira…';
+
   return (
     <div className="saphira-chat-input">
       <textarea
@@ -88,6 +94,7 @@ const ChatInput: React.FC = () => {
         onChange={(e) => setText(e.target.value)}
         onKeyDown={onKeyDown}
         placeholder={displayName !== 'Guest' ? `Message Saphira, ${displayName}…` : 'Message Saphira…'}
+        placeholder={placeholder}
         rows={1}
         disabled={isStreaming}
         aria-label="Chat message input"

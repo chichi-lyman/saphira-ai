@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://saphira.ai/schemas/cipher/dom_action.json",
+  "title": "Cipher DOM Action Review",
+  "description": "Schema for actions that must pass Agent Cipher / Sentinel before sandbox execution.",
+  "type": "object",
+  "required": ["type"],
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "navigate",
+        "click",
+        "fill_form",
+        "fill_credential",
+        "submit",
+        "payment",
+        "purchase",
+        "account_modify",
+        "download",
+        "upload"
+      ]
+    },
+    "url": { "type": "string", "format": "uri" },
+    "selector": { "type": "string" },
+    "credential_refs": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^cred_" },
+      "description": "Opaque zero-trust credential references only"
+    },
+    "payload": { "type": "object" },
+    "page_content_hash": { "type": "string" },
+    "require_user_approval": { "type": "boolean", "default": false }
+  },
+  "additionalProperties": false
+}

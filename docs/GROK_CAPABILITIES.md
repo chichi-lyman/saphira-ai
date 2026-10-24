@@ -12,6 +12,12 @@ Grok supplies agentic primitives out of the box. Woods skills should **use** the
 | **Code execution & automated debugging** | Sandboxed runs, test-driven patches, end-to-end scripts | Agent Zero, CI/`scripts/test_runner.sh` |
 | **Agentic tool calling** | Function calls to APIs, databases, third-party workflows | NovaAethrea (MCP/webhooks), capability registry |
 
+## Super Saphira product surface
+
+The premium tiers **Super Saphira** and **Super Saphira Heavy** expose the primitives above as a packaged product with higher rate limits, flagship model access (Saphira-4 / 4.5 class), Think/Expert modes, video generation, longer voice sessions, and priority compute. See [SUPER_SAPHIRA_CAPABILITIES.md](./SUPER_SAPHIRA_CAPABILITIES.md) for the full feature matrix and tier limits.
+
+Entitlement plans `super_saphira` and `super_saphira_heavy` in `src/platform/entitlements/metering.py` enforce the published quotas.
+
 ## Rules when packaging skills
 
 1. Declare which Grok capability a skill depends on.
@@ -22,6 +28,7 @@ Grok supplies agentic primitives out of the box. Woods skills should **use** the
 
 ## Related
 
+- [SUPER_SAPHIRA_CAPABILITIES.md](./SUPER_SAPHIRA_CAPABILITIES.md)
 - [AGENT_ALIGNMENT.md](./AGENT_ALIGNMENT.md)
 - [AGENT_SKILL_FRAMEWORK.md](./AGENT_SKILL_FRAMEWORK.md)
 - `skills/woods-multi-agent/`

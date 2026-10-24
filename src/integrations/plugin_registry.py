@@ -142,11 +142,11 @@ def default_plugin_manifests() -> tuple[PluginManifest, ...]:
         ),
         PluginManifest(
             "web_research",
-            "1.0",
-            "Live web browsing, scraping, fact verification, and summarized research",
+            "1.1",
+            "Live web browsing, scraping, fact verification (Firecrawl/Tavily/Browserbase)",
             ("research", "grounding", "web_search"),
             ("search",),
-            metadata={"category": "core_utility"},
+            metadata={"category": "core_utility", "providers": ("firecrawl", "tavily", "browserbase")},
         ),
         PluginManifest(
             "memory",
@@ -171,7 +171,7 @@ def default_plugin_manifests() -> tuple[PluginManifest, ...]:
             ("analytics", "business_intelligence"),
             ("read",),
         ),
-        # --- Core Utility Plugins (Everyday & Productivity) ---
+        # --- Core Utility Plugins ---
         PluginManifest(
             "google_workspace",
             "1.0",
@@ -220,7 +220,7 @@ def default_plugin_manifests() -> tuple[PluginManifest, ...]:
             True,
             metadata={"category": "core_utility"},
         ),
-        # --- Extended Workflow & Automation Plugins ---
+        # --- Extended Workflow ---
         PluginManifest(
             "zapier",
             "1.0",
@@ -250,6 +250,89 @@ def default_plugin_manifests() -> tuple[PluginManifest, ...]:
             True,
             True,
             metadata={"category": "extended_workflow"},
+        ),
+        # --- Competitive excellence pillars (all agents may invoke) ---
+        PluginManifest(
+            "latency",
+            "1.0",
+            "Low-latency TTS/STT/TTFT path (local ONNX/Piper + streaming); target 180–350ms",
+            ("low_latency_audio", "tts", "stt", "ttft"),
+            ("audio",),
+            metadata={
+                "category": "excellence",
+                "target": "180ms-350ms",
+                "agents": ("saphira", "aura", "agent_zero"),
+            },
+        ),
+        PluginManifest(
+            "memory_hybrid",
+            "1.0",
+            "Hybrid memory retention/recall (pgvector + operational store); design target 98.2%",
+            ("hybrid_memory_recall", "memory", "vector_search"),
+            ("read", "write"),
+            metadata={
+                "category": "excellence",
+                "target": "98.2%",
+                "agents": ("saphira", "scholar", "novaaethrea"),
+            },
+        ),
+        PluginManifest(
+            "tool_automation",
+            "1.0",
+            "High-reliability tool execution (FastAPI fabric, Android a11y, web connectors); target 94.5%",
+            ("tool_automation", "automation", "device_action"),
+            ("execute",),
+            True,
+            True,
+            metadata={
+                "category": "excellence",
+                "target": "94.5%",
+                "agents": ("agent_two", "novareign", "aura"),
+            },
+        ),
+        PluginManifest(
+            "edge_offline",
+            "1.0",
+            "Edge/offline native path (Android, Termux, WebGPU, optional vLLM)",
+            ("edge_offline", "offline", "on_device"),
+            ("local",),
+            metadata={
+                "category": "excellence",
+                "target": "100% native path",
+                "agents": ("agent_zero", "aura", "cipher"),
+            },
+        ),
+        PluginManifest(
+            "reasoning",
+            "1.0",
+            "Deep/zero-shot reasoning via Scholar + orchestrator multi-step plans",
+            ("deep_reasoning", "reasoning", "analysis"),
+            ("think",),
+            metadata={
+                "category": "excellence",
+                "target": "84.5/100+",
+                "agents": ("scholar", "novaaethrea", "saphira", "orchestrator"),
+            },
+        ),
+        PluginManifest(
+            "privacy_ledger",
+            "1.0",
+            "Self-hosted privacy & ownership: append-only execution ledger, tenant isolation",
+            ("privacy_ledger", "privacy", "audit"),
+            ("audit",),
+            metadata={
+                "category": "excellence",
+                "target": "10/10",
+                "agents": ("cipher", "agent_two", "novareign", "saphira"),
+            },
+        ),
+        PluginManifest(
+            "excellence_overview",
+            "1.0",
+            "Composite excellence posture (Tier S): latency, memory, automation, edge, privacy, reasoning",
+            ("excellence_overview", "benchmark"),
+            ("read",),
+            metadata={"category": "excellence", "tier": "S", "rank_target": 4},
         ),
     )
 

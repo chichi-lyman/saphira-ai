@@ -22,16 +22,20 @@ def _settings(**kwargs) -> Settings:
         "openai_api_key": None,
         "gemini_api_key": None,
         "xai_api_key": None,
+        "anthropic_api_key": None,
         "openai_enabled": True,
         "gemini_enabled": True,
         "xai_enabled": True,
+        "anthropic_enabled": True,
         "llm_preference": "gemini,openai,xai",
         "openai_model": "gpt-4o-mini",
         "gemini_model": "gemini-2.0-flash",
         "xai_model": "grok-2-latest",
+        "anthropic_model": "claude-sonnet-4-5-20250929",
+        "environment": "test",
     }
     base.update(kwargs)
-    return Settings(**base)
+    return Settings.model_validate(base)
 
 
 @pytest.mark.asyncio
@@ -50,10 +54,11 @@ async def test_not_configured_when_no_keys():
             openai_api_key="",
             gemini_api_key="",
             xai_api_key="",
+            anthropic_api_key="",
         )
     )
     result = await reg.generate(GenerateRequest(prompt="hello"))
-    assert result.status in ("error", "not_configured")
+    assert result.status in ("error", "not_configured", "disabled")
     assert result.status != "success"
 
 

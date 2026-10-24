@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AutonomousResearchTaskContract",
+  "type": "object",
+  "required": [
+    "contract_id",
+    "goal",
+    "success_criteria",
+    "allowed_domains",
+    "action_budget",
+    "output_schema",
+    "approval_level",
+    "created_by",
+    "created_at"
+  ],
+  "properties": {
+    "contract_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier for this research run"
+    },
+    "goal": {
+      "type": "string",
+      "minLength": 10,
+      "description": "Natural-language research objective"
+    },
+    "success_criteria": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "description": "Measurable conditions that end the run successfully"
+    },
+    "allowed_domains": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^(\\\*\\.)?[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+      },
+      "minItems": 1,
+      "description": "Strict allow-list. Navigation outside this list is forbidden."
+    },
+    "action_budget": {
+      "type": "object",
+      "required": ["max_pages", "max_seconds", "max_cost_usd"],
+      "properties": {
+        "max_pages": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "max_seconds": { "type": "integer", "minimum": 30, "maximum": 3600 },
+        "max_cost_usd": { "type": "number", "minimum": 0.01, "maximum": 5.0 }
+      }
+    },
+    "output_schema": {
+      "type": "object",
+      "description": "JSON Schema that every extracted record must satisfy"
+    },
+    "cadence": {
+      "type": "string",
+      "enum": ["one_shot", "hourly", "daily", "weekly", "event"],
+      "default": "one_shot"
+    },
+    "approval_level": {
+      "type": "string",
+      "enum": ["auto", "require_approval", "deny"],
+      "description": "Maps to CommercialAuthorityPolicy / governance gate"
+    },
+    "prohibited_actions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "form_submit",
+          "login",
+          "purchase",
+          "message",
+          "create_account",
+          "download_binary",
+          "execute_script"
+        ]
+      },
+      "default": ["form_submit", "login", "purchase", "message", "create_account"]
+    },
+    "freshness_hours": {
+      "type": "integer",
+      "minimum": 1,
+      "default": 24
+    },
+    "created_by": { "type": "string" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "parent_contract_id": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

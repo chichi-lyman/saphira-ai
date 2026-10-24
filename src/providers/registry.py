@@ -7,7 +7,13 @@ import logging
 from typing import Any, Optional
 
 from src.config.settings import Settings, get_settings
-from src.providers.adapters import GeminiAdapter, OpenAIAdapter, XAIAdapter, LLMProvider
+from src.providers.adapters import (
+    GeminiAdapter,
+    OpenAIAdapter,
+    XAIAdapter,
+    AnthropicAdapter,
+    LLMProvider,
+)
 from src.providers.types import GenerateRequest, GenerateResult, InvocationRecord, ProviderName
 
 logger = logging.getLogger("Saphira.ProviderRegistry")
@@ -24,6 +30,7 @@ class ProviderRegistry:
         self._settings = settings or get_settings()
         self._providers: dict[str, LLMProvider] = {
             ProviderName.GEMINI.value: GeminiAdapter(self._settings),
+            ProviderName.ANTHROPIC.value: AnthropicAdapter(self._settings),
             ProviderName.OPENAI.value: OpenAIAdapter(self._settings),
             ProviderName.XAI.value: XAIAdapter(self._settings),
         }
@@ -112,7 +119,7 @@ class ProviderRegistry:
         system: Optional[str] = None,
         metadata: Optional[dict] = None,
     ) -> GenerateResult:
-        """Convenience used by chat surface."""
+        """Convenience used by chat surface (legacy path). Prefer SaphiraBrain."""
         return await self.generate(
             GenerateRequest(
                 prompt=prompt,

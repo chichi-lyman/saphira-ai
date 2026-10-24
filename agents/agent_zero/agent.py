@@ -1,7 +1,8 @@
-# Copyright © 2026 Chelsea Megan Woods
-class AgentZero:
-    name = "agent_zero"
-    default_policy = "ALLOW"
+# Copyright (c) 2026 Chelsea Megan Woods. All Rights Reserved.
+# Owner & Creator: Chelsea Megan Woods | Woods AI Studio / Lyman Legacies
+#
+# Lightweight package stub. Canonical implementation lives in src/agents/agent_zero.py
 
-    def execute(self, task: dict) -> dict:
-        return {"agent": self.name, "task": task, "status": "executed"}
+from src.agents.agent_zero import AgentZero
+
+__all__ = ["AgentZero"]

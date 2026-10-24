@@ -1,144 +1,95 @@
-"""Provider-neutral model registry and deterministic routing contracts.
+# Copyright (c) 2026 Chelsea Megan Woods / Woods AI Studio / Lyman Legacies / Nova Umbrella
+# All rights reserved.
 
-This module does not call external providers. Provider adapters register their
-capabilities and supply an invocation callable at application startup.
-"""
-from __future__ import annotations
-
-from dataclasses import dataclass, field
-from enum import Enum
-from typing import Any, Callable, Iterable
+from typing import Any, Dict, Optional
+from pydantic import BaseModel
 
 
-class Modality(str, Enum):
-    TEXT = "text"
-    IMAGE = "image"
-    AUDIO = "audio"
-    VIDEO = "video"
-    FILE = "file"
-
-
-@dataclass(frozen=True)
-class ModelSpec:
+class ModelEndpointConfig(BaseModel):
     provider: str
-    model_id: str
-    capabilities: frozenset[str] = frozenset({"chat"})
-    modalities: frozenset[Modality] = frozenset({Modality.TEXT})
-    enabled: bool = False
-    max_input_tokens: int | None = None
-    cost_per_1k_input_tokens: float | None = None
-    cost_per_1k_output_tokens: float | None = None
-    max_latency_ms: int | None = None
-    metadata: dict[str, Any] = field(default_factory=dict)
-
-    @property
-    def key(self) -> str:
-        return f"{self.provider}:{self.model_id}"
+    model_name: str
+    endpoint_url: str
+    is_local: bool = False
+    max_context_tokens: int = 8192
+    notes: str = ""
 
 
-@dataclass(frozen=True)
-class RoutingRequest:
-    capability: str = "chat"
-    required_modalities: frozenset[Modality] = frozenset({Modality.TEXT})
-    max_cost_per_1k_input_tokens: float | None = None
-    max_latency_ms: int | None = None
-    preferred_providers: tuple[str, ...] = ()
-    allow_disabled: bool = False
+class SaphiraModelRegistry:
+    """
+    Central Provider-Neutral Model Registry for Saphira AI.
 
+    Registers cloud backends (Gemini, Claude/Anthropic, OpenAI-compatible)
+    and local offline vLLM / Ollama endpoints. Used by the inference router
+    so the product can switch providers without rewriting business logic.
+    """
 
-@dataclass(frozen=True)
-class RoutingDecision:
-    selected: ModelSpec
-    candidates: tuple[str, ...]
-    reason: str
+    PROVIDERS: Dict[str, ModelEndpointConfig] = {
+        # Primary cloud path (Google)
+        "gemini_flash": ModelEndpointConfig(
+            provider="google",
+            model_name="gemini-2.5-flash",
+            endpoint_url="https://generativelanguage.googleapis.com/v1beta",
+            is_local=False,
+            max_context_tokens=1048576,
+            notes="Fast, high-context. Primary for most interactive work.",
+        ),
+        "gemini_pro": ModelEndpointConfig(
+            provider="google",
+            model_name="gemini-2.5-pro",
+            endpoint_url="https://generativelanguage.googleapis.com/v1beta",
+            is_local=False,
+            max_context_tokens=1048576,
+            notes="Heavier reasoning when quality > latency.",
+        ),
+        # Anthropic path (fallback / specialized)
+        "claude_sonnet": ModelEndpointConfig(
+            provider="anthropic",
+            model_name="claude-sonnet-4-5-20250929",
+            endpoint_url="https://api.anthropic.com/v1/messages",
+            is_local=False,
+            max_context_tokens=200000,
+            notes="Strong coding & long-document analysis fallback.",
+        ),
+        "claude_haiku": ModelEndpointConfig(
+            provider="anthropic",
+            model_name="claude-haiku-4-5-20251001",
+            endpoint_url="https://api.anthropic.com/v1/messages",
+            is_local=False,
+            max_context_tokens=200000,
+            notes="Fast, cost-efficient Anthropic option.",
+        ),
+        # Local / self-hosted (force-local, offline, cost control)
+        "vllm_local": ModelEndpointConfig(
+            provider="vllm",
+            model_name="qwen2.5-coder-7b-instruct",
+            endpoint_url="http://localhost:8000/v1/chat/completions",
+            is_local=True,
+            max_context_tokens=32768,
+            notes="Local OpenAI-compatible endpoint (vLLM).",
+        ),
+        "ollama_local": ModelEndpointConfig(
+            provider="ollama",
+            model_name="llama3.1:8b",
+            endpoint_url="http://localhost:11434/v1/chat/completions",
+            is_local=True,
+            max_context_tokens=8192,
+            notes="Local Ollama for fully offline or privacy-sensitive runs.",
+        ),
+    }
 
+    @classmethod
+    def get_endpoint(cls, key: str = "gemini_flash") -> Optional[ModelEndpointConfig]:
+        return cls.PROVIDERS.get(key)
 
-class NoEligibleModelError(RuntimeError):
-    """Raised when no registered model satisfies a routing request."""
+    @classmethod
+    def list_local_endpoints(cls) -> Dict[str, ModelEndpointConfig]:
+        return {k: v for k, v in cls.PROVIDERS.items() if v.is_local}
 
+    @classmethod
+    def list_cloud_endpoints(cls) -> Dict[str, ModelEndpointConfig]:
+        return {k: v for k, v in cls.PROVIDERS.items() if not v.is_local}
 
-class ModelRegistry:
-    """In-memory registry; production persistence/configuration belongs to the host app."""
-
-    def __init__(self) -> None:
-        self._models: dict[str, ModelSpec] = {}
-        self._invokers: dict[str, Callable[..., Any]] = {}
-
-    def register(
-        self, spec: ModelSpec, invoker: Callable[..., Any] | None = None
-    ) -> None:
-        if not spec.provider.strip() or not spec.model_id.strip():
-            raise ValueError("provider and model_id must be non-empty")
-        if spec.cost_per_1k_input_tokens is not None and spec.cost_per_1k_input_tokens < 0:
-            raise ValueError("input token cost cannot be negative")
-        if spec.cost_per_1k_output_tokens is not None and spec.cost_per_1k_output_tokens < 0:
-            raise ValueError("output token cost cannot be negative")
-        if spec.max_latency_ms is not None and spec.max_latency_ms <= 0:
-            raise ValueError("max_latency_ms must be positive")
-        self._models[spec.key] = spec
-        if invoker is not None:
-            self._invokers[spec.key] = invoker
-        else:
-            self._invokers.pop(spec.key, None)
-
-    def unregister(self, key: str) -> None:
-        self._models.pop(key, None)
-        self._invokers.pop(key, None)
-
-    def get(self, key: str) -> ModelSpec | None:
-        return self._models.get(key)
-
-    def list_models(self, *, include_disabled: bool = True) -> tuple[ModelSpec, ...]:
-        models = self._models.values()
-        if not include_disabled:
-            models = (m for m in models if m.enabled)
-        return tuple(sorted(models, key=lambda m: m.key))
-
-    def route(self, request: RoutingRequest) -> RoutingDecision:
-        eligible: list[ModelSpec] = []
-        for model in self._models.values():
-            if not request.allow_disabled and not model.enabled:
-                continue
-            if request.capability not in model.capabilities:
-                continue
-            if not request.required_modalities.issubset(model.modalities):
-                continue
-            if request.max_cost_per_1k_input_tokens is not None:
-                cost = model.cost_per_1k_input_tokens
-                if cost is None or cost > request.max_cost_per_1k_input_tokens:
-                    continue
-            latency = request.max_latency_ms
-            if latency is not None and (
-                model.max_latency_ms is None or model.max_latency_ms > latency
-            ):
-                continue
-            eligible.append(model)
-
-        if not eligible:
-            raise NoEligibleModelError(
-                "No enabled registered model satisfies capability, modality, cost, and latency constraints"
-            )
-
-        preference = {name: i for i, name in enumerate(request.preferred_providers)}
-        eligible.sort(
-            key=lambda m: (
-                preference.get(m.provider, len(preference)),
-                m.cost_per_1k_input_tokens
-                if m.cost_per_1k_input_tokens is not None
-                else float("inf"),
-                m.max_latency_ms if m.max_latency_ms is not None else float("inf"),
-                m.key,
-            )
-        )
-        selected = eligible[0]
-        return RoutingDecision(
-            selected=selected,
-            candidates=tuple(m.key for m in eligible),
-            reason="eligible model ranked by provider preference, declared cost, latency, then stable key",
-        )
-
-    def invoke(self, decision: RoutingDecision, **kwargs: Any) -> Any:
-        invoker = self._invokers.get(decision.selected.key)
-        if invoker is None:
-            raise RuntimeError(f"No invoker registered for {decision.selected.key}")
-        return invoker(**kwargs)
+    @classmethod
+    def preferred_order(cls) -> list[str]:
+        """Default routing preference: fast Gemini → quality Claude → local."""
+        return ["gemini_flash", "claude_sonnet", "claude_haiku", "vllm_local", "ollama_local"]
