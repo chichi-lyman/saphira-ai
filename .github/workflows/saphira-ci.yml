@@ -27,7 +27,7 @@ jobs:
         run: python -m compileall -q .
       - name: Run tests
         env:
-          ENVIRONMENT: testing
+          ENVIRONMENT: test
           PYTHONPATH: ${{ github.workspace }}
         run: |
           pytest -q --tb=line \
@@ -51,7 +51,7 @@ jobs:
           pip install -r requirements.txt -r requirements-dev.txt
       - name: Run TikTok integration smoke tests
         env:
-          ENVIRONMENT: testing
+          ENVIRONMENT: test
           PYTHONPATH: ${{ github.workspace }}
         run: |
           if [ -f tests/test_tiktok_integration.py ]; then
