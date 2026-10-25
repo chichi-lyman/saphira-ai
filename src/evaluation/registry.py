@@ -32,28 +32,9 @@ class BenchmarkRegistry:
             cls._instance._register_defaults()
         return cls._instance
 
-    def register(
-        self,
-        key: str,
-        benchmark_cls: Type,
-        *,
-        name: str,
-        description: str,
-        subjects: int = 0,
-        category: str = "knowledge",
-        owner_agents: Optional[list[str]] = None,
-        capability_keys: Optional[list[str]] = None,
-    ) -> None:
-        """Register a benchmark class under a stable capability key."""
+    def register(self, key: str, benchmark_cls: Type, *, name: str, description: str, subjects: int = 0, category: str = "knowledge", owner_agents: Optional[list[str]] = None, capability_keys: Optional[list[str]] = None) -> None:
         self._benchmarks[key] = benchmark_cls
-        self._metadata[key] = {
-            "name": name,
-            "description": description,
-            "subjects": subjects,
-            "category": category,
-            "owner_agents": owner_agents or ["scholar", "evaluator"],
-            "capability_keys": capability_keys or [f"eval.{key}"],
-        }
+        self._metadata[key] = {"name": name, "description": description, "subjects": subjects, "category": category, "owner_agents": owner_agents or ["scholar", "evaluator"], "capability_keys": capability_keys or [f"eval.{key}"]}
         logger.info("Registered benchmark %s (%s)", key, name)
 
     def get(self, key: str) -> Optional[Type]:
@@ -73,92 +54,15 @@ class BenchmarkRegistry:
         from .benchmarks.humaneval import HumanEvalBenchmark
         from .benchmarks.mbpp import MBPPBenchmark
         from .benchmarks.gpqa import GPQABenchmark
+        from .benchmarks.math_bench import MATHBenchmark
+        from .benchmarks.gsm8k import GSM8KBenchmark
 
-        self.register(
-            "mmlu",
-            MMLUBenchmark,
-            name="MMLU (Massive Multitask Language Understanding)",
-            description=(
-                "Tests broad academic, factual, and cross-domain reasoning "
-                "across 57 subjects spanning humanities, social sciences, STEM, "
-                "and professional domains (elementary to professional level)."
-            ),
-            subjects=57,
-            category="knowledge",
-            owner_agents=["scholar", "evaluator", "nova_aethrea"],
-            capability_keys=[
-                "eval.mmlu",
-                "eval.mmlu.0shot",
-                "eval.mmlu.5shot",
-                "knowledge.academic",
-                "reasoning.multitask",
-            ],
-        )
-
-        self.register(
-            "humaneval",
-            HumanEvalBenchmark,
-            name="HumanEval (Python Coding)",
-            description=(
-                "164 handwritten Python programming problems with function signature, "
-                "docstring, and unit tests. Measures zero-shot pass@1 code generation "
-                "accuracy for complex programming tasks (OpenAI, 2021)."
-            ),
-            subjects=164,
-            category="coding",
-            owner_agents=["scholar", "evaluator", "agent_zero", "nova_aethrea"],
-            capability_keys=[
-                "eval.humaneval",
-                "eval.humaneval.pass_at_1",
-                "coding.python",
-                "coding.zero_shot",
-                "reasoning.code_generation",
-            ],
-        )
-
-        self.register(
-            "mbpp",
-            MBPPBenchmark,
-            name="MBPP (Mostly Basic Python Problems)",
-            description=(
-                "Crowd-sourced Python programming tasks designed for entry-level "
-                "programmers. Evaluates pass@1 functional correctness on practical "
-                "scripting and basic algorithmic problems (Google Research)."
-            ),
-            subjects=974,
-            category="coding",
-            owner_agents=["scholar", "evaluator", "agent_zero", "nova_aethrea"],
-            capability_keys=[
-                "eval.mbpp",
-                "eval.mbpp.pass_at_1",
-                "coding.python",
-                "coding.basic",
-                "reasoning.code_generation",
-            ],
-        )
-
-        self.register(
-            "gpqa",
-            GPQABenchmark,
-            name="GPQA (Graduate-Level Google-Proof Q&A)",
-            description=(
-                "Graduate-level multiple-choice questions in biology, chemistry, and physics "
-                "written by domain experts. Designed to be Google-proof: PhD experts ~65–81% "
-                "accuracy; skilled non-experts with web access ~22–34%. Includes Diamond subset."
-            ),
-            subjects=448,
-            category="reasoning",
-            owner_agents=["scholar", "evaluator", "nova_aethrea"],
-            capability_keys=[
-                "eval.gpqa",
-                "eval.gpqa.diamond",
-                "reasoning.graduate",
-                "reasoning.science",
-                "knowledge.biology",
-                "knowledge.chemistry",
-                "knowledge.physics",
-            ],
-        )
+        self.register("mmlu", MMLUBenchmark, name="MMLU (Massive Multitask Language Understanding)", description="Tests broad academic, factual, and cross-domain reasoning across 57 subjects.", subjects=57, category="knowledge", owner_agents=["scholar", "evaluator", "nova_aethrea"], capability_keys=["eval.mmlu", "eval.mmlu.0shot", "eval.mmlu.5shot", "knowledge.academic", "reasoning.multitask"])
+        self.register("humaneval", HumanEvalBenchmark, name="HumanEval (Python Coding)", description="164 handwritten Python problems; zero-shot pass@1 code generation (OpenAI, 2021).", subjects=164, category="coding", owner_agents=["scholar", "evaluator", "agent_zero", "nova_aethrea"], capability_keys=["eval.humaneval", "eval.humaneval.pass_at_1", "coding.python", "coding.zero_shot", "reasoning.code_generation"])
+        self.register("mbpp", MBPPBenchmark, name="MBPP (Mostly Basic Python Problems)", description="Crowd-sourced Python tasks; pass@1 functional correctness (Google Research).", subjects=974, category="coding", owner_agents=["scholar", "evaluator", "agent_zero", "nova_aethrea"], capability_keys=["eval.mbpp", "eval.mbpp.pass_at_1", "coding.python", "coding.basic", "reasoning.code_generation"])
+        self.register("gpqa", GPQABenchmark, name="GPQA (Graduate-Level Google-Proof Q&A)", description="Graduate-level MCQ in biology, chemistry, physics; Google-proof (Rein et al., 2023).", subjects=448, category="reasoning", owner_agents=["scholar", "evaluator", "nova_aethrea"], capability_keys=["eval.gpqa", "eval.gpqa.diamond", "reasoning.graduate", "reasoning.science", "knowledge.biology", "knowledge.chemistry", "knowledge.physics"])
+        self.register("math", MATHBenchmark, name="MATH (Competition Mathematics)", description="Competition mathematics; step-by-step quantitative reasoning via exact-match final answer (Hendrycks et al., 2021).", subjects=12500, category="math", owner_agents=["scholar", "evaluator", "nova_aethrea"], capability_keys=["eval.math", "eval.math.exact_match", "reasoning.mathematical", "reasoning.quantitative", "knowledge.competition_math"])
+        self.register("gsm8k", GSM8KBenchmark, name="GSM8K (Grade School Math 8K)", description="Grade-school math word problems; multi-step arithmetic exact-match (Cobbe et al., 2021).", subjects=8500, category="math", owner_agents=["scholar", "evaluator", "nova_aethrea"], capability_keys=["eval.gsm8k", "eval.gsm8k.exact_match", "reasoning.mathematical", "reasoning.quantitative", "knowledge.grade_school_math"])
 
 
 def get_registry() -> BenchmarkRegistry:
