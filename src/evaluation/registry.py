@@ -10,7 +10,7 @@ Routed through: Capability Registry / NovaReign DAG
 
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, Optional, Type
+from typing import Any, Dict, Optional, Type
 import logging
 
 logger = logging.getLogger("Saphira.Evaluation.Registry")
@@ -69,8 +69,9 @@ class BenchmarkRegistry:
         return {k: dict(v) for k, v in self._metadata.items()}
 
     def _register_defaults(self) -> None:
-        # Late import to avoid circular deps
         from .benchmarks.mmlu import MMLUBenchmark
+        from .benchmarks.humaneval import HumanEvalBenchmark
+        from .benchmarks.mbpp import MBPPBenchmark
 
         self.register(
             "mmlu",
@@ -90,6 +91,48 @@ class BenchmarkRegistry:
                 "eval.mmlu.5shot",
                 "knowledge.academic",
                 "reasoning.multitask",
+            ],
+        )
+
+        self.register(
+            "humaneval",
+            HumanEvalBenchmark,
+            name="HumanEval (Python Coding)",
+            description=(
+                "164 handwritten Python programming problems with function signature, "
+                "docstring, and unit tests. Measures zero-shot pass@1 code generation "
+                "accuracy for complex programming tasks (OpenAI, 2021)."
+            ),
+            subjects=164,
+            category="coding",
+            owner_agents=["scholar", "evaluator", "agent_zero", "nova_aethrea"],
+            capability_keys=[
+                "eval.humaneval",
+                "eval.humaneval.pass_at_1",
+                "coding.python",
+                "coding.zero_shot",
+                "reasoning.code_generation",
+            ],
+        )
+
+        self.register(
+            "mbpp",
+            MBPPBenchmark,
+            name="MBPP (Mostly Basic Python Problems)",
+            description=(
+                "Crowd-sourced Python programming tasks designed for entry-level "
+                "programmers. Evaluates pass@1 functional correctness on practical "
+                "scripting and basic algorithmic problems (Google Research)."
+            ),
+            subjects=974,
+            category="coding",
+            owner_agents=["scholar", "evaluator", "agent_zero", "nova_aethrea"],
+            capability_keys=[
+                "eval.mbpp",
+                "eval.mbpp.pass_at_1",
+                "coding.python",
+                "coding.basic",
+                "reasoning.code_generation",
             ],
         )
 
