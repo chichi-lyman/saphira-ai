@@ -72,6 +72,7 @@ class BenchmarkRegistry:
         from .benchmarks.mmlu import MMLUBenchmark
         from .benchmarks.humaneval import HumanEvalBenchmark
         from .benchmarks.mbpp import MBPPBenchmark
+        from .benchmarks.gpqa import GPQABenchmark
 
         self.register(
             "mmlu",
@@ -133,6 +134,29 @@ class BenchmarkRegistry:
                 "coding.python",
                 "coding.basic",
                 "reasoning.code_generation",
+            ],
+        )
+
+        self.register(
+            "gpqa",
+            GPQABenchmark,
+            name="GPQA (Graduate-Level Google-Proof Q&A)",
+            description=(
+                "Graduate-level multiple-choice questions in biology, chemistry, and physics "
+                "written by domain experts. Designed to be Google-proof: PhD experts ~65–81% "
+                "accuracy; skilled non-experts with web access ~22–34%. Includes Diamond subset."
+            ),
+            subjects=448,
+            category="reasoning",
+            owner_agents=["scholar", "evaluator", "nova_aethrea"],
+            capability_keys=[
+                "eval.gpqa",
+                "eval.gpqa.diamond",
+                "reasoning.graduate",
+                "reasoning.science",
+                "knowledge.biology",
+                "knowledge.chemistry",
+                "knowledge.physics",
             ],
         )
 
