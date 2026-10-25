@@ -6,6 +6,14 @@ Unified workspace for **Saphira AI** and all specialist agents under one reposit
 
 Saphira is the only user-facing identity. Internal agents (Aura, Agent Two, Nova Reign, NovaAethrea, Agent Zero, Lyra, and extended specialists) stay secret-masked behind the fixed executive pipeline.
 
+## Publications & Technical Evaluation Frameworks
+
+Technical writing, multi-agent evaluation rubrics, SFT/RLHF-style quality frameworks, and system architecture documentation are collected here:
+
+**→ [PUBLICATIONS.md](./PUBLICATIONS.md)**
+
+This includes evaluation dimensions for instruction following, multi-turn coherence, hallucination control, code-review quality, governance gates, and self-healing recovery — suitable for portfolio links and professional evaluation platforms.
+
 ## Super Saphira tiers
 
 Premium capability surface and rate limits: [docs/SUPER_SAPHIRA_CAPABILITIES.md](./docs/SUPER_SAPHIRA_CAPABILITIES.md)
@@ -80,6 +88,7 @@ uv run pytest
 
 ## Key docs
 
+- [PUBLICATIONS.md](./PUBLICATIONS.md) — Publications & Technical Evaluation Frameworks
 - [docs/AGENT_ALIGNMENT.md](./docs/AGENT_ALIGNMENT.md) — pipeline and agent roles
 - [docs/SUPER_FEATURES_FRAMEWORK.md](./docs/SUPER_FEATURES_FRAMEWORK.md) — Creation / Usage / Upgrade
 - [docs/THE_WEAVER.md](./docs/THE_WEAVER.md) — Contextual Cartographer
