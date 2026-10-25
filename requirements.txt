@@ -11,6 +11,8 @@ sqlalchemy>=2.0
 asyncpg>=0.29
 langgraph>=0.2
 langchain-core>=0.2
+celery[redis]>=5.4
+stripe>=11.0
 mcp>=1.0
 
 # Optional integrations (imported by connectors / workers / commerce)
