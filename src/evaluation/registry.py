@@ -56,6 +56,7 @@ class BenchmarkRegistry:
         from .benchmarks.gpqa import GPQABenchmark
         from .benchmarks.math_bench import MATHBenchmark
         from .benchmarks.gsm8k import GSM8KBenchmark
+        from .benchmarks.mgsm import MGSMBenchmark
 
         self.register("mmlu", MMLUBenchmark, name="MMLU (Massive Multitask Language Understanding)", description="Tests broad academic, factual, and cross-domain reasoning across 57 subjects.", subjects=57, category="knowledge", owner_agents=["scholar", "evaluator", "nova_aethrea"], capability_keys=["eval.mmlu", "eval.mmlu.0shot", "eval.mmlu.5shot", "knowledge.academic", "reasoning.multitask"])
         self.register("humaneval", HumanEvalBenchmark, name="HumanEval (Python Coding)", description="164 handwritten Python problems; zero-shot pass@1 code generation (OpenAI, 2021).", subjects=164, category="coding", owner_agents=["scholar", "evaluator", "agent_zero", "nova_aethrea"], capability_keys=["eval.humaneval", "eval.humaneval.pass_at_1", "coding.python", "coding.zero_shot", "reasoning.code_generation"])
@@ -63,6 +64,7 @@ class BenchmarkRegistry:
         self.register("gpqa", GPQABenchmark, name="GPQA (Graduate-Level Google-Proof Q&A)", description="Graduate-level MCQ in biology, chemistry, physics; Google-proof (Rein et al., 2023).", subjects=448, category="reasoning", owner_agents=["scholar", "evaluator", "nova_aethrea"], capability_keys=["eval.gpqa", "eval.gpqa.diamond", "reasoning.graduate", "reasoning.science", "knowledge.biology", "knowledge.chemistry", "knowledge.physics"])
         self.register("math", MATHBenchmark, name="MATH (Competition Mathematics)", description="Competition mathematics; step-by-step quantitative reasoning via exact-match final answer (Hendrycks et al., 2021).", subjects=12500, category="math", owner_agents=["scholar", "evaluator", "nova_aethrea"], capability_keys=["eval.math", "eval.math.exact_match", "reasoning.mathematical", "reasoning.quantitative", "knowledge.competition_math"])
         self.register("gsm8k", GSM8KBenchmark, name="GSM8K (Grade School Math 8K)", description="Grade-school math word problems; multi-step arithmetic exact-match (Cobbe et al., 2021).", subjects=8500, category="math", owner_agents=["scholar", "evaluator", "nova_aethrea"], capability_keys=["eval.gsm8k", "eval.gsm8k.exact_match", "reasoning.mathematical", "reasoning.quantitative", "knowledge.grade_school_math"])
+        self.register("mgsm", MGSMBenchmark, name="MGSM (Multilingual Grade School Math)", description="250 grade-school math word problems in 10 typologically diverse languages (+ English); exact-match numeric answer (Shi et al., 2022).", subjects=250, category="math", owner_agents=["scholar", "evaluator", "nova_aethrea"], capability_keys=["eval.mgsm", "eval.mgsm.exact_match", "reasoning.mathematical", "reasoning.multilingual", "knowledge.grade_school_math"])
 
 
 def get_registry() -> BenchmarkRegistry:
