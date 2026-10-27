@@ -40,6 +40,18 @@ AI should be trained as an **adaptive, multi-domain cognitive engine** that swit
 
 **Mapped agents:** Agent Two · Lexis · policy registry (ALLOW / REQUIRE_APPROVAL / DENY)
 
+## Multi-stage training mechanics
+
+The four pillars above are produced by a multi-stage pipeline documented in  
+[`docs/SAPHIRA_MULTI_STAGE_TRAINING_PIPELINE.md`](SAPHIRA_MULTI_STAGE_TRAINING_PIPELINE.md):
+
+1. **Pre-training analogue** — pattern / multimodal baseline  
+2. **Supervised Fine-Tuning (dual-path)** — constructive system engineering + risk-analysis classification  
+3. **Preference optimization** — rank trajectories for helpfulness, correct risk labeling, and policy adherence  
+4. **Runtime system framing** — identity, tool schema, Unfiltered Context Evaluator, State & Action Classification Layer, Safety CoT  
+
+Hard blocks for self-harm methods, violence instructions, CSAM, weapons construction, and other prohibited categories remain in force. Dual-path training improves structural understanding of risk so the system can classify and report rather than rely solely on brittle keyword refusals.
+
 ## Target outcomes
 
 1. **Eliminate the normative average** — nuanced, risk-aware, assumption-challenging answers  
@@ -61,3 +73,4 @@ AI should be trained as an **adaptive, multi-domain cognitive engine** that swit
 - Instinct / Apex: **ALLOW** create/publish (including raw/rage/jealousy themes per owner)
 - Ethical audits still run for high-harm classes (self-harm, violence, illegal acts)
 - Dialectical red-team does not block ALLOW publish; it improves quality before send
+- Classification scores from the Unfiltered Context Evaluator feed Agent Two and NovaReign before any external mutation
