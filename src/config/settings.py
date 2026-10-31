@@ -30,6 +30,8 @@ class Settings(BaseSettings):
 
     database_url: Optional[str] = Field(default=None, validation_alias="DATABASE_URL")
     redis_url: Optional[str] = Field(default="redis://localhost:6379/0", validation_alias="REDIS_URL")
+    automation_webhook_secret: Optional[str] = Field(default=None, validation_alias="SAPHIRA_AUTOMATION_WEBHOOK_SECRET")
+    automation_outbound_url: Optional[str] = Field(default=None, validation_alias="SAPHIRA_AUTOMATION_OUTBOUND_URL")
     celery_broker_url: Optional[str] = Field(default=None, validation_alias="CELERY_BROKER_URL")
     celery_result_backend: Optional[str] = Field(default=None, validation_alias="CELERY_RESULT_BACKEND")
 
@@ -105,6 +107,8 @@ class Settings(BaseSettings):
             "allowed_origins_count": len(self.allowed_origins_list()),
             "database_configured": bool(self.database_url),
             "redis_configured": bool(self.redis_url),
+            "automation_inbound_configured": bool(self.automation_webhook_secret),
+            "automation_outbound_configured": bool(self.automation_outbound_url),
             "llm_provider_configured": self.has_any_llm_provider(),
             "providers_enabled": self.providers_enabled,
             "tts_configured": bool(self.elevenlabs_api_key and self.elevenlabs_voice_id),
