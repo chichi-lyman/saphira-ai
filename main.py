@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import logging
 
 from src.api.chat_router import router as chat_router
+from src.api.automation_webhooks import router as automation_router
 from src.api.device_ws import router as device_router
 from src.api.tiktok_router import router as tiktok_router
 from src.api.platform_router import router as platform_router
@@ -52,6 +53,7 @@ app.add_middleware(
 app.add_middleware(AuditEventMiddleware)
 
 app.include_router(chat_router, prefix="/api")
+app.include_router(automation_router)
 app.include_router(device_router, prefix="/api")
 app.include_router(tiktok_router, prefix="/api")
 app.include_router(platform_router, prefix="/api")
