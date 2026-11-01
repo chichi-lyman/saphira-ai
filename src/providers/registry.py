@@ -15,15 +15,18 @@ from src.providers.adapters import (
     LLMProvider,
 )
 from src.providers.types import GenerateRequest, GenerateResult, InvocationRecord, ProviderName
+from src.resilience.circuit_breaker import CircuitBreaker, CircuitOpenError
+from src.resilience.degradation import GracefulDegradation, DegradationLevel
 
 logger = logging.getLogger("Saphira.ProviderRegistry")
 
 
 class ProviderRegistry:
     """
-    Configuration-driven LLM provider registry.
+    Configuration-driven LLM provider registry with circuit breakers,
+    graceful degradation, and partial-failure recovery.
+
     External calls are off unless Settings.providers_enabled is True.
-    Health is observed (read-only); never mutated from call paths.
     """
 
     def __init__(self, settings: Optional[Settings] = None):
@@ -34,14 +37,31 @@ class ProviderRegistry:
             ProviderName.OPENAI.value: OpenAIAdapter(self._settings),
             ProviderName.XAI.value: XAIAdapter(self._settings),
         }
+        self._breakers: dict[str, CircuitBreaker] = {
+            name: CircuitBreaker(
+                name=name,
+                failure_threshold=5,
+                recovery_timeout=30.0,
+                success_threshold=2,
+            )
+            for name in self._providers
+        }
+        self._degradation = GracefulDegradation()
         self._telemetry: list[InvocationRecord] = []
 
     def health(self) -> dict[str, Any]:
-        """Read-only snapshot. Never mutates state."""
+        """Read-only snapshot including circuit state."""
+        providers = {}
+        for name, p in self._providers.items():
+            snap = p.health_snapshot()
+            snap["circuit"] = self._breakers[name].snapshot()
+            providers[name] = snap
+        self._degradation.update_from_provider_health({"providers": providers})
         return {
             "providers_enabled": self._settings.providers_enabled,
             "preference": self._settings.llm_preference_list(),
-            "providers": {name: p.health_snapshot() for name, p in self._providers.items()},
+            "providers": providers,
+            "degradation": self._degradation.snapshot(),
         }
 
     def _record(self, result: GenerateResult, metadata: Optional[dict] = None) -> None:
@@ -78,9 +98,11 @@ class ProviderRegistry:
         fallback: bool = True,
     ) -> GenerateResult:
         """
-        Route a generation request.
+        Route a generation request with circuit-breaker protection and
+        graceful degradation.
+
         - preferred: force a specific provider name
-        - fallback: try preference order until one succeeds
+        - fallback: try preference order until one succeeds (partial failure recovery)
         """
         if not self._settings.providers_enabled:
             result = GenerateResult(
@@ -98,17 +120,45 @@ class ProviderRegistry:
                 order.append(name)
 
         last: GenerateResult = GenerateResult(status="error", message="No providers available")
+        attempted = 0
+
         for name in order:
             provider = self._providers.get(name)
             if not provider or not provider.enabled():
                 continue
+
+            breaker = self._breakers[name]
+            if not breaker.allow():
+                logger.debug("skip %s (circuit open, retry_after=%.1fs)", name, breaker.retry_after())
+                continue
+
+            attempted += 1
             result = await provider.generate(req)
             self._record(result, metadata=req.metadata)
+
             if result.status == "success":
+                breaker.record_success()
                 return result
+
+            # Treat non-success as failure for the breaker
+            breaker.record_failure(result.message)
             last = result
             if not fallback:
                 return result
+
+        # All paths failed or circuits open → degrade
+        health = self.health()
+        level = self._degradation.level
+        if level >= DegradationLevel.STANDBY or attempted == 0:
+            msg = self._degradation.standby_message(last.message if last else None)
+            standby = GenerateResult(
+                status="standby",
+                text=msg,
+                message=msg,
+                provider="standby",
+            )
+            self._record(standby, metadata=req.metadata)
+            return standby
 
         return last
 
@@ -128,6 +178,11 @@ class ProviderRegistry:
             ),
             fallback=True,
         )
+
+    def reset_circuits(self) -> None:
+        """Admin / test helper."""
+        for b in self._breakers.values():
+            b.reset()
 
 
 _registry: Optional[ProviderRegistry] = None

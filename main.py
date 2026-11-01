@@ -14,6 +14,7 @@ from src.api.saphira_dispatcher import router as saphira_dispatcher_router
 from src.api.excellence_router import router as excellence_router
 from src.api.autonomy_router import router as autonomy_router
 from src.api.face_router import router as face_router
+from src.api.webhook_router import router as webhook_router
 from src.commerce.stripe_checkout import router as checkout_router
 from src.commerce.billing_router import router as billing_router
 from core.control_plane import router as control_plane_router
@@ -30,8 +31,8 @@ settings = validate_environment(strict=False)
 
 app = FastAPI(
     title="Saphira AI Enterprise",
-    description="Conversational executive assistant with governed autonomous agents and enterprise control plane.",
-    version="17.4.0",
+    description="Conversational executive assistant with governed autonomous agents, provider resilience, and automation bridges.",
+    version="17.5.0",
 )
 
 app.add_middleware(
@@ -61,6 +62,7 @@ app.include_router(platform_router, prefix="/api")
 app.include_router(twilio_voice_router, prefix="/api")
 app.include_router(mcp_router, prefix="/api")
 app.include_router(face_router, prefix="/api")  # /api/face/*
+app.include_router(webhook_router, prefix="/api")  # /api/webhooks/*
 app.include_router(saphira_dispatcher_router)  # /v1/saphira/stream
 app.include_router(excellence_router)  # /v1/router/execute
 app.include_router(autonomy_router)  # /v1/autonomy/repair

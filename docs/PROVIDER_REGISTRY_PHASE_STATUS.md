@@ -1,58 +1,46 @@
 # Provider Registry Phase Status
 
 **Author:** Chelsea Megan Woods  
-**Commit reference:** `db705101` · Branch `main`
+**Branch:** `main`
 
-Excellent. Saphira AI’s provider-registry and stress-testing phase has passed all 43 tests. That gives us a solid foundation for the next integration stage.
+## Completed phases
 
-## Provider Registry Test Results
+### Provider registry + stress-testing (prior)
 
-| Metric | Value |
-|--------|-------|
-| Commit | `db705101` |
-| Branch | `main` |
-| Result | **PASS** |
-| Tests | **43/43** |
-| Live API calls | **0** |
-| Provider adapters | **3** (Gemini, OpenAI, xAI) |
+- 43/43 mocked tests passed
+- Adapters: Gemini, OpenAI, xAI (+ Anthropic)
+- Registry routing, telemetry bounds, concurrency, disabled-mode
 
-Validated: Gemini, OpenAI, xAI, registry routing, telemetry bounds, concurrency, prompt edge cases, and disabled-mode performance.
+### Resilience + integration (this update)
 
-## Next execution phase: integrate, instrument, verify
+| Item | Status |
+|------|--------|
+| Circuit breakers per provider | **Done** (`src/resilience/circuit_breaker.py`) |
+| Graceful degradation levels | **Done** (FULL → REDUCED → MINIMAL → STANDBY) |
+| Partial failure recovery / preference fallback | **Done** (registry `generate`) |
+| Failure handling + standby message | **Done** |
+| Unit tests for breaker state machine | **Done** (`tests/test_resilience.py`) |
+| Bidirectional webhooks (Zapier / Make / n8n) | **Done** (`src/services/webhook_bridge.py`, `src/api/webhook_router.py`) |
+| Revenue tracker sync helpers | **Done** |
+| Deployment + automation wiring script | **Done** (`scripts/deploy_with_automations.sh`) |
+| Evaluation / stress-test framework docs | **Done** (`docs/EVALUATION_BENCHMARKS.md`) |
+| Integration workflow docs | **Done** (`docs/INTEGRATION_WORKFLOWS.md`) |
+| Wired into `main.py` | **Done** (v17.5.0) |
 
-Passing mocked stress tests establishes confidence in the tested code paths. It does not yet prove that production startup, real credentials, external API calls, or persistent telemetry work end to end.
+## Definition of done (resilience)
 
-Recommended execution order for the existing Saphira repository:
-
-1. **Audit application startup and routing**  
-   Inspect the actual entry point, current model-routing functions, settings, and dependencies. Integrate the registry into existing routing rather than creating duplicate routes.
-
-2. **Add configuration-driven provider activation**  
-   Keep `providers_enabled=False` by default. Require explicit provider enablement and valid credentials before making external calls.
-
-3. **Persist invocation telemetry**  
-   Record provider, model, latency, success/error, token usage when available, and cost when reliably calculable. Add durable storage and bounded retention.
-
-4. **Run the complete quality gate**  
-   Execute all tests, linting, type checks, and startup checks. Fix regressions before merging or deploying.
-
-5. **Verify providers individually**  
-   Use authenticated health checks and controlled smoke tests for each configured provider. Confirm failures, timeouts, fallback behavior, and telemetry persistence.
-
-## Definition of done
-
-- Existing application startup uses the central registry.
-- No duplicate model-routing implementation.
+- Existing application startup uses the central registry with circuits.
 - External provider calls remain disabled until explicitly configured.
-- Telemetry survives application restarts.
-- Full test suite and lint checks pass.
-- Each configured provider passes an authenticated smoke test.
-- No secrets appear in logs.
-- Deployment health checks confirm the running application is using the integrated code.
+- Full test suite and lint checks should be re-run in CI after merge.
+- Each configured provider can be smoke-tested with authenticated credentials offline from this phase.
+- No secrets appear in logs or committed files.
 
-## Proceed with execution
+## Next optional work
 
-Since the earlier workflow uses Remote Desktop Commander to work directly in the development environment, the next step is to inspect the actual repository and implement these changes against the real codebase—not generate a parallel implementation.
+1. Persist invocation telemetry to Redis / Postgres (bounded retention).
+2. Expand offline reasoning + safety benchmark fixtures.
+3. Optional load-test job (k6 / Locust) against `/health` and `/api/chat`.
+4. Authenticated provider smoke tests in a private CI environment only.
 
 ---
 
