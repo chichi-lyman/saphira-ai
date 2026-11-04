@@ -49,6 +49,9 @@ app.add_middleware(
         "X-Tenant-ID",
         "X-Agent-DID",
         "X-Saphira-Automation-Key",
+        "X-Webhook-Timestamp",
+        "X-Webhook-Signature",
+        "X-Webhook-Event-Id",
         "X-Saphira-Memory-Key",
     ],
 )
