@@ -168,6 +168,7 @@ create policy agent_task_events_select_own on public.agent_task_events
     exists (select 1 from public.agent_tasks t
             where t.id = agent_task_events.task_id and t.user_id = (select auth.uid()))
   );
+revoke all on public.agent_tasks, public.agent_task_events from anon, authenticated;
 grant select on public.agent_tasks, public.agent_task_events to authenticated;
 
 -- Audit history is backend-only and not client-readable or editable.
