@@ -14,6 +14,6 @@ class RBAC:
     def allows(self,p,permission,resource=None):
         if not p.active or not is_known(permission): return False
         grants=set().union(*(self.roles.get(r,set()) for r in p.roles))
-        return permission in grants and (resource is None or p.kind=="user" or "*" in p.scopes or resource in p.scopes)
+        return permission in grants and (resource is None or "*" in p.scopes or resource in p.scopes)
     def require(self,p,permission,resource=None):
         if not self.allows(p,permission,resource): raise AuthorizationDenied("Permission denied: "+permission)
