@@ -74,9 +74,7 @@ class Settings(BaseSettings):
     telegram_bot_token: Optional[str] = Field(default=None, validation_alias="TELEGRAM_BOT_TOKEN")
     telegram_chat_id: Optional[str] = Field(default=None, validation_alias="TELEGRAM_CHAT_ID")
 
-    saphira_jwt_secret: Optional[str] = Field(default=None, validation_alias="SAPHIRA_JWT_SECRET")
     saphira_encryption_key: Optional[str] = Field(default=None, validation_alias="SAPHIRA_ENCRYPTION_KEY")
-    saphira_admin_audit_key: Optional[str] = Field(default=None, validation_alias="SAPHIRA_ADMIN_AUDIT_KEY")
 
     @field_validator("log_level", mode="before")
     @classmethod
