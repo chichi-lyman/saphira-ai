@@ -1,24 +1,32 @@
 # Saphira Core Governance Implementation
 
-## Implemented in this branch
+## Code delivered in this branch
 
-- Standard account password verification using PBKDF2-HMAC-SHA256 and opaque session-token helpers.
-- RFC 6238 TOTP step-up verification for administrator authentication.
-- Deny-by-default RBAC, a permission catalogue, and privileged-action policy decisions.
-- Ed25519 public-key verification and a key registry/revocation interface.
-- Canonical signed command envelopes and a KMS signer protocol. No private key material is stored in this repository.
-- Master command gateway enforcing administrator identity, MFA, key trust, signature, scope, expiry, revocation, and one-time nonce consumption.
-- Override manager, master-authorized emergency stop, scoped delegated agent grants, and execution guard.
-- Hash-chained audit events and chain verification.
+- Password registration/authentication helpers using PBKDF2-HMAC-SHA256, opaque session tokens, hashed-token storage, expiry, revocation, and atomic refresh rotation.
+- RFC 6238 administrator TOTP with one-time counter consumption. The secret resolver and counter store must be protected and durable.
+- Deny-by-default RBAC, permission catalogue, scoped resource checks, and policy decisions that route privileged permissions to master approval.
+- Ed25519 public-key verification, durable key-registry/revocation interfaces, canonical signed command envelopes, and a KMS signer interface.
+- Master gateway pins a configured immutable administrator account ID, validates MFA, registered command/action-to-permission mapping, signature algorithm, key ownership, signature, command scope, time window, revocation, command-ID replay, and nonce replay.
+- Master override manager records an authorization intent before performing a protected action, then records and verifies the result.
+- Master-authorized emergency stop, delegated short-lived agent credentials, and a common execution guard.
+- Hash-chained audit events, optional mandatory KMS signatures, atomic append interface, and chain/signature verification.
+- Controlled key-rotation service contract.
+- Unit tests for account authentication/session rotation, TOTP replay rejection, nonce replay, RBAC/policy denial, and audit tamper detection.
 
-## Required production adapters and rollout gates
+## Production dependencies — must be supplied by the deployment
 
-The in-memory key registry, revocation registry, nonce store, delegated-grant store, emergency-stop store, and audit store are development/test adapters only. Before production, replace them with durable, strongly consistent services. Use a managed KMS/HSM signer, database-backed key lifecycle and revocation, atomic nonce consumption with TTL, centrally revocable delegated credentials, an independently backed-up append-only audit sink, and a durable emergency-stop latch.
+The code intentionally does not embed a master private key, create a default master identity, or ship development credentials. Production must provision the master administrator by immutable account ID and store public verification keys through a controlled bootstrap process. The private signing key must remain in a KMS/HSM; the application receives signatures from the KMS operation, never the private key.
 
-The application must call ExecutionGuard at every API, worker, agent, provider, integration, and scheduler execution boundary. The repository modules do not automatically secure call sites that have not been wired to the guard. Master administrator identity and trusted public keys must be provisioned through a controlled bootstrap procedure; do not infer master status from a display name or a user-editable role.
+Production adapters must implement durable, strongly consistent interfaces for account/session records, MFA secrets and used TOTP counters, public-key registry, key revocation, nonce/command-ID consumption, delegated grants, emergency-stop state, and audit events. The audit store must be append-only, independently backed up, and configured with `AuditRecorder(require_signature=True, signer=..., signing_key_id=...)`. The KMS signer must sign both privileged commands and audit-event digests where configured.
 
-Do not enable privileged operations until the KMS signer, MFA secret store, persistent stores, replay protection, audit retention, key rotation/recovery, and integration tests have passed security review. Missing configuration or unavailable verification dependencies must fail closed.
+The local `InMemoryNonceStore` and `InMemoryAuditStore` are test-only. They are not suitable for multi-worker or production deployments. Key rotation must use a transactional store operation that atomically installs the replacement key and disables the old key; the revocation record and audit event must be retained.
 
-## Test and validation status
+## Integration boundary and current release blockers
 
-Unit tests are included for RBAC denial, privileged-action policy decisions, audit-chain tamper detection, and malformed TOTP rejection. These tests have not been executed in this branch-creation operation. CI results and full application integration remain release gates.
+The governance modules do not secure an application entry point merely by existing. In particular, the current chat API and existing orchestration/worker paths must be wired to authenticate a trusted principal and call `ExecutionGuard` before any agent, provider, tool, integration, scheduler, or worker execution. Do not trust a role or administrator name supplied in request JSON. The current chat router's visible request model does not itself establish an authenticated user principal, so this integration is still a release blocker.
+
+Do not enable privileged actions until every execution entry point is guarded; durable adapters are deployed; master MFA and KMS signing are configured; key rotation/recovery and emergency stop are exercised; and the adversarial integration suite passes. Missing configuration, failed signature verification, unavailable authorization services, and unavailable replay stores must fail closed.
+
+## Validation status
+
+Tests have been added but must pass in CI before merge. A previous CI revision showed P0 integration passing while broader Python/package/agent workflows failed. Later branch commits changed the implementation and need a fresh completed CI run. This pull request is a code implementation baseline, not a production security certification.
