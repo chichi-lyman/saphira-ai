@@ -1,4 +1,4 @@
-import { useState, type FormEvent, type ReactNode } from 'react';
+import { useState, type FormEvent, type ReactNode, type CSSProperties } from 'react';
 import { useUser } from '../context/UserContext';
 
 export function AuthGate({ children }: { children: ReactNode }) {
@@ -58,15 +58,15 @@ export function AuthGate({ children }: { children: ReactNode }) {
   </section></main>;
 }
 
-const shell: React.CSSProperties = { minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 24, background: '#0B0813', color: '#fff', fontFamily: 'Inter, system-ui, sans-serif' };
-const panel: React.CSSProperties = { width: 'min(100%, 420px)', padding: 32, border: '1px solid rgba(255,255,255,.12)', borderRadius: 24, background: 'rgba(25,18,37,.92)', boxShadow: '0 24px 80px rgba(0,0,0,.4)' };
-const mark: React.CSSProperties = { color: '#FF00A0', fontSize: 30 };
-const heading: React.CSSProperties = { margin: '8px 0', fontSize: 34, letterSpacing: '-.04em' };
-const copy: React.CSSProperties = { color: '#c9bfd3', margin: 0 };
-const small: React.CSSProperties = { color: '#93899e', fontSize: 12, lineHeight: 1.5, marginTop: 22 };
-const label: React.CSSProperties = { display: 'grid', gap: 7, color: '#e9e2ef', fontSize: 13 };
-const field: React.CSSProperties = { width: '100%', boxSizing: 'border-box', borderRadius: 12, border: '1px solid rgba(255,255,255,.16)', padding: '13px 14px', background: '#100b19', color: '#fff', fontSize: 15 };
-const primary: React.CSSProperties = { border: 0, borderRadius: 12, padding: 14, background: 'linear-gradient(100deg,#8B00FF,#FF00A0)', color: '#fff', fontWeight: 700, cursor: 'pointer' };
-const notice: React.CSSProperties = { color: '#e9d8ff', fontSize: 13, lineHeight: 1.5 };
-const links: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', gap: 12, marginTop: 16 };
-const link: React.CSSProperties = { border: 0, background: 'transparent', color: '#d9a9ff', cursor: 'pointer', padding: 0, fontSize: 13 };
+const shell: CSSProperties = { minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 24, background: '#0B0813', color: '#fff', fontFamily: 'Inter, system-ui, sans-serif' };
+const panel: CSSProperties = { width: 'min(100%, 420px)', padding: 32, border: '1px solid rgba(255,255,255,.12)', borderRadius: 24, background: 'rgba(25,18,37,.92)', boxShadow: '0 24px 80px rgba(0,0,0,.4)' };
+const mark: CSSProperties = { color: '#FF00A0', fontSize: 30 };
+const heading: CSSProperties = { margin: '8px 0', fontSize: 34, letterSpacing: '-.04em' };
+const copy: CSSProperties = { color: '#c9bfd3', margin: 0 };
+const small: CSSProperties = { color: '#93899e', fontSize: 12, lineHeight: 1.5, marginTop: 22 };
+const label: CSSProperties = { display: 'grid', gap: 7, color: '#e9e2ef', fontSize: 13 };
+const field: CSSProperties = { width: '100%', boxSizing: 'border-box', borderRadius: 12, border: '1px solid rgba(255,255,255,.16)', padding: '13px 14px', background: '#100b19', color: '#fff', fontSize: 15 };
+const primary: CSSProperties = { border: 0, borderRadius: 12, padding: 14, background: 'linear-gradient(100deg,#8B00FF,#FF00A0)', color: '#fff', fontWeight: 700, cursor: 'pointer' };
+const notice: CSSProperties = { color: '#e9d8ff', fontSize: 13, lineHeight: 1.5 };
+const links: CSSProperties = { display: 'flex', justifyContent: 'space-between', gap: 12, marginTop: 16 };
+const link: CSSProperties = { border: 0, background: 'transparent', color: '#d9a9ff', cursor: 'pointer', padding: 0, fontSize: 13 };
