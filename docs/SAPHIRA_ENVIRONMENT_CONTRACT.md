@@ -41,11 +41,13 @@ Secrets are injected by the deployment platform. Never commit secret values.
 - `COMMUNICATIONS_PROVIDER_KEY`
 - `CALENDAR_PROVIDER_KEY`
 
-## Security
+## Identity and security
 
-- `SAPHIRA_JWT_SECRET`
-- `SAPHIRA_ENCRYPTION_KEY`
-- `SAPHIRA_ADMIN_AUDIT_KEY`
+- `SUPABASE_URL`
+- `SUPABASE_PUBLISHABLE_KEY` (server-side token validation)
+- `SAPHIRA_ENCRYPTION_KEY` (temporary server-only credential-vault encryption key; migrate to managed secret storage/KMS before production scale)
+
+Supabase Auth owns user passwords and sessions. The application does not use a custom user JWT secret or a client-held master signing key.
 
 ## Device / realtime
 
