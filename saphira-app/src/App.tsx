@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useChat } from './context/ChatContext';
 import { useSaphiraStream } from './hooks/useSaphiraStream';
 import type { SaphiraMessage } from './types/saphira';
+import { useUser } from './context/UserContext';
 
 type View = 'home' | 'work' | 'chats' | 'settings';
 type WorkItem = { id: string; title: string; status: 'ready' | 'running' | 'approval'; detail: string };
@@ -21,6 +22,7 @@ const makeMessage = (role: SaphiraMessage['role'], content: string): SaphiraMess
 
 const App: React.FC = () => {
   const { messages, addMessage, clearMessages, threads, setThreads, setActiveThreadId } = useChat();
+  const { user, signOut } = useUser();
   const { startStream, isStreaming, streamedContent, streamError, resetStream } = useSaphiraStream();
   const [view, setView] = useState<View>('home');
   const [draft, setDraft] = useState('');
@@ -157,6 +159,8 @@ const App: React.FC = () => {
           <section className="content-view settings-view">
             <div className="section-heading"><div><span className="eyebrow">CONFIGURATION</span><h1>Settings</h1></div></div>
             <div className="settings-list">
+              <div><strong>Signed in as</strong><small>{user?.email ?? user?.id}</small></div>
+              <button className="primary-small" onClick={() => { void signOut().catch((error) => console.error('Sign out failed:', error)); }}>Sign out</button>
               <label><span><strong>Voice responses</strong><small>Allow Saphira to speak responses when voice mode is active.</small></span><input type="checkbox" checked={voiceEnabled} onChange={(e) => setVoiceEnabled(e.target.checked)} /></label>
               <div><strong>Personality</strong><small>Warm, direct, intelligent, conversational.</small></div>
               <div><strong>Memory</strong><small>Saphira uses the connected memory layer when available.</small></div>
