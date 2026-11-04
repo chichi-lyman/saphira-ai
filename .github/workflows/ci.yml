@@ -71,4 +71,5 @@ jobs:
       - name: Import agent package
         run: |
           pip install pydantic
+          if [ "${{ matrix.agent }}" = "aura" ]; then pip install numpy; fi
           python -c "from agents.${{ matrix.agent }}.agent import *; print('${{ matrix.agent }} OK')"
