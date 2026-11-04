@@ -42,7 +42,7 @@ const App: React.FC = () => {
 
     const userMessage = makeMessage('user', text);
     const requestMessages = [...messages, userMessage];
-    const sessionId = activeThreadId ?? (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(36).slice(2));
+    const sessionId = activeThreadId ?? (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(36).slice(2));
     if (!activeThreadId) setActiveThreadId(sessionId);
     addMessage(userMessage);
     setDraft('');
