@@ -21,8 +21,8 @@ def test_registry_has_mmlu():
 def test_extract_choice():
     assert _extract_choice("The answer is B") == 1
     assert _extract_choice("A") == 0
-    # Digit parsing: 0-3 branch is checked; "3" maps to index 3
-    assert _extract_choice("I choose 3") == 3
+    # 1-based digits preferred: "I choose 3" → index 2
+    assert _extract_choice("I choose 3") == 2
     assert _extract_choice("random text") is None
 
 
@@ -32,8 +32,6 @@ def test_mmlu_subjects_count():
 
 @pytest.mark.asyncio
 async def test_builtin_subset_runs():
-    """Mock model that always answers 'B' — score is deterministic on builtin set."""
-
     async def always_b(prompt: str) -> str:
         return "B"
 
