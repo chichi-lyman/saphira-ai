@@ -12,7 +12,7 @@ export interface UseSaphiraStreamResult {
   isStreaming: boolean;
   streamError: string | null;
   streamedContent: string;
-  startStream: (messages: SaphiraMessage[]) => Promise<string>;
+  startStream: (messages: SaphiraMessage[], sessionId?: string) => Promise<string>;
   stopStream: () => void;
   resetStream: () => void;
 }
@@ -34,7 +34,7 @@ export function useSaphiraStream(): UseSaphiraStreamResult {
     abortRef.current = false;
   }, []);
 
-  const startStream = useCallback(async (messages: SaphiraMessage[]): Promise<string> => {
+  const startStream = useCallback(async (messages: SaphiraMessage[], sessionId?: string): Promise<string> => {
     abortRef.current = false;
     setIsStreaming(true);
     setStreamError(null);
@@ -43,7 +43,7 @@ export function useSaphiraStream(): UseSaphiraStreamResult {
     let full = '';
 
     try {
-      for await (const chunk of streamChat(messages)) {
+      for await (const chunk of streamChat(messages, { session_id: sessionId })) {
         if (abortRef.current) break;
         full += chunk;
         setStreamedContent(full);
