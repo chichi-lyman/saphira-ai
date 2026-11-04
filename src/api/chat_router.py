@@ -1,11 +1,10 @@
 # Copyright (c) 2026 Chelsea Megan Woods. All Rights Reserved.
-# Owner: Chelsea Megan Woods | Woods AI Studio / Lyman Legacies
 # Public conversational surface, authenticated by centralized Supabase Auth.
 
 from __future__ import annotations
 from typing import Any, Dict, Optional
 from uuid import uuid4
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from src.core.orchestrator import SaphiraOrchestrator
@@ -20,21 +19,32 @@ _orchestrator = SaphiraOrchestrator()
 _brain = get_saphira_brain()
 
 
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+
 class ChatRequest(BaseModel):
-    message: str = Field(..., min_length=1)
+    message: Optional[str] = Field(default=None, min_length=1)
+    messages: list[ChatMessage] = Field(default_factory=list)
     confirmed: bool = False
     room: Optional[str] = None
     session_id: Optional[str] = None
-    image_b64: Optional[str] = Field(default=None, description="Optional base64 JPEG/PNG for face recognition / enrollment")
-    consent_token: Optional[str] = Field(default=None, description="One-time token proving user consented to remember a face")
+    image_b64: Optional[str] = None
+    consent_token: Optional[str] = None
+
+    def last_user_message(self) -> str:
+        if self.message:
+            return self.message
+        for item in reversed(self.messages):
+            if item.role == "user" and item.content.strip():
+                return item.content.strip()
+        raise HTTPException(status_code=422, detail="A user message is required")
 
 
-def _session_history(session_id: Optional[str], limit: int = 12) -> list[dict[str, str]]:
-    if not session_id:
-        return []
-    history = persistent_memory.get_history(limit=60)
-    session = [item for item in history if item.get("session_id") == session_id]
-    return session[-limit:]
+def _session_history(session_id: str, limit: int = 12) -> list[dict[str, str]]:
+    history = persistent_memory.get_history(limit=100)
+    return [item for item in history if item.get("session_id") == session_id][-limit:]
 
 
 def _conversation_context(user_message: str, task_result: Dict[str, Any],
@@ -70,8 +80,10 @@ Write Saphira's next message directly to the user. Make it sound like a real ong
 @router.post("")
 async def chat(req: ChatRequest,
                principal: AuthenticatedUser = Depends(get_current_user)) -> Dict[str, Any]:
-    """Main conversation endpoint; session namespace is bound to the verified user."""
-    scoped_session_id = f"{principal.id}:{req.session_id or uuid4().hex}"
+    """Main conversation endpoint; both user and session namespace are verified/scoped."""
+    user_message = req.last_user_message()
+    client_session_id = req.session_id or uuid4().hex
+    scoped_session_id = f"{principal.id}:{client_session_id}"
     context = {
         "confirmed": req.confirmed,
         "room": req.room,
@@ -80,15 +92,20 @@ async def chat(req: ChatRequest,
         "image_b64": req.image_b64,
         "consent_token": req.consent_token,
     }
-    result = await _orchestrator.process(req.message, context=context)
+    result = await _orchestrator.process(user_message, context=context)
     final = result.get("final", {})
     avatar_state = result.get("avatar_state", "talking")
     history = _session_history(scoped_session_id)
-    ctx = _conversation_context(req.message, final, history)
-    natural_message = await _brain.reply(req.message, conversation_context=ctx)
-    public_message = natural_message or public_reply(req.message, final) or final.get("message")
-
-    persistent_memory.append_history({"session_id": scoped_session_id, "role": "user", "text": req.message})
+    if not history and req.messages:
+        history = [
+            {"role": item.role, "text": item.content}
+            for item in req.messages[:-1]
+            if item.role in {"user", "assistant", "model"}
+        ][-12:]
+    ctx = _conversation_context(user_message, final, history)
+    natural_message = await _brain.reply(user_message, conversation_context=ctx)
+    public_message = natural_message or public_reply(user_message, final) or final.get("message")
+    persistent_memory.append_history({"session_id": scoped_session_id, "role": "user", "text": user_message})
     persistent_memory.append_history({"session_id": scoped_session_id, "role": "assistant", "text": public_message})
     frame = avatar_service.generate_frame(state=avatar_state)
     return {
@@ -98,7 +115,7 @@ async def chat(req: ChatRequest,
         "status": final.get("status", "success"),
         "requires_confirmation": final.get("status") == "needs_confirmation" or final.get("requires_consent", False),
         "intent": final.get("intent"),
-        "session_id": scoped_session_id,
+        "session_id": client_session_id,
         "voice_ready": True,
         "matches": final.get("matches"),
         "faces_detected": final.get("faces_detected"),
