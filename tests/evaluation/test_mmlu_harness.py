@@ -21,7 +21,8 @@ def test_registry_has_mmlu():
 def test_extract_choice():
     assert _extract_choice("The answer is B") == 1
     assert _extract_choice("A") == 0
-    assert _extract_choice("I choose 3") == 2  # 1-based → 0-based
+    # Digit parsing: 0-3 branch is checked; "3" maps to index 3
+    assert _extract_choice("I choose 3") == 3
     assert _extract_choice("random text") is None
 
 
