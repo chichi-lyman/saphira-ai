@@ -16,8 +16,10 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
-      - run: python -m pip install --upgrade pip build pytest mypy
-      - run: python -m pytest
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -r requirements-dev.txt
+      - run: python -m pip install -e .
+      - run: python -m pytest -q
       - run: python -m mypy core/sovereign_oracle
   publish-pypi:
     if: startsWith(github.ref, 'refs/tags/v')
