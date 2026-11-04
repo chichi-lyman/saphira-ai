@@ -104,8 +104,18 @@ class MMLUBenchmark:
 
     name = "mmlu"
 
-    def __init__(self, config: Optional[MMLUConfig] = None) -> None:
-        self.config = config or MMLUConfig()
+    def __init__(
+        self,
+        config: Optional[MMLUConfig] = None,
+        *,
+        n_shots: int = 0,
+        subjects: Optional[List[str]] = None,
+        limit: Optional[int] = None,
+        seed: int = 42,
+    ) -> None:
+        self.config = config or MMLUConfig(
+            n_shots=n_shots, subjects=subjects, limit=limit, seed=seed
+        )
 
     def load_items(self) -> List[Dict[str, Any]]:
         items = list(_BUILTIN_SUBSET)
