@@ -21,7 +21,7 @@ const makeMessage = (role: SaphiraMessage['role'], content: string): SaphiraMess
 });
 
 const App: React.FC = () => {
-  const { messages, addMessage, clearMessages, threads, setThreads, setActiveThreadId } = useChat();
+  const { messages, addMessage, clearMessages, threads, activeThreadId, setThreads, setActiveThreadId } = useChat();
   const { user, signOut } = useUser();
   const { startStream, isStreaming, streamedContent, streamError, resetStream } = useSaphiraStream();
   const [view, setView] = useState<View>('home');
@@ -42,19 +42,21 @@ const App: React.FC = () => {
 
     const userMessage = makeMessage('user', text);
     const requestMessages = [...messages, userMessage];
+    const sessionId = activeThreadId ?? (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(36).slice(2));
+    if (!activeThreadId) setActiveThreadId(sessionId);
     addMessage(userMessage);
     setDraft('');
     resetStream();
 
     try {
-      const reply = await startStream(requestMessages);
+      const reply = await startStream(requestMessages, sessionId);
       if (reply.trim()) addMessage(makeMessage('model', reply));
     } catch {
       addMessage(makeMessage('model', 'I hit a connection problem reaching Saphira Core. Please try again.'));
     }
 
     if (messages.length === 0) {
-      const thread = { id: userMessage.id!, title: text.slice(0, 42), updatedAt: new Date().toISOString(), messageCount: 2 };
+      const thread = { id: sessionId, title: text.slice(0, 42), updatedAt: new Date().toISOString(), messageCount: 2 };
       setThreads([thread, ...threads]);
       setActiveThreadId(thread.id);
     }
