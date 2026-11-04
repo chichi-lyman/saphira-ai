@@ -14,6 +14,7 @@ class Settings(BaseSettings):
         extra="ignore",
         case_sensitive=False,
         populate_by_name=True,
+        populate_by_name=True,
     )
 
     port: int = Field(default=8000, ge=1, le=65535)
