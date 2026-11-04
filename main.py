@@ -89,3 +89,15 @@ async def startup_mcp() -> None:
         await mcp_manager.startup()
     except Exception as exc:
         logger.warning("MCP startup skipped or partial: %s", exc)
+
+
+@app.get("/health", tags=["health"])
+async def health_check():
+    """Container liveness probe; does not imply downstream providers are healthy."""
+    return {"status": "ok", "service": "saphira-ai"}
+
+
+@app.get("/ready", tags=["health"])
+async def readiness_check():
+    """Process readiness probe; dependency-specific readiness belongs in provider health checks."""
+    return {"status": "ready", "service": "saphira-ai"}
