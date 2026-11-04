@@ -4,7 +4,7 @@ import os
 from dataclasses import dataclass
 from typing import Any
 import httpx
-from fastapi import Header, HTTPException, status
+from fastapi import Header, HTTPException
 
 @dataclass(frozen=True)
 class AuthenticatedUser:
