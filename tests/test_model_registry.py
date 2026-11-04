@@ -10,19 +10,20 @@ from src.core.model_registry import ModelEndpointConfig, SaphiraModelRegistry
 
 def test_providers_include_cloud_and_local():
     keys = set(SaphiraModelRegistry.PROVIDERS.keys())
-    assert "gemini_primary" in keys
+    assert "gemini_flash" in keys
+    assert "gemini_pro" in keys
+    assert "claude_sonnet" in keys
     assert "vllm_local" in keys
     assert "ollama_local" in keys
 
 
-def test_get_endpoint_default_is_vllm_local():
+def test_get_endpoint_default_is_gemini_flash():
     ep = SaphiraModelRegistry.get_endpoint()
     assert ep is not None
-    assert ep.provider == "vllm"
-    assert ep.is_local is True
-    assert ep.endpoint_url == "http://localhost:8000/v1/chat/completions"
-    assert ep.model_name == "qwen2.5-coder-7b-instruct"
-    assert ep.max_context_tokens == 32768
+    assert ep.provider == "google"
+    assert ep.is_local is False
+    assert ep.model_name == "gemini-2.5-flash"
+    assert ep.max_context_tokens == 1048576
 
 
 def test_get_endpoint_ollama():
@@ -35,7 +36,7 @@ def test_get_endpoint_ollama():
 
 
 def test_get_endpoint_gemini_cloud():
-    ep = SaphiraModelRegistry.get_endpoint("gemini_primary")
+    ep = SaphiraModelRegistry.get_endpoint("gemini_flash")
     assert ep is not None
     assert ep.provider == "google"
     assert ep.is_local is False

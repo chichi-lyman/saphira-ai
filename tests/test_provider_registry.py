@@ -27,7 +27,7 @@ def _settings(**kwargs) -> Settings:
         "gemini_enabled": True,
         "xai_enabled": True,
         "anthropic_enabled": True,
-        "llm_preference": "gemini,openai,xai",
+        "llm_preference": "gemini,anthropic,openai,xai",
         "openai_model": "gpt-4o-mini",
         "gemini_model": "gemini-2.0-flash",
         "xai_model": "grok-2-latest",
@@ -87,6 +87,15 @@ async def test_preference_order_exposed():
     reg = ProviderRegistry(_settings(llm_preference="openai,xai,gemini"))
     health = reg.health()
     assert health["preference"] == ["openai", "xai", "gemini"]
+
+
+@pytest.mark.asyncio
+async def test_preference_order_default_includes_anthropic():
+    reg = ProviderRegistry(_settings())
+    health = reg.health()
+    # Default preference string is gemini,anthropic,openai,xai
+    assert health["preference"][0] == "gemini"
+    assert "anthropic" in health["preference"]
 
 
 @pytest.mark.asyncio
