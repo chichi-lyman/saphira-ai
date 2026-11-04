@@ -86,12 +86,6 @@ class Settings(BaseSettings):
     def normalize_environment(cls, v: object) -> object:
         return v.lower() if isinstance(v, str) else v
 
-    @model_validator(mode="after")
-    def production_requires_core_secrets(self) -> "Settings":
-        if self.environment == "production" and self.saphira_jwt_secret is not None and not self.saphira_jwt_secret.strip():
-            raise ValueError("Invalid production configuration: SAPHIRA_JWT_SECRET is empty")
-        return self
-
     def allowed_origins_list(self) -> List[str]:
         return [o.strip() for o in self.saphira_allowed_origins.split(",") if o.strip()]
 
@@ -125,7 +119,6 @@ class Settings(BaseSettings):
             "stripe_price_configured": bool(self.stripe_price_monthly),
             "email_configured": bool(self.resend_api_key and self.resend_from),
             "phone_alert_configured": bool(self.telegram_bot_token and self.telegram_chat_id),
-            "jwt_secret_set": bool(self.saphira_jwt_secret and self.saphira_jwt_secret.strip()),
         }
 
 
