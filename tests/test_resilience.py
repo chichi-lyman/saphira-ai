@@ -59,12 +59,27 @@ def test_degradation_full_to_standby():
     }
     assert g.update_from_provider_health(health) == DegradationLevel.FULL
 
+    # One circuit open → single provider left → MINIMAL
     health["providers"]["gemini"]["circuit"]["state"] = "open"
-    assert g.update_from_provider_health(health) == DegradationLevel.REDUCED
+    assert g.update_from_provider_health(health) == DegradationLevel.MINIMAL
 
+    # Both open → STANDBY
     health["providers"]["openai"]["circuit"]["state"] = "open"
     assert g.update_from_provider_health(health) == DegradationLevel.STANDBY
 
     msg = g.standby_message("timeout")
     assert "Standby" in msg
     assert "timeout" in msg
+
+
+def test_degradation_reduced_with_multiple_remaining():
+    """When >1 providers still healthy and some circuits open → REDUCED."""
+    g = GracefulDegradation()
+    health = {
+        "providers": {
+            "gemini": {"enabled": True, "circuit": {"state": "open"}},
+            "openai": {"enabled": True, "circuit": {"state": "closed"}},
+            "xai": {"enabled": True, "circuit": {"state": "closed"}},
+        }
+    }
+    assert g.update_from_provider_health(health) == DegradationLevel.REDUCED
