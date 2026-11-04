@@ -5,6 +5,16 @@
 
 Original paper: Hendrycks et al., 2020 (arXiv:2009.03300)
 57 subjects, 4-choice multiple choice, elementary → professional level.
+
+This module provides a clean, dependency-light interface that can:
+  1. Use a local/cached subset for CI and agent self-tests (no network).
+  2. Load the full HuggingFace dataset when `datasets` is available.
+  3. Run 0-shot or 5-shot evaluations against any async/sync model callable.
+
+Design notes for Nova Umbrella:
+  - Owned primarily by Agent Scholar (knowledge synthesis) + Evaluator.
+  - Results feed NovaAethrea memory and NovaReign capability scoring.
+  - Never exposed as a user-facing agent name.
 """
 
 from __future__ import annotations
