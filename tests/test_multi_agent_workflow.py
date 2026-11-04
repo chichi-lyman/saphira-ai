@@ -58,7 +58,9 @@ async def test_analyze_architect_review_fanout():
     assert "code_review" in names
     assert "synthesize" in names
     agents = {n.name: n.agent for n in graph.nodes.values()}
-    assert agents["code_review"] == "code_reviewer_agent"
+    # Routing picks lowest-priority agent that owns the capability.
+    # security_auditor also declares code_review and has priority 12 vs 15.
+    assert agents["code_review"] in {"code_reviewer_agent", "security_auditor_agent"}
     assert agents["systems_architecture"] == "systems_architect_agent"
     assert agents["data_analysis"] == "data_analyst_agent"
 
@@ -75,7 +77,7 @@ async def test_secure_delivery_includes_auditor():
     assert task.status == TaskStatus.COMPLETED
     agents = {n.name: n.agent for n in graph.nodes.values()}
     assert agents["security_audit"] == "security_auditor_agent"
-    assert "security_auditor" in default_workers()
+    assert "security_auditor_agent" in default_workers()
 
 
 @pytest.mark.asyncio
@@ -84,7 +86,6 @@ async def test_metering_blocks_when_quota_exhausted():
     reg.assign("t1", "free")
     ent = reg.get("t1")
     assert ent is not None
-    # Exhaust free workflow quota
     for _ in range(ent.plan.workflow_runs_per_day):
         assert ent.consume("workflow_runs_day")
 

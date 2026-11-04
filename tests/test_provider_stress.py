@@ -3,16 +3,6 @@
 """
 Stress tests for every ProviderRegistry component.
 
-Covers:
-- Settings defaults & preference parsing
-- Each adapter (Gemini, OpenAI, xAI) disabled / not_configured / error paths
-- Registry routing, fallback, preferred provider, concurrent load
-- Telemetry bounds & integrity
-- Health snapshot immutability under load
-- Rapid repeated calls
-- Empty / huge prompts
-- Metadata propagation
-
 No live external API calls are made.
 """
 
@@ -76,10 +66,11 @@ class TestSettingsStress:
             ("GEMINI,OpenAI", ["gemini", "openai"]),
             ("", []),
             ("single", ["single"]),
+            ("gemini,anthropic,openai,xai", ["gemini", "anthropic", "openai", "xai"]),
         ]
         for raw, expected in cases:
             s = make_settings(llm_preference=raw)
-            assert s.llm_preference_list() == expected
+            assert s.llm_preference_list() == expected, f"raw={raw!r}"
 
     def test_has_any_llm_provider(self):
         assert make_settings().has_any_llm_provider() is False
@@ -132,10 +123,8 @@ class TestOpenAIAdapterStress:
     @pytest.mark.asyncio
     async def test_mocked_success_path(self):
         a = OpenAIAdapter(make_settings(providers_enabled=True, openai_api_key="sk"))
-        with patch.object(a, "_client", create=True) as mock_client:
-            # Minimal mock; if adapter short-circuits we still accept disabled
-            r = await a.generate(GenerateRequest(prompt="hi"))
-            assert r.status in ("success", "disabled", "error", "not_configured")
+        r = await a.generate(GenerateRequest(prompt="hi"))
+        assert r.status in ("success", "disabled", "error", "not_configured")
 
     @pytest.mark.asyncio
     async def test_mocked_api_exception(self):
@@ -211,4 +200,4 @@ class TestBurstStress:
             r = await reg.generate(GenerateRequest(prompt=f"b{i}"))
             assert r.status == "disabled"
         elapsed = time.perf_counter() - t0
-        assert elapsed < 30.0  # should be fast
+        assert elapsed < 30.0
