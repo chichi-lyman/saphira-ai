@@ -100,6 +100,8 @@ create index if not exists audit_events_actor_created_idx on public.audit_events
 alter table public.conversations
   add column if not exists created_by uuid references auth.users(id) on delete set null;
 
+alter table public.saphira_memory enable row level security;
+alter table public.saphira_task_ledger enable row level security;
 alter table public.profiles enable row level security;
 alter table public.user_preferences enable row level security;
 alter table public.user_roles enable row level security;
