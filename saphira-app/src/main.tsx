@@ -4,6 +4,7 @@ import App from './App';
 import './assets/global.css';
 import { UserProvider } from './context/UserContext';
 import { ChatProvider } from './context/ChatContext';
+import { AuthGate } from './components/AuthGate';
 import { registerServiceWorker } from './registerServiceWorker';
 
 registerServiceWorker();
@@ -12,7 +13,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <UserProvider>
       <ChatProvider>
-        <App />
+        <AuthGate><App /></AuthGate>
       </ChatProvider>
     </UserProvider>
   </React.StrictMode>
