@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from typing import List, Literal, Optional
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
