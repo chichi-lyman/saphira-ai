@@ -1,38 +1,104 @@
 /**
- * Saphira AI™ User / session context
+ * Centralized Supabase Auth session context for Saphira AI.
+ * Supabase owns credentials, refresh, expiry, and session revocation.
  */
-
 import {
-  createContext,
-  useContext,
-  useMemo,
-  useState,
-  type ReactNode,
+  createContext, useContext, useEffect, useMemo, useState,
+  type ReactNode, type Dispatch, type SetStateAction,
 } from 'react';
+import type { Session } from '@supabase/supabase-js';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 export interface SaphiraUser {
   id: string;
   name?: string;
   email?: string;
 }
-
 interface UserContextValue {
   user: SaphiraUser | null;
-  setUser: (user: SaphiraUser | null) => void;
+  session: Session | null;
+  loading: boolean;
+  authEnabled: boolean;
+  setUser: Dispatch<SetStateAction<SaphiraUser | null>>;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<void>;
+  signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
 }
-
 const UserContext = createContext<UserContextValue | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<SaphiraUser | null>(null);
-  const value = useMemo(() => ({ user, setUser }), [user]);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+    let active = true;
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (!active) return;
+      if (error) console.error('Could not restore Saphira session:', error.message);
+      const next = data.session;
+      setSession(next);
+      setUser(next?.user ? {
+        id: next.user.id,
+        email: next.user.email,
+        name: next.user.user_metadata?.full_name || next.user.user_metadata?.name,
+      } : null);
+      setLoading(false);
+    }).catch(() => { if (active) setLoading(false); });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, next) => {
+      if (!active) return;
+      setSession(next);
+      setUser(next?.user ? {
+        id: next.user.id,
+        email: next.user.email,
+        name: next.user.user_metadata?.full_name || next.user.user_metadata?.name,
+      } : null);
+      setLoading(false);
+    });
+    return () => { active = false; subscription.unsubscribe(); };
+  }, []);
+
+  const signIn = async (email: string, password: string) => {
+    if (!supabase) throw new Error('Supabase Auth is not configured.');
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    if (error) throw error;
+  };
+  const signUp = async (email: string, password: string) => {
+    if (!supabase) throw new Error('Supabase Auth is not configured.');
+    const { error } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: { emailRedirectTo: window.location.origin },
+    });
+    if (error) throw error;
+  };
+  const signOut = async () => {
+    if (!supabase) return;
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+  };
+  const resetPassword = async (email: string) => {
+    if (!supabase) throw new Error('Supabase Auth is not configured.');
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: window.location.origin,
+    });
+    if (error) throw error;
+  };
+
+  const value = useMemo(() => ({
+    user, session, loading, authEnabled: isSupabaseConfigured, setUser,
+    signIn, signUp, signOut, resetPassword,
+  }), [user, session, loading]);
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 }
-
 export function useUser(): UserContextValue {
   const ctx = useContext(UserContext);
-  if (!ctx) {
-    throw new Error('useUser must be used within a UserProvider');
-  }
+  if (!ctx) throw new Error('useUser must be used within a UserProvider');
   return ctx;
 }
