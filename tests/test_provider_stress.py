@@ -185,7 +185,7 @@ class TestHealthImmutability:
         h1["providers_enabled"] = True
         assert reg.health()["providers_enabled"] is False
 
-    def test_all_three_providers_in_health(self):
+    def test_all_providers_in_health(self):
         reg = ProviderRegistry(make_settings())
         h = reg.health()
         assert {"gemini", "openai", "xai"}.issubset(set(h["providers"].keys()))

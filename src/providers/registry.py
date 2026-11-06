@@ -121,11 +121,13 @@ class ProviderRegistry:
 
         last: GenerateResult = GenerateResult(status="error", message="No providers available")
         attempted = 0
+        enabled_seen = False
 
         for name in order:
             provider = self._providers.get(name)
             if not provider or not provider.enabled():
                 continue
+            enabled_seen = True
 
             breaker = self._breakers[name]
             if not breaker.allow():
@@ -149,6 +151,13 @@ class ProviderRegistry:
         # All paths failed or circuits open → degrade
         health = self.health()
         level = self._degradation.level
+        if not enabled_seen:
+            # No provider is configured/enabled at all: that is a
+            # configuration state, not an outage. Surface the plain error
+            # ("No providers available") instead of the standby reply, which
+            # is reserved for configured providers that are temporarily
+            # down (attempts exhausted or all circuits open).
+            return last
         if level >= DegradationLevel.STANDBY or attempted == 0:
             msg = self._degradation.standby_message(last.message if last else None)
             standby = GenerateResult(

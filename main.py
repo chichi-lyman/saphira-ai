@@ -71,6 +71,17 @@ app.include_router(billing_router)
 app.include_router(control_plane_router)
 app.include_router(telemetry_router)
 
+@app.get("/")
+async def root() -> dict:
+    return {"service": "saphira-ai", "status": "ok"}
+
+
+@app.get("/health")
+async def health() -> dict:
+    """Lightweight liveness probe used by Render/Docker health checks."""
+    return {"status": "ok"}
+
+
 API_KEY_NAME = "X-Saphira-Sentinel-Token"
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=True)
 

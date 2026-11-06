@@ -104,8 +104,13 @@ class MMLUBenchmark:
 
     name = "mmlu"
 
-    def __init__(self, config: Optional[MMLUConfig] = None) -> None:
-        self.config = config or MMLUConfig()
+    def __init__(self, n_shots: int = 0, subjects: Optional[List[str]] = None, limit: Optional[int] = None, seed: int = 42, use_builtin_subset: bool = True, cache_path: Optional[str] = None, config: Optional[MMLUConfig] = None, **kwargs: Any) -> None:
+        # Flat-kwargs construction matches EvaluationRunner and every sibling
+        # benchmark; ``config=`` remains supported for direct construction.
+        if config is not None:
+            self.config = config
+        else:
+            self.config = MMLUConfig(n_shots=max(0, min(n_shots, 5)), subjects=subjects, limit=limit, seed=seed, use_builtin_subset=use_builtin_subset, cache_path=cache_path)
 
     def load_items(self) -> List[Dict[str, Any]]:
         items = list(_BUILTIN_SUBSET)

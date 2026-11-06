@@ -248,6 +248,18 @@ async def test_dispatch_saphira_default():
 
 
 @pytest.mark.asyncio
+async def test_dispatch_unknown_agent_key_falls_to_saphira_branch():
+    event = _event(payload={"content": "hello"})
+    resp = await AgentExecutionEngine.dispatch_to_agent("unknown_agent", event)
+    assert resp.source_agent == "saphira"
+    assert resp.event_type == "text_response"
+
+
+# ---------------------------------------------------------------------------
+# ConnectionManager
+# ---------------------------------------------------------------------------
+
+
 async def test_dispatch_novaaethrea_memory_path():
     event = _event(event_type="memory_query", target_agent="novaaethrea", payload={})
     resp = await AgentExecutionEngine.dispatch_to_agent("novaaethrea", event)

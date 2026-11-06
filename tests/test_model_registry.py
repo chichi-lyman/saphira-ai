@@ -26,6 +26,16 @@ def test_get_endpoint_default_is_gemini_flash():
     assert ep.max_context_tokens == 1048576
 
 
+def test_get_endpoint_vllm_local():
+    ep = SaphiraModelRegistry.get_endpoint("vllm_local")
+    assert ep is not None
+    assert ep.provider == "vllm"
+    assert ep.is_local is True
+    assert ep.endpoint_url == "http://localhost:8000/v1/chat/completions"
+    assert ep.model_name == "qwen2.5-coder-7b-instruct"
+    assert ep.max_context_tokens == 32768
+
+
 def test_get_endpoint_ollama():
     ep = SaphiraModelRegistry.get_endpoint("ollama_local")
     assert ep is not None
