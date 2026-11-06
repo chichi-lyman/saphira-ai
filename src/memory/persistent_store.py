@@ -134,6 +134,7 @@ class PersistentMemoryStore:
         self._save()
 
     def get_connector_health(self) -> Dict[str, Any]:
+        """Return a shallow copy of connector health records."""
         return dict(self._data.get("connector_health", {}))
 
     def build_context_pack(

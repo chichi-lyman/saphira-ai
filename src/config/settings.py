@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     )
 
     port: int = Field(default=8000, ge=1, le=65535)
-    environment: Literal["development", "staging", "production", "test"] = Field(
+    environment: Literal["development", "staging", "production", "test", "testing"] = Field(
         default="development", validation_alias="ENVIRONMENT"
     )
     saphira_env: Optional[str] = Field(default=None, validation_alias="SAPHIRA_ENV")
@@ -40,6 +40,24 @@ class Settings(BaseSettings):
     anthropic_api_key: Optional[str] = Field(default=None, validation_alias="ANTHROPIC_API_KEY")
     saphira_model: Optional[str] = Field(default=None, validation_alias="SAPHIRA_MODEL")
 
+    # --- Google Vertex AI / Gemini Enterprise ---
+    # Prefer Vertex when project is set (production / GCP). Falls back to GEMINI_API_KEY (AI Studio).
+    google_cloud_project: Optional[str] = Field(
+        default=None,
+        validation_alias="GOOGLE_CLOUD_PROJECT",
+        description="GCP project ID for Vertex AI / Gemini on Google Cloud.",
+    )
+    vertex_location: str = Field(
+        default="us-central1",
+        validation_alias="VERTEX_LOCATION",
+        description="Vertex AI region (e.g. us-central1, europe-west4, global).",
+    )
+    vertex_enabled: bool = Field(
+        default=True,
+        validation_alias="VERTEX_ENABLED",
+        description="Allow Vertex AI backend when GOOGLE_CLOUD_PROJECT is set.",
+    )
+
     # --- Provider Registry (configuration-driven) ---
     providers_enabled: bool = Field(
         default=False,
@@ -48,7 +66,7 @@ class Settings(BaseSettings):
     )
     openai_model: str = Field(default="gpt-4o-mini", validation_alias="OPENAI_MODEL")
     openai_content_model: str = Field(default="gpt-4o-mini", validation_alias="OPENAI_CONTENT_MODEL")
-    gemini_model: str = Field(default="gemini-2.0-flash", validation_alias="GEMINI_MODEL")
+    gemini_model: str = Field(default="gemini-2.5-flash", validation_alias="GEMINI_MODEL")
     xai_model: str = Field(default="grok-2-latest", validation_alias="XAI_MODEL")
     anthropic_model: str = Field(
         default="claude-sonnet-4-5-20250929",
@@ -98,6 +116,14 @@ class Settings(BaseSettings):
     def allowed_origins_list(self) -> List[str]:
         return [o.strip() for o in self.saphira_allowed_origins.split(",") if o.strip()]
 
+    def vertex_configured(self) -> bool:
+        """True when Vertex AI project is set and Vertex path is enabled."""
+        return bool(self.vertex_enabled and self.google_cloud_project and self.google_cloud_project.strip())
+
+    def gemini_developer_configured(self) -> bool:
+        """True when AI Studio / Gemini Developer API key is present."""
+        return bool(self.gemini_api_key and self.gemini_api_key.strip())
+
     def has_any_llm_provider(self) -> bool:
         return any(
             bool(v and v.strip())
@@ -106,6 +132,7 @@ class Settings(BaseSettings):
                 self.gemini_api_key,
                 self.xai_api_key,
                 self.anthropic_api_key,
+                self.google_cloud_project,
             )
         )
 
@@ -122,6 +149,8 @@ class Settings(BaseSettings):
             "redis_configured": bool(self.redis_url),
             "llm_provider_configured": self.has_any_llm_provider(),
             "providers_enabled": self.providers_enabled,
+            "vertex_configured": self.vertex_configured(),
+            "gemini_developer_configured": self.gemini_developer_configured(),
             "tts_configured": bool(self.elevenlabs_api_key and self.elevenlabs_voice_id),
             "stripe_configured": bool(self.stripe_secret_key),
             "stripe_webhook_configured": bool(self.stripe_webhook_secret),
@@ -141,6 +170,7 @@ def validate_environment(*, strict: bool = False) -> Settings:
     settings = Settings()
     if strict and not settings.has_any_llm_provider():
         raise ValueError(
-            "Strict validation failed: set OPENAI_API_KEY, GEMINI_API_KEY, XAI_API_KEY, or ANTHROPIC_API_KEY"
+            "Strict validation failed: set GOOGLE_CLOUD_PROJECT (Vertex), "
+            "GEMINI_API_KEY, OPENAI_API_KEY, XAI_API_KEY, or ANTHROPIC_API_KEY"
         )
     return settings

@@ -21,25 +21,58 @@ class LLMProvider(Protocol):
 
 
 class GeminiAdapter:
+    """
+    Dual-mode Gemini provider:
+    - Vertex AI (preferred when GOOGLE_CLOUD_PROJECT is set): production GCP path
+    - Gemini Developer API (GEMINI_API_KEY): AI Studio / rapid prototyping
+
+    Uses the unified google-genai SDK (Client with vertexai=True or api_key=...).
+    """
+
     name = ProviderName.GEMINI
 
     def __init__(self, settings: Settings):
         self._settings = settings
         self._api_key = (settings.gemini_api_key or "").strip()
+        self._project = (settings.google_cloud_project or "").strip()
+        self._location = (settings.vertex_location or "us-central1").strip()
 
     def configured(self) -> bool:
-        return bool(self._api_key)
+        return self._settings.vertex_configured() or self._settings.gemini_developer_configured()
 
     def enabled(self) -> bool:
         return bool(self._settings.gemini_enabled) and self.configured()
+
+    def _backend(self) -> str:
+        if self._settings.vertex_configured():
+            return "vertex"
+        if self._settings.gemini_developer_configured():
+            return "developer"
+        return "none"
 
     def health_snapshot(self) -> dict[str, Any]:
         return {
             "provider": self.name.value,
             "configured": self.configured(),
             "enabled": self.enabled(),
+            "backend": self._backend(),
             "default_model": self._settings.gemini_model,
+            "project": self._project or None,
+            "location": self._location if self._backend() == "vertex" else None,
         }
+
+    def _build_client(self):
+        from google import genai
+
+        if self._settings.vertex_configured():
+            # Vertex AI / Gemini on Google Cloud (IAM / ADC / service account)
+            return genai.Client(
+                vertexai=True,
+                project=self._project,
+                location=self._location,
+            )
+        # Gemini Developer API (AI Studio key)
+        return genai.Client(api_key=self._api_key)
 
     async def generate(self, req: GenerateRequest) -> GenerateResult:
         if not self._settings.providers_enabled:
@@ -52,15 +85,14 @@ class GeminiAdapter:
             return GenerateResult(
                 status="not_configured",
                 provider=self.name.value,
-                message="Gemini not enabled or missing key",
+                message="Gemini not enabled — set GOOGLE_CLOUD_PROJECT (Vertex) or GEMINI_API_KEY",
             )
 
         model = req.model or self._settings.gemini_model
+        backend = self._backend()
         t0 = time.perf_counter()
         try:
-            from google import genai
-
-            client = genai.Client(api_key=self._api_key)
+            client = self._build_client()
             contents = req.prompt if not req.system else f"{req.system}\n\n{req.prompt}"
 
             def _call():
@@ -75,6 +107,7 @@ class GeminiAdapter:
                 provider=self.name.value,
                 model=model,
                 latency_ms=latency,
+                raw={"backend": backend},
             )
         except Exception as e:
             latency = (time.perf_counter() - t0) * 1000
@@ -82,7 +115,7 @@ class GeminiAdapter:
                 status="error",
                 provider=self.name.value,
                 model=model,
-                message=str(e),
+                message=f"[{backend}] {e}",
                 latency_ms=latency,
             )
 
@@ -128,32 +161,29 @@ class OpenAIAdapter:
             from openai import AsyncOpenAI
 
             client = AsyncOpenAI(api_key=self._api_key)
-            messages: list[dict[str, str]] = []
+            messages = []
             if req.system:
                 messages.append({"role": "system", "content": req.system})
             messages.append({"role": "user", "content": req.prompt})
-
-            kwargs: dict[str, Any] = {
-                "model": model,
-                "messages": messages,
-                "temperature": req.temperature,
-            }
-            if req.max_tokens is not None:
-                kwargs["max_tokens"] = req.max_tokens
-
-            resp = await client.chat.completions.create(**kwargs)
+            resp = await client.chat.completions.create(
+                model=model,
+                messages=messages,
+                temperature=req.temperature,
+                max_tokens=req.max_tokens,
+            )
             latency = (time.perf_counter() - t0) * 1000
-            choice = (resp.choices[0].message.content or "") if resp.choices else ""
+            text = ""
+            if resp.choices:
+                text = (resp.choices[0].message.content or "").strip()
             usage = None
-            if resp.usage:
+            if getattr(resp, "usage", None):
                 usage = {
-                    "prompt_tokens": resp.usage.prompt_tokens,
-                    "completion_tokens": resp.usage.completion_tokens,
-                    "total_tokens": resp.usage.total_tokens,
+                    "prompt_tokens": getattr(resp.usage, "prompt_tokens", None),
+                    "completion_tokens": getattr(resp.usage, "completion_tokens", None),
                 }
             return GenerateResult(
                 status="success",
-                text=choice.strip(),
+                text=text,
                 provider=self.name.value,
                 model=model,
                 latency_ms=latency,
@@ -171,8 +201,6 @@ class OpenAIAdapter:
 
 
 class XAIAdapter:
-    """xAI / Grok via OpenAI-compatible endpoint."""
-
     name = ProviderName.XAI
 
     def __init__(self, settings: Settings):
@@ -212,29 +240,33 @@ class XAIAdapter:
         try:
             from openai import AsyncOpenAI
 
-            client = AsyncOpenAI(api_key=self._api_key, base_url="https://api.x.ai/v1")
-            messages: list[dict[str, str]] = []
+            client = AsyncOpenAI(
+                api_key=self._api_key,
+                base_url="https://api.x.ai/v1",
+            )
+            messages = []
             if req.system:
                 messages.append({"role": "system", "content": req.system})
             messages.append({"role": "user", "content": req.prompt})
-
             resp = await client.chat.completions.create(
                 model=model,
                 messages=messages,
                 temperature=req.temperature,
+                max_tokens=req.max_tokens,
             )
             latency = (time.perf_counter() - t0) * 1000
-            text = (resp.choices[0].message.content or "") if resp.choices else ""
+            text = ""
+            if resp.choices:
+                text = (resp.choices[0].message.content or "").strip()
             usage = None
-            if resp.usage:
+            if getattr(resp, "usage", None):
                 usage = {
-                    "prompt_tokens": resp.usage.prompt_tokens,
-                    "completion_tokens": resp.usage.completion_tokens,
-                    "total_tokens": resp.usage.total_tokens,
+                    "prompt_tokens": getattr(resp.usage, "prompt_tokens", None),
+                    "completion_tokens": getattr(resp.usage, "completion_tokens", None),
                 }
             return GenerateResult(
                 status="success",
-                text=text.strip(),
+                text=text,
                 provider=self.name.value,
                 model=model,
                 latency_ms=latency,
@@ -252,19 +284,17 @@ class XAIAdapter:
 
 
 class AnthropicAdapter:
-    """Claude via the official Anthropic Messages API. Strong coding + long-context brain."""
-
     name = ProviderName.ANTHROPIC
 
     def __init__(self, settings: Settings):
         self._settings = settings
-        self._api_key = (getattr(settings, "anthropic_api_key", None) or "").strip()
+        self._api_key = (settings.anthropic_api_key or "").strip()
 
     def configured(self) -> bool:
         return bool(self._api_key)
 
     def enabled(self) -> bool:
-        return bool(getattr(self._settings, "anthropic_enabled", True)) and self.configured()
+        return bool(self._settings.anthropic_enabled) and self.configured()
 
     def health_snapshot(self) -> dict[str, Any]:
         return {

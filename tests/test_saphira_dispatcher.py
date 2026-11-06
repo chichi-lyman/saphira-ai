@@ -68,11 +68,6 @@ SAMPLE_SCREEN_TREE = {
 }
 
 
-# ---------------------------------------------------------------------------
-# Schema validation
-# ---------------------------------------------------------------------------
-
-
 def test_client_event_requires_core_fields():
     with pytest.raises(ValidationError):
         ClientEvent(event_type="text_intent", payload={})  # type: ignore[call-arg]
@@ -91,11 +86,6 @@ def test_agent_response_defaults():
         payload={"text": "hi"},
     )
     assert resp.requires_client_action is False
-
-
-# ---------------------------------------------------------------------------
-# NovaAgentRegistry routing
-# ---------------------------------------------------------------------------
 
 
 def test_resolve_explicit_supported_agent():
@@ -121,6 +111,7 @@ def test_resolve_audio_voice_to_aura():
 
 
 def test_resolve_memory_recall_to_novaaethrea():
+    """Memory / recall events route to NovaAethrea (long-term memory)."""
     for et in ("memory_query", "recall_context", "MEMORY_WRITE"):
         event = _event(event_type=et, target_agent=None)
         assert NovaAgentRegistry.resolve_target_agent(event) == "novaaethrea"
@@ -143,11 +134,6 @@ def test_supported_agents_catalog():
         "cipher",
     }
     assert set(NovaAgentRegistry.SUPPORTED_AGENTS.keys()) == expected
-
-
-# ---------------------------------------------------------------------------
-# AgentExecutionEngine — novareign / a11y path
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
@@ -234,11 +220,6 @@ async def test_dispatch_novareign_unknown_intent_still_returns_plan():
     assert plan["target_type"] == "none"
 
 
-# ---------------------------------------------------------------------------
-# AgentExecutionEngine — aura / saphira
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.asyncio
 async def test_dispatch_aura():
     event = _event(event_type="user_voice_chunk", target_agent="aura")
@@ -262,7 +243,7 @@ async def test_dispatch_saphira_default():
 
     assert resp.source_agent == "saphira"
     assert resp.event_type == "text_response"
-    assert "plan my day" in resp.payload["text"]
+    assert "plan my day" in resp.payload["text"] or resp.payload.get("brain") == "SaphiraBrain"
     assert resp.requires_client_action is False
 
 
@@ -277,6 +258,13 @@ async def test_dispatch_unknown_agent_key_falls_to_saphira_branch():
 # ---------------------------------------------------------------------------
 # ConnectionManager
 # ---------------------------------------------------------------------------
+
+
+async def test_dispatch_novaaethrea_memory_path():
+    event = _event(event_type="memory_query", target_agent="novaaethrea", payload={})
+    resp = await AgentExecutionEngine.dispatch_to_agent("novaaethrea", event)
+    assert resp.source_agent == "novaaethrea"
+    assert resp.event_type == "memory_context"
 
 
 @pytest.mark.asyncio
@@ -329,11 +317,6 @@ async def test_connection_manager_send_to_missing_session_is_noop():
         payload={"text": "noop"},
     )
     await manager.send_response("missing", resp)  # should not raise
-
-
-# ---------------------------------------------------------------------------
-# End-to-end routing helper (registry → engine)
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio

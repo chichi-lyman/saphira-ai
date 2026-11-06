@@ -1,0 +1,71 @@
+# Saphira AI — Master Digital Directory
+# © 2026 Chelsea Megan Woods. All Rights Reserved.
+# Canonical identity map for social channels, developer platforms, link hubs, wishlists, and payments.
+# Saphira reads this to know which accounts she can manage, publish to, or reference.
+
+ownership:
+  primary: Chelsea Megan Woods
+  brand: Chelsea Woods / Nova Reign / Saphira AI
+  github_org_or_user: chichi-lyman
+
+social_media:
+  x_twitter:
+    handle: "@faavmegan"
+    url: "https://x.com/faavmegan"
+    notes: "Primary X presence"
+  tiktok:
+    handle: "@chelseameganwoods"
+    url: "https://tiktok.com/@chelseameganwoods"
+  instagram:
+    handle: "@chelsiaaa.woods"
+    url: "https://instagram.com/chelsiaaa.woods"
+    meta_graph: true  # Uses same Meta app + Instagram Graph API as Facebook
+  facebook:
+    page_or_profile: "xx.Its.chichi.xx"
+    url: "https://facebook.com/xx.Its.chichi.xx"
+    meta_graph: true
+    capabilities:
+      - scheduled_posts
+      - photo_media_uploads
+      - auto_reply_comments
+      - comment_moderation
+      - messenger_basic
+      - page_insights
+  youtube_primary:
+    handle: "@chelseameganwoods"
+    url: "https://youtube.com/@chelseameganwoods"
+  youtube_media_vlog:
+    handle: "@faav.megan"
+    url: "https://youtube.com/@faav.megan"
+  linkedin:
+    handle: "chelsea-megan-woods-67699a276"
+    url: "https://linkedin.com/in/chelsea-megan-woods-67699a276"
+
+link_hubs_wishlists:
+  central_link_hub: "https://youpay.bio/faav.megan"
+  beacons: "https://beacons.ai/faavmegan"
+  throne_wishlist: "https://throne.com/xx_nova_xx"
+  amazon_storefront: "Accessible via youpay.bio/faav.megan"
+
+payments_p2p:
+  cash_app: "$CarolinaaC1993"
+  cash_app_url: "https://cash.app/$CarolinaaC1993"
+  paypal: "@chelseawoods93"
+  paypal_url: "https://paypal.me/chelseawoods93"
+  chime_pay_anyone: "$NovaReignn"
+
+developer:
+  github_profile: "https://github.com/chichi-lyman"
+  saphira_ai: "https://github.com/chichi-lyman/saphira-ai"
+  nova_umbrella: "https://github.com/chichi-lyman/Nova_Umbrella"
+
+# How Saphira uses this map
+saphira_integration:
+  facebook_instagram:
+    connector: src/connectors/facebook.py + src/connectors/instagram.py
+    auth: FACEBOOK_ACCESS_TOKEN + FACEBOOK_PAGE_ID + INSTAGRAM_ACCESS_TOKEN + INSTAGRAM_USER_ID
+    graph_version: "v19.0"  # bump as needed
+  automated_publishing:
+    workflow: .github/workflows/social-media-post.yml
+    trigger: schedule + workflow_dispatch + content pipeline
+  policy: All outbound posts, replies, and DMs remain under Nova Reign governance + communications policy gates.

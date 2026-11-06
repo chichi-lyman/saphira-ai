@@ -11,6 +11,8 @@ from src.core.model_registry import ModelEndpointConfig, SaphiraModelRegistry
 def test_providers_include_cloud_and_local():
     keys = set(SaphiraModelRegistry.PROVIDERS.keys())
     assert "gemini_flash" in keys
+    assert "gemini_pro" in keys
+    assert "claude_sonnet" in keys
     assert "vllm_local" in keys
     assert "ollama_local" in keys
 
@@ -20,6 +22,7 @@ def test_get_endpoint_default_is_gemini_flash():
     assert ep is not None
     assert ep.provider == "google"
     assert ep.is_local is False
+    assert ep.model_name == "gemini-2.5-flash"
     assert ep.max_context_tokens == 1048576
 
 

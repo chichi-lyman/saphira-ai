@@ -137,3 +137,20 @@ Source: AGNT.gg / Manus ecosystem (2026). Names are kebab-case ready for skill d
 98. **loki-mode** — Pushes systems to full power for massive computing tasks.
 99. **scientific-research** — Cross-references academic papers for data grounding.
 100. **formula-solver** — Translates complex multi-step math into step-by-step explanations.
+
+## Installed Grok automation skills
+
+Local packages under `skills/`. These are operational routines with approval gates, not extra catalog entries in the 1–100 list.
+
+- **viral-hook-script-engine** — Short-form hooks, scripts, and visual or audio prompts.
+- **x-engagement-thread-writer** — Niche scan on X, reply drafts, and a post queue.
+- **omni-channel-content-repurposer** — One long-form source into LinkedIn, Instagram, Shorts, and X.
+- **ad-copy-variant-tester** — Paid-social A/B copy with a single lever per variant.
+- **skill-creator** — Compile a repeated workflow into a SKILL.md package.
+- **fastapi-docker-orchestrator** — FastAPI app, Dockerfile, and compose with env name checks.
+- **github-repository-guardian** — PR review, semantic commits, issue plans, and CI outlines.
+- **api-connector-webhook-handler** — Signed webhooks and MCP-style connector scaffolds.
+- **autonomous-email-lead-qualifier** — Inbox scoring and unsent lead replies.
+- **automated-competitor-intelligence** — Public competitor and pricing brief.
+- **ecommerce-stripe-revenue-tracker** — Read-only sales totals and churn signals.
+

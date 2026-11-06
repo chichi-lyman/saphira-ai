@@ -33,6 +33,8 @@ Source material is community-curated from the AGNT.gg / Manus ecosystem (2026). 
 
 Full numbered list lives in `references/catalog.md` (100 entries).
 
+Installed local automation skills are listed at the bottom of that file under Installed Grok automation skills.
+
 | Range | Category |
 |-------|----------|
 | 1–15  | Development & Diagnostics |
