@@ -18,20 +18,38 @@ class SaphiraModelRegistry:
     """
     Central Provider-Neutral Model Registry for Saphira AI.
 
-    Registers cloud backends (Gemini, Claude/Anthropic, OpenAI-compatible)
-    and local offline vLLM / Ollama endpoints. Used by the inference router
-    so the product can switch providers without rewriting business logic.
+    Registers cloud backends (Gemini via Vertex AI or Developer API,
+    Claude/Anthropic, OpenAI-compatible) and local offline vLLM / Ollama
+    endpoints. Used by the inference router so the product can switch
+    providers without rewriting business logic.
     """
 
     PROVIDERS: Dict[str, ModelEndpointConfig] = {
-        # Primary cloud path (Google)
+        # Primary cloud path — Vertex AI (production GCP)
+        "vertex_gemini_flash": ModelEndpointConfig(
+            provider="vertex",
+            model_name="gemini-2.5-flash",
+            endpoint_url="https://{location}-aiplatform.googleapis.com",
+            is_local=False,
+            max_context_tokens=1048576,
+            notes="Vertex AI Gemini 2.5 Flash. Preferred production path when GOOGLE_CLOUD_PROJECT is set.",
+        ),
+        "vertex_gemini_pro": ModelEndpointConfig(
+            provider="vertex",
+            model_name="gemini-2.5-pro",
+            endpoint_url="https://{location}-aiplatform.googleapis.com",
+            is_local=False,
+            max_context_tokens=1048576,
+            notes="Vertex AI Gemini 2.5 Pro for heavier reasoning.",
+        ),
+        # Developer API path (AI Studio key) — same models, different backend
         "gemini_flash": ModelEndpointConfig(
             provider="google",
             model_name="gemini-2.5-flash",
             endpoint_url="https://generativelanguage.googleapis.com/v1beta",
             is_local=False,
             max_context_tokens=1048576,
-            notes="Fast, high-context. Primary for most interactive work.",
+            notes="Gemini Developer API (AI Studio key). Fast interactive work.",
         ),
         "gemini_pro": ModelEndpointConfig(
             provider="google",
@@ -39,7 +57,7 @@ class SaphiraModelRegistry:
             endpoint_url="https://generativelanguage.googleapis.com/v1beta",
             is_local=False,
             max_context_tokens=1048576,
-            notes="Heavier reasoning when quality > latency.",
+            notes="Gemini Developer API Pro. Quality over latency.",
         ),
         # Anthropic path (fallback / specialized)
         "claude_sonnet": ModelEndpointConfig(
@@ -91,5 +109,13 @@ class SaphiraModelRegistry:
 
     @classmethod
     def preferred_order(cls) -> list[str]:
-        """Default routing preference: fast Gemini → quality Claude → local."""
-        return ["gemini_flash", "claude_sonnet", "claude_haiku", "vllm_local", "ollama_local"]
+        """Default routing preference: Vertex Flash → Developer Flash → Claude → local."""
+        return [
+            "vertex_gemini_flash",
+            "gemini_flash",
+            "vertex_gemini_pro",
+            "claude_sonnet",
+            "claude_haiku",
+            "vllm_local",
+            "ollama_local",
+        ]
