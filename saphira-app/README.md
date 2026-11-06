@@ -33,7 +33,7 @@ saphira-app/
 ```bash
 cd saphira-app
 cp .env.local.example .env.local
-# Edit .env.local with VITE_SAPHIRA_API_KEY and VITE_SAPHIRA_API_BASE_URL
+# Edit .env.local with VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY, and VITE_SAPHIRA_API_BASE_URL
 npm install
 npm run dev
 ```
@@ -42,7 +42,9 @@ The Vite dev server runs on port 3000 and proxies `/api` to the FastAPI backend 
 
 ## Integration with Saphira core
 
-- API client targets `/api/chat` on the existing FastAPI service.
+- API client targets `/api/chat` and sends the signed-in Supabase access token as a bearer token.
+- Supabase Auth handles registration, email verification, login, password reset, session refresh, and logout.
+- Browser code uses only the public Supabase publishable key; never place service-role or provider secrets in Vite variables.
 - System instruction and model defaults live in `src/config/saphiraConfig.ts`.
 - Streaming is handled by `useSaphiraStream` and `saphiraApi.streamChat`.
 

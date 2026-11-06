@@ -91,9 +91,12 @@ cp .env.local.example .env.local
 
 Required for typical local use:
 
-- `VITE_SAPHIRA_API_BASE_URL=http://localhost:8000`
-- `VITE_SAPHIRA_API_KEY` only if the backend expects a bearer token
+- `VITE_SUPABASE_URL` — Supabase project URL
+- `VITE_SUPABASE_PUBLISHABLE_KEY` — public browser key; never use the service-role key
+- `VITE_SAPHIRA_API_BASE_URL=http://localhost:8000/api`
 - `VITE_SAPHIRA_MODEL` if you need a non-default model id
+
+The backend also needs `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` so FastAPI can validate each bearer token against Supabase Auth. The shared browser API-key mechanism has been removed.
 
 Vite embeds only variables that start with `VITE_` into the client bundle. Restart the dev server after changing `.env.local`.
 

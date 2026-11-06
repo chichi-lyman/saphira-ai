@@ -22,6 +22,7 @@ export interface SaphiraChatRequest {
   stream?: boolean;
   system_instruction?: string;
   user_name?: string;
+  session_id?: string;
 }
 
 export interface SaphiraChatChoice {

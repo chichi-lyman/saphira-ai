@@ -1,0 +1,89 @@
+import { useState, type FormEvent, type ReactNode, type CSSProperties } from 'react';
+import { useUser } from '../context/UserContext';
+
+export function AuthGate({ children }: { children: ReactNode }) {
+  const { user, loading, authEnabled, passwordRecovery, signIn, signUp, signInWithGoogle, resetPassword, updatePassword } = useUser();
+  const [mode, setMode] = useState<'signin' | 'signup' | 'reset'>('signin');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [message, setMessage] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
+    setMessage('');
+    setBusy(true);
+    try {
+      if (passwordRecovery) {
+        if (password.length < 8) throw new Error('Use at least 8 characters for your new password.');
+        if (password !== confirmPassword) throw new Error('The passwords do not match.');
+        await updatePassword(password);
+        setPassword('');
+        setConfirmPassword('');
+        setMessage('Your password has been updated. You can continue to Saphira.');
+      } else if (mode === 'signup') {
+        await signUp(email, password);
+        setMessage('Account created. Check your email to verify your address before signing in.');
+      } else if (mode === 'reset') {
+        await resetPassword(email);
+        setMessage('If that account exists, a password-reset email has been sent.');
+      } else {
+        await signIn(email, password);
+      }
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Authentication could not be completed.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (loading) return <main style={shell}><section style={panel}><p>Checking your secure session…</p></section></main>;
+  if (!authEnabled) return <main style={shell}><section style={panel}>
+    <div style={mark}>✦</div><h1 style={heading}>Saphira</h1>
+    <p style={copy}>Cloud sign-in is not configured yet.</p>
+    <p style={small}>Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY in the web deployment, then rebuild. No shared API key belongs in the browser.</p>
+  </section></main>;
+  if (user && !passwordRecovery) return <>{children}</>;
+
+  return <main style={shell}><section style={panel}>
+    <div style={mark}>✦</div><h1 style={heading}>Saphira</h1>
+    <p style={copy}>{passwordRecovery ? 'Choose a new password.' : 'Your AI assistant. Sign in to continue.'}</p>
+    <form onSubmit={submit} style={{ display: 'grid', gap: 12, marginTop: 24 }}>
+      {!passwordRecovery && <label style={label}>Email
+        <input style={field} type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+      </label>}
+      {(mode !== 'reset' || passwordRecovery) && <label style={label}>{passwordRecovery ? 'New password' : 'Password'}
+        <input style={field} type="password" minLength={8} autoComplete={mode === 'signup' || passwordRecovery ? 'new-password' : 'current-password'} required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" />
+      </label>}
+      {passwordRecovery && <label style={label}>Confirm new password
+        <input style={field} type="password" minLength={8} autoComplete="new-password" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+      </label>}
+      <button type="submit" disabled={busy} style={primary}>{busy ? 'Please wait…' : passwordRecovery ? 'Update password' : mode === 'signup' ? 'Create account' : mode === 'reset' ? 'Send reset link' : 'Sign in'}</button>
+    </form>
+    {!passwordRecovery && mode === 'signin' && <button type="button" style={secondary} onClick={() => { void signInWithGoogle().catch((error) => setMessage(error instanceof Error ? error.message : 'Google sign-in failed.')); }}>Continue with Google</button>}
+    {message && <p role="status" style={notice}>{message}</p>}
+    {!passwordRecovery && <div style={links}>
+      {mode !== 'signin' && <button style={link} onClick={() => { setMode('signin'); setMessage(''); }}>Back to sign in</button>}
+      {mode === 'signin' && <>
+        <button style={link} onClick={() => { setMode('signup'); setMessage(''); }}>Create an account</button>
+        <button style={link} onClick={() => { setMode('reset'); setMessage(''); }}>Forgot password?</button>
+      </>}
+    </div>}
+    <p style={small}>Account security and sessions are managed by the identity provider.</p>
+  </section></main>;
+}
+
+const shell: CSSProperties = { minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 24, background: '#0B0813', color: '#fff', fontFamily: 'Inter, system-ui, sans-serif' };
+const panel: CSSProperties = { width: 'min(100%, 420px)', padding: 32, border: '1px solid rgba(255,255,255,.12)', borderRadius: 24, background: 'rgba(25,18,37,.92)', boxShadow: '0 24px 80px rgba(0,0,0,.4)' };
+const mark: CSSProperties = { color: '#FF00A0', fontSize: 30 };
+const heading: CSSProperties = { margin: '8px 0', fontSize: 34, letterSpacing: '-.04em' };
+const copy: CSSProperties = { color: '#c9bfd3', margin: 0 };
+const small: CSSProperties = { color: '#93899e', fontSize: 12, lineHeight: 1.5, marginTop: 22 };
+const label: CSSProperties = { display: 'grid', gap: 7, color: '#e9e2ef', fontSize: 13 };
+const field: CSSProperties = { width: '100%', boxSizing: 'border-box', borderRadius: 12, border: '1px solid rgba(255,255,255,.16)', padding: '13px 14px', background: '#100b19', color: '#fff', fontSize: 15 };
+const primary: CSSProperties = { border: 0, borderRadius: 12, padding: 14, background: 'linear-gradient(100deg,#8B00FF,#FF00A0)', color: '#fff', fontWeight: 700, cursor: 'pointer' };
+const secondary: CSSProperties = { width: '100%', marginTop: 10, border: '1px solid rgba(255,255,255,.16)', borderRadius: 12, padding: 12, background: 'transparent', color: '#fff', cursor: 'pointer' };
+const notice: CSSProperties = { color: '#e9d8ff', fontSize: 13, lineHeight: 1.5 };
+const links: CSSProperties = { display: 'flex', justifyContent: 'space-between', gap: 12, marginTop: 16 };
+const link: CSSProperties = { border: 0, background: 'transparent', color: '#d9a9ff', cursor: 'pointer', padding: 0, fontSize: 13 };

@@ -24,6 +24,11 @@ dependencies = [
   "langgraph>=0.2",
   "langchain-core>=0.2",
   "mcp>=1.0",
+  "google-genai>=1.0",
+  "stripe>=11.0",
+  "requests>=2.31",
+  "celery[redis]>=5.3",
+  "numpy>=1.26",
 ]
 
 [project.optional-dependencies]

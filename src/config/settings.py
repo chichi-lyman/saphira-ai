@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from typing import List, Literal, Optional
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -13,6 +13,7 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
         case_sensitive=False,
+        populate_by_name=True,
     )
 
     port: int = Field(default=8000, ge=1, le=65535)
@@ -74,9 +75,7 @@ class Settings(BaseSettings):
     telegram_bot_token: Optional[str] = Field(default=None, validation_alias="TELEGRAM_BOT_TOKEN")
     telegram_chat_id: Optional[str] = Field(default=None, validation_alias="TELEGRAM_CHAT_ID")
 
-    saphira_jwt_secret: Optional[str] = Field(default=None, validation_alias="SAPHIRA_JWT_SECRET")
     saphira_encryption_key: Optional[str] = Field(default=None, validation_alias="SAPHIRA_ENCRYPTION_KEY")
-    saphira_admin_audit_key: Optional[str] = Field(default=None, validation_alias="SAPHIRA_ADMIN_AUDIT_KEY")
 
     @field_validator("log_level", mode="before")
     @classmethod
@@ -87,12 +86,6 @@ class Settings(BaseSettings):
     @classmethod
     def normalize_environment(cls, v: object) -> object:
         return v.lower() if isinstance(v, str) else v
-
-    @model_validator(mode="after")
-    def production_requires_core_secrets(self) -> "Settings":
-        if self.environment == "production" and self.saphira_jwt_secret is not None and not self.saphira_jwt_secret.strip():
-            raise ValueError("Invalid production configuration: SAPHIRA_JWT_SECRET is empty")
-        return self
 
     def allowed_origins_list(self) -> List[str]:
         return [o.strip() for o in self.saphira_allowed_origins.split(",") if o.strip()]
@@ -127,7 +120,6 @@ class Settings(BaseSettings):
             "stripe_price_configured": bool(self.stripe_price_monthly),
             "email_configured": bool(self.resend_api_key and self.resend_from),
             "phone_alert_configured": bool(self.telegram_bot_token and self.telegram_chat_id),
-            "jwt_secret_set": bool(self.saphira_jwt_secret and self.saphira_jwt_secret.strip()),
         }
 
 
