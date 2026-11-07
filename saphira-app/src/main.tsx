@@ -5,8 +5,10 @@ import './assets/global.css';
 import { UserProvider } from './context/UserContext';
 import { ChatProvider } from './context/ChatContext';
 import { registerServiceWorker } from './registerServiceWorker';
+import { injectSpeedInsights } from '@vercel/speed-insights';
 
 registerServiceWorker();
+injectSpeedInsights();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
