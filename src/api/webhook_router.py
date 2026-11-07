@@ -4,12 +4,26 @@
 from __future__ import annotations
 
 import logging
+import json
+import os
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Header, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from src.services.webhook_bridge import get_webhook_bridge
+from src.integrations.webhook_security import WebhookSignatureVerifier
+
+_signature_verifier: WebhookSignatureVerifier | None = None
+
+def _get_signature_verifier() -> WebhookSignatureVerifier | None:
+    global _signature_verifier
+    secret = os.getenv("SAPHIRA_WEBHOOK_SIGNING_SECRET", "")
+    if not secret:
+        return None
+    if _signature_verifier is None:
+        _signature_verifier = WebhookSignatureVerifier(secret)
+    return _signature_verifier
 
 logger = logging.getLogger("Saphira.WebhookRouter")
 
@@ -45,27 +59,32 @@ class OutboundTrigger(BaseModel):
 async def inbound_webhook(
     request: Request,
     x_saphira_automation_key: Optional[str] = Header(None, alias="X-Saphira-Automation-Key"),
+    x_webhook_timestamp: Optional[str] = Header(None, alias="X-Webhook-Timestamp"),
+    x_webhook_signature: Optional[str] = Header(None, alias="X-Webhook-Signature"),
+    x_webhook_event_id: Optional[str] = Header(None, alias="X-Webhook-Event-Id"),
 ):
-    """
-    Catch-all inbound endpoint for Zapier, Make, and n8n.
-
-    Configure the automation tool to POST JSON to:
-      https://<your-backend>/api/webhooks/inbound
-    with header:
-      X-Saphira-Automation-Key: <SAPHIRA_AUTOMATION_WEBHOOK_SECRET>
-    """
+    """Receive automation events; enforce HMAC when SAPHIRA_WEBHOOK_SIGNING_SECRET is set."""
     bridge = get_webhook_bridge()
-    if not bridge.verify_inbound(x_saphira_automation_key):
-        raise HTTPException(status_code=401, detail="Invalid or missing automation key")
-
+    verifier = _get_signature_verifier()
     try:
-        body = await request.json()
-    except Exception:
-        raise HTTPException(status_code=400, detail="JSON body required")
-
+        raw_body = await request.body()
+        if verifier is not None:
+            try:
+                timestamp = int(x_webhook_timestamp or "")
+            except ValueError:
+                raise HTTPException(status_code=401, detail="Invalid webhook timestamp")
+            if not verifier.verify(timestamp, raw_body, x_webhook_signature or "",
+                                   x_webhook_event_id or ""):
+                raise HTTPException(status_code=401, detail="Invalid, stale, or replayed webhook")
+        elif not bridge.verify_inbound(x_saphira_automation_key):
+            raise HTTPException(status_code=401, detail="Invalid or missing automation key")
+        body = json.loads(raw_body)
+    except HTTPException:
+        raise
+    except (ValueError, UnicodeDecodeError):
+        raise HTTPException(status_code=400, detail="Valid JSON body required")
     if not isinstance(body, dict):
         raise HTTPException(status_code=400, detail="Body must be a JSON object")
-
     result = bridge.handle_inbound_event(body)
     logger.info("inbound handled: %s", result.get("handled_as"))
     return result
