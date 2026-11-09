@@ -12,9 +12,8 @@ on:
       - '.github/workflows/flutter-apk-build.yml'
   workflow_dispatch:
 
-# Backend URL is NOT baked in. The Flutter client stores the live
-# SAPHIRA_BASE_URL at runtime via Settings → SharedPreferences.
-# This keeps the APK free of environment-specific origins and secrets.
+# Backend URL is runtime-configurable in the app (Settings).
+# No secrets or environment origins are baked into the APK.
 
 jobs:
   build-flutter-apk:
@@ -42,6 +41,23 @@ jobs:
       - name: Flutter version
         run: flutter --version
 
+      - name: Ensure platform scaffolding
+        working-directory: mobile
+        run: |
+          # Generate any missing Android embedding files without wiping lib/
+          # Existing custom Kotlin (MainActivity, voice services) is preserved
+          # when files already exist; flutter create only fills gaps.
+          flutter create . --project-name saphira_ai --org com.saphira --platforms=android
+
+          # Force correct source path (one level up from android/)
+          if grep -q 'source = "../.."' android/app/build.gradle 2>/dev/null; then
+            sed -i 's|source = "../.."|source = "../"|' android/app/build.gradle
+          fi
+
+          # Ensure assets directory exists (pubspec references it)
+          mkdir -p assets
+          touch assets/.gitkeep
+
       - name: Install dependencies
         working-directory: mobile
         run: flutter pub get
@@ -59,10 +75,6 @@ jobs:
           APK="mobile/build/app/outputs/flutter-apk/app-release.apk"
           test -s "$APK"
           ls -lh "$APK"
-          # Optional: show package identity if aapt is available
-          if command -v aapt >/dev/null 2>&1; then
-            aapt dump badging "$APK" | head -5 || true
-          fi
 
       - name: Upload Flutter release APK
         uses: actions/upload-artifact@v4

@@ -25,10 +25,16 @@ android {
 
     buildTypes {
         release {
+            // Debug signing for sideloadable CI artifacts.
+            // Replace with a persistent release keystore for Play Store.
             signingConfig = signingConfigs.debug
         }
     }
 }
 
-flutter { source = "../.." }
+flutter {
+    // mobile/android is one level below the Flutter project root (mobile/)
+    source = "../"
+}
+
 dependencies {}
