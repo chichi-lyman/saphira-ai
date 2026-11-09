@@ -1,0 +1,93 @@
+name: Frontier Verifier — Build, Test, Push GHCR
+
+# © 2026 Chelsea Megan Woods · Nova Umbrella
+# Builds deploy/frontier image, runs SymPy/Z3/torch preflight, pushes to ghcr.io
+
+on:
+  push:
+    branches: [main, 'release/*']
+    tags: ['v*']
+    paths:
+      - 'deploy/frontier/**'
+      - 'src/frontier/**'
+      - 'crates/saphira_symbolic_verifier/**'
+      - '.github/workflows/frontier-ghcr.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'deploy/frontier/**'
+      - 'src/frontier/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/saphira-verifier-server
+
+jobs:
+  build-test-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=sha,prefix=sha-,format=short
+
+      - name: Build (load local)
+        uses: docker/build-push-action@v5
+        with:
+          context: deploy/frontier
+          file: deploy/frontier/Dockerfile
+          load: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Pre-flight SymPy / Z3 / torch
+        run: |
+          docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:test python -c "
+          import sympy as sp
+          from z3 import Solver
+          import torch
+          s = Solver()
+          assert str(s.check()) == 'sat'
+          x = sp.Symbol('x')
+          assert sp.simplify(sp.cos(x)**2 + sp.sin(x)**2 - 1) == 0
+          print('Pre-flight verification passed.')
+          "
+
+      - name: Push to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/build-push-action@v5
+        with:
+          context: deploy/frontier
+          file: deploy/frontier/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
