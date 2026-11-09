@@ -1,22 +1,84 @@
 version: 2
 updates:
-  # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
+      time: "04:00"
+      timezone: "America/New_York"
     open-pull-requests-limit: 10
+    labels:
+      - "ci/cd"
+      - "dependencies"
+      - "automated-pr"
+    assignees:
+      - "chichi-lyman"
+    commit-message:
+      prefix: "build(deps-dev)"
+      include: "scope"
 
-  # Python (root)
-  - package-ecosystem: "pip"
+  - package-ecosystem: "docker"
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 10
+      day: "monday"
+      time: "04:30"
+      timezone: "America/New_York"
+    open-pull-requests-limit: 5
+    labels:
+      - "docker"
+      - "infrastructure"
+      - "automated-pr"
+    assignees:
+      - "chichi-lyman"
+    commit-message:
+      prefix: "chore(docker)"
+      include: "scope"
 
-  # Android / Gradle
-  - package-ecosystem: "gradle"
-    directory: "/android"
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "05:00"
+      timezone: "America/New_York"
+    open-pull-requests-limit: 15
+    labels:
+      - "python"
+      - "core-engine"
+      - "dependencies"
+    assignees:
+      - "chichi-lyman"
+    commit-message:
+      prefix: "fix(deps)"
+      include: "scope"
+    groups:
+      torch-and-science:
+        patterns:
+          - "torch*"
+          - "numpy*"
+          - "sympy*"
+          - "z3-solver*"
+      fastapi-backend:
+        patterns:
+          - "fastapi*"
+          - "uvicorn*"
+          - "gunicorn*"
+          - "pydantic*"
+          - "asyncpg*"
+
+  - package-ecosystem: "cargo"
+    directory: "/"
     schedule:
       interval: "weekly"
+      day: "sunday"
     open-pull-requests-limit: 5
+    labels:
+      - "rust"
+      - "wasm"
+      - "verifier"
+    assignees:
+      - "chichi-lyman"
+    commit-message:
+      prefix: "refactor(rust)"
+      include: "scope"
