@@ -1,0 +1,54 @@
+# Saphira Frontier stack — verifier + pgvector + Redis
+# © 2026 Chelsea Megan Woods · Nova Umbrella
+version: "3.8"
+
+services:
+  saphira-verifier-server:
+    build:
+      context: ../..
+      dockerfile: deploy/frontier/Dockerfile
+    container_name: saphira_verifier_prod
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "8000"
+      WORKERS: "2"
+      WAIT_FOR_PG: "true"
+      POSTGRES_HOST: saphira_postgres
+      POSTGRES_PORT: "5432"
+    depends_on:
+      - saphira_postgres
+      - saphira_redis
+    networks:
+      - nova_umbrella_mesh
+
+  saphira_postgres:
+    image: pgvector/pgvector:pg16
+    container_name: saphira_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: saphira_edge_db
+      POSTGRES_USER: saphira_admin
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-saphira_secure_pass_2026}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - nova_umbrella_mesh
+
+  saphira_redis:
+    image: redis:7.2-alpine
+    container_name: saphira_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - nova_umbrella_mesh
+
+volumes:
+  pgdata:
+
+networks:
+  nova_umbrella_mesh:
+    driver: bridge
