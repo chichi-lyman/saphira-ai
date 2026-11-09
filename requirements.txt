@@ -20,7 +20,7 @@ mcp>=1.0
 redis>=5.0
 celery>=5.3
 stripe>=16.0.0
-google-genai>=0.8
+google-genai>=3.0.0
 
 # ---------------------------------------------------------------------------
 # Optional vision / face recognition extras (install only what you need)
