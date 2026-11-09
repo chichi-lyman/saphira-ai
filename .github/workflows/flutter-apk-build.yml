@@ -1,0 +1,73 @@
+name: Saphira Flutter APK Build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/flutter-apk-build.yml'
+  pull_request:
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/flutter-apk-build.yml'
+  workflow_dispatch:
+
+# Backend URL is NOT baked in. The Flutter client stores the live
+# SAPHIRA_BASE_URL at runtime via Settings → SharedPreferences.
+# This keeps the APK free of environment-specific origins and secrets.
+
+jobs:
+  build-flutter-apk:
+    name: Build Saphira Flutter Release APK
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Install dependencies
+        working-directory: mobile
+        run: flutter pub get
+
+      - name: Analyze (non-blocking)
+        working-directory: mobile
+        run: flutter analyze --no-fatal-infos || true
+
+      - name: Build release APK
+        working-directory: mobile
+        run: flutter build apk --release
+
+      - name: Verify APK
+        run: |
+          APK="mobile/build/app/outputs/flutter-apk/app-release.apk"
+          test -s "$APK"
+          ls -lh "$APK"
+          # Optional: show package identity if aapt is available
+          if command -v aapt >/dev/null 2>&1; then
+            aapt dump badging "$APK" | head -5 || true
+          fi
+
+      - name: Upload Flutter release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: saphira-flutter-apk
+          path: mobile/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 30
