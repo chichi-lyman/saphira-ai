@@ -94,3 +94,21 @@ uv run pytest
 - [docs/THE_WEAVER.md](./docs/THE_WEAVER.md) — Contextual Cartographer
 - [docs/HUMAN_LOGIC_RULEBOOK.md](./docs/HUMAN_LOGIC_RULEBOOK.md) — classical logic verification
 - [docs/AI_FOUNDATIONS_STILLNESS_AND_ERROR.md](./docs/AI_FOUNDATIONS_STILLNESS_AND_ERROR.md) — loss, attention, backprop
+
+## Discoverability & Entity Graph
+
+Coordinated Technical SEO + Schema Markup + Digital PR pipeline for search engines and AI crawlers:
+
+| Asset | Purpose |
+|-------|--------|
+| [`llms.txt`](./llms.txt) | LLM-optimized summary for Google AI Overviews, Perplexity, ChatGPT Search, Claude |
+| [`public/schema/person-saphira.jsonld`](./public/schema/person-saphira.jsonld) | JSON-LD Person + SoftwareApplication + Organization entity graph |
+| [`docs/SEO_AND_DISCOVERABILITY.md`](./docs/SEO_AND_DISCOVERABILITY.md) | Full strategy: IndexNow, GSC, topics, publishing, interlinking |
+| [`.github/workflows/indexnow-ping.yml`](./.github/workflows/indexnow-ping.yml) | Auto-ping IndexNow on docs/release changes |
+| [`robots.txt`](./robots.txt) | Explicit allow for major AI crawlers |
+
+**Recommended GitHub topics** (set under repo ⚙️ Settings → General → Topics):
+
+`multi-agent-systems` · `edge-ai` · `fastapi` · `saphira-ai` · `webgpu` · `onnx` · `voice-assistant` · `nova-umbrella` · `android` · `flutter` · `pgvector`
+
+**Architect:** Chelsea Megan Woods — Lead AI Systems Architect & Founder (Woods Legacies / Woods AI Studio / Nova Umbrella).
