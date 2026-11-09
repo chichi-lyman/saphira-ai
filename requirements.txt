@@ -18,7 +18,7 @@ mcp>=1.0
 
 # Optional integrations (imported by connectors / workers / commerce)
 redis>=5.0
-celery>=5.3
+celery>=5.7.0
 stripe>=16.0.0
 google-genai>=0.8
 
