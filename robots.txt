@@ -1,0 +1,31 @@
+# Saphira AI — robots guidance for the public documentation surface
+# Primary canonical source: https://github.com/chichi-lyman/saphira-ai
+#
+# For custom domains, host this file at the domain root and point
+# Sitemap: to your generated sitemap.xml.
+
+User-agent: *
+Allow: /
+
+# LLM / AI crawlers — explicit allow for major agents
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+# Helpful entry points
+# Sitemap: https://YOUR-CUSTOM-DOMAIN/sitemap.xml
+# See also: /llms.txt and /public/schema/person-saphira.jsonld

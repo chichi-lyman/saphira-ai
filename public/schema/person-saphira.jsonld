@@ -1,0 +1,77 @@
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Person",
+      "@id": "https://github.com/chichi-lyman#person",
+      "name": "Chelsea Megan Woods",
+      "alternateName": ["ChiChi", "Chelsea Megan Lyman"],
+      "jobTitle": "Lead AI Systems Architect & Founder",
+      "worksFor": {
+        "@type": "Organization",
+        "name": "Woods Legacies",
+        "alternateName": ["Woods AI Studio", "Nova Umbrella", "Lyman Legacies"]
+      },
+      "url": "https://github.com/chichi-lyman",
+      "sameAs": [
+        "https://github.com/chichi-lyman",
+        "https://beacons.ai/chichi-lyman",
+        "https://www.tiktok.com/@chelseameganwoods",
+        "https://www.instagram.com/chelsiaaa.woods"
+      ],
+      "knowsAbout": [
+        "Multi-Agent AI Systems",
+        "Edge Computing",
+        "FastAPI",
+        "WebGPU Acceleration",
+        "AI Model Evaluation",
+        "Saphira AI Framework",
+        "Nova Umbrella",
+        "Voice Assistants",
+        "ONNX",
+        "pgvector"
+      ]
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://github.com/chichi-lyman/saphira-ai#software",
+      "name": "Saphira AI",
+      "url": "https://github.com/chichi-lyman/saphira-ai",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Linux, Android, Web",
+      "author": {
+        "@id": "https://github.com/chichi-lyman#person"
+      },
+      "creator": {
+        "@id": "https://github.com/chichi-lyman#person"
+      },
+      "description": "Autonomous local-first and cloud-hybrid voice assistant framework featuring multi-agent executive pipeline, openwake-word ONNX detection, WebGPU acceleration, pgvector memory, and policy-gated commerce.",
+      "softwareVersion": "1.3.0",
+      "isAccessibleForFree": true,
+      "keywords": [
+        "multi-agent-systems",
+        "edge-ai",
+        "fastapi",
+        "saphira-ai",
+        "webgpu",
+        "onnx",
+        "voice-assistant",
+        "nova-umbrella"
+      ]
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://github.com/chichi-lyman#org",
+      "name": "Woods Legacies",
+      "alternateName": ["Woods AI Studio", "Nova Umbrella", "Lyman Legacies"],
+      "founder": {
+        "@id": "https://github.com/chichi-lyman#person"
+      },
+      "url": "https://github.com/chichi-lyman",
+      "sameAs": [
+        "https://github.com/chichi-lyman",
+        "https://beacons.ai/chichi-lyman"
+      ]
+    }
+  ]
+}

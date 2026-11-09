@@ -1,0 +1,98 @@
+name: IndexNow & Discoverability Ping
+
+on:
+  release:
+    types: [published]
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'README.md'
+      - 'llms.txt'
+      - 'public/**'
+      - '.github/workflows/indexnow-ping.yml'
+  workflow_dispatch:
+
+# Pings IndexNow (Bing → ChatGPT Search, Copilot, Perplexity) when
+# documentation or release artifacts change. Google Search Console
+# sitemap submission remains a manual / API step with verified domains.
+
+jobs:
+  indexnow:
+    name: Ping IndexNow
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build URL list
+        id: urls
+        run: |
+          BASE="https://github.com/chichi-lyman/saphira-ai"
+          RAW="https://raw.githubusercontent.com/chichi-lyman/saphira-ai/main"
+
+          URLS=(
+            "${BASE}"
+            "${BASE}/blob/main/README.md"
+            "${BASE}/blob/main/llms.txt"
+            "${BASE}/blob/main/docs/SEO_AND_DISCOVERABILITY.md"
+            "${BASE}/blob/main/docs/SAPHIRA_PRODUCT_DESCRIPTION.md"
+            "${RAW}/llms.txt"
+            "${RAW}/public/schema/person-saphira.jsonld"
+          )
+
+          # Write one URL per line for the ping script
+          printf "%s\n" "${URLS[@]}" > /tmp/indexnow-urls.txt
+          echo "Prepared $(wc -l < /tmp/indexnow-urls.txt) URLs"
+
+      - name: Ping IndexNow
+        env:
+          INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
+        run: |
+          if [ -z "$INDEXNOW_KEY" ]; then
+            echo "INDEXNOW_KEY secret not set — skipping live IndexNow ping."
+            echo "Add a repository secret INDEXNOW_KEY (your IndexNow key) to enable automatic pings."
+            echo "Key file must also be hosted at https://<your-domain>/$INDEXNOW_KEY.txt when using a custom domain."
+            exit 0
+          fi
+
+          # IndexNow accepts a JSON payload with host + key + urlList
+          # For GitHub-hosted content we still notify the engine; primary
+          # benefit accrues once custom domains are verified and key-hosted.
+          python3 << 'PY'
+          import json, os, urllib.request
+
+          key = os.environ["INDEXNOW_KEY"]
+          urls = open("/tmp/indexnow-urls.txt").read().strip().splitlines()
+
+          payload = {
+              "host": "github.com",
+              "key": key,
+              "urlList": urls,
+          }
+
+          data = json.dumps(payload).encode("utf-8")
+          req = urllib.request.Request(
+              "https://api.indexnow.org/indexnow",
+              data=data,
+              headers={"Content-Type": "application/json; charset=utf-8"},
+              method="POST",
+          )
+          try:
+              with urllib.request.urlopen(req, timeout=30) as resp:
+                  print("IndexNow status:", resp.status)
+                  print(resp.read().decode()[:500])
+          except Exception as e:
+              print("IndexNow ping failed (non-fatal):", e)
+          PY
+
+      - name: Summary
+        run: |
+          echo "### Discoverability ping" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- llms.txt and JSON-LD schema are part of the public surface." >> "$GITHUB_STEP_SUMMARY"
+          echo "- IndexNow was attempted when INDEXNOW_KEY is configured." >> "$GITHUB_STEP_SUMMARY"
+          echo "- Submit/refresh sitemaps in Google Search Console for verified custom domains." >> "$GITHUB_STEP_SUMMARY"
