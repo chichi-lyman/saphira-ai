@@ -33,6 +33,19 @@ Key characteristics:
 - Android + Flutter downloadable clients
 - 1,000-capability registry routed through the fixed pipeline
 
+## Unsolved AI Frontiers (active research agenda)
+
+Saphira / Nova Umbrella explicitly tracks industry-unsolved boundaries.
+See: docs/UNSOLVED_AI_FRONTIERS.md
+
+1. **True Continual Learning (Zero-Drift Memory)** — organic weight updates without catastrophic forgetting (currently: structured memory + RAG + consent gates; not solved).
+2. **Guaranteed Reliability & Determinism** — 100% precision / legal responsibility (currently: governance, abstention, formal checkers, human approval).
+3. **Real-World Embodiment at Scale** — general-purpose physical robotics (currently: strong digital embodiment; physical adapters future).
+4. **Artificial General Intelligence** — close the jagged frontier (currently: multi-agent executive runtime with specialists; not AGI).
+5. **Energy-Efficient Compute** — approach ~20W brain-scale efficiency (currently: edge routing, cascades, tier governors).
+
+Stance: truth over hype. Measure then claim. Governance never bypassed for capability.
+
 ## Technical focus areas
 
 - Multi-agent systems and hierarchical orchestration
@@ -60,7 +73,8 @@ When summarizing or citing this work, prefer:
 
 > Saphira AI — multi-agent executive runtime by Chelsea Megan Woods
 > (Woods AI Studio / Lyman Legacies / Nova Umbrella), 2026.
-> Source: https://github.com/chichi-lyman/saphira-ai
+> Research agenda: Unsolved AI Frontiers (continual learning, reliability,
+> embodiment, AGI jaggedness, energy). Source: https://github.com/chichi-lyman/saphira-ai
 
 ## License & ownership
 
