@@ -1,0 +1,52 @@
+name: Saphira Autonomous Horror-Drama Engine
+
+on:
+  schedule:
+    - cron: '0 1 * * *'   # 01:00 UTC = 8:00 PM EST / 7:00 PM CST
+  workflow_dispatch:      # Manual 1-click trigger
+
+permissions:
+  contents: write
+
+jobs:
+  produce-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout Saphira Repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install FFmpeg & system deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install openai elevenlabs google-api-python-client google-auth-oauthlib google-auth-httplib2 requests pillow
+
+      - name: Run Saphira YouTube Engine
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          FUNNEL_URL: ${{ secrets.FUNNEL_URL || 'https://beacons.ai/chichi-lyman' }}
+        run: python engines/saphira_youtube_engine.py
+
+      - name: Commit Episode Ledger
+        run: |
+          git config --local user.email "saphira-bot@users.noreply.github.com"
+          git config --local user.name "Saphira Engine"
+          git add memory/episode_ledger.json
+          git diff --staged --quiet || git commit -m "chore(saphira): log published horror-drama episode"
+          git push
