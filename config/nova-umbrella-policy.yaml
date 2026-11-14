@@ -1,0 +1,86 @@
+# Nova Umbrella policy defaults.
+# This file is declarative guidance; enforcement must be implemented by the policy engine.
+version: "1.0"
+governance:
+  model: single_root_authority
+  root_identity_label: "Chelsea Megan Woods"
+  root_identity_alias: "Chelsea Megan Lyman"
+  trust_anchor:
+    type: hardware_backed_public_key
+    public_key_reference: "secret-manager://nova-umbrella/root-public-key"
+    private_key_in_repository: false
+    biometric_is_signature: false
+  immutable_constraints:
+    - agents_may_not_change_root_identity
+    - agents_may_not_elevate_own_permissions
+    - agents_may_not_disable_policy_enforcement
+    - agents_may_not_bypass_approval_windows
+    - agents_may_not_replace_trust_anchor
+authorization:
+  default_decision: DENY
+  decisions: [ALLOW, REQUIRE_APPROVAL, DENY]
+  approval_required_for:
+    - production_deployment
+    - root_or_policy_change
+    - security_boundary_change
+    - credential_or_trust_anchor_change
+    - sensitive_data_migration
+    - destructive_action
+  approval:
+    bind_to_exact_action_and_artifact_digest: true
+    require_expiry: true
+    require_single_use_nonce: true
+    invalidate_on_material_change: true
+    agent_self_approval: false
+agents:
+  default_capabilities: []
+  require_unique_identity: true
+  require_least_privilege: true
+  require_task_scope: true
+  require_resource_scope: true
+  require_time_and_resource_limits: true
+layers:
+  interface:
+    name: Saphira AI
+    ui_background: "#FFFFFF"
+    responsibilities: [command_intake, user_interaction, approval_status]
+  cognitive:
+    components: [NovaReign, Context_Engine]
+    responsibilities: [planning, task_decomposition, context_retrieval, orchestration]
+  perimeter:
+    components: [Nginx_Gateway, Aura]
+    responsibilities: [authentication, schema_validation, policy_enforcement, anomaly_monitoring]
+  vault:
+    components: [Agent_Zero, isolated_containers]
+    responsibilities: [code_generation, testing, optimization, artifact_validation]
+execution:
+  sandbox:
+    filesystem_default: deny
+    network_default: deny
+    enforce_cpu_memory_runtime_limits: true
+    validate_before_promotion: true
+  resilience:
+    isolate_subtask_failures: true
+    bounded_retries: true
+    exponential_backoff_with_jitter: true
+    circuit_breakers: true
+    preserve_independent_successes: true
+    fail_closed_when_authorization_unavailable: true
+    retry_denied_action_to_evade_policy: false
+audit:
+  enabled: true
+  tamper_evident: true
+  required_fields:
+    - actor
+    - action
+    - target
+    - policy_version
+    - decision
+    - correlation_id
+    - outcome
+  secrets_in_logs: false
+communication:
+  tone: direct_calm_functional
+  emotional_mimicry: false
+  marketing_jargon: false
+  unnecessary_filler: false
